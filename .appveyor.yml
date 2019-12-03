@@ -26,7 +26,8 @@ build: false
 
 test_script:
   - echo test
-  - SETX PATH "%PYTHON%;%PYTHON%\Scripts;";conda
+  - SETX PATH "%PYTHON%;%PYTHON%\\Scripts;"
+  - echo %PATH%
   - dir %PYTHON%
   - dir
   - cd Scripts
