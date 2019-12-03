@@ -1,8 +1,12 @@
-def MyFunc(bool):
-    if bool:
-        print("The answer is 42")
-    else:
-        print("This branch is not covered")
+import os
+import sys
+
+
+filePath = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(filePath + '\\..\\MyPackages')
+
+
+from MyFuncs import *
 
 
 def test_PrintHelloWorld():
@@ -10,3 +14,4 @@ def test_PrintHelloWorld():
 
 def test_MyFunc():
     MyFunc(True)
+
