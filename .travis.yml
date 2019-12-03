@@ -26,10 +26,11 @@ install:
   - conda activate test-environment
   #- python setup.py install
   - conda install pytest
+  - conda install pytest-cov
   - conda install codecov
   -
 script:
-  - pytest --cov=cpr tests
+  - pytest --cov-report term --cov=tests
 
 after_success:
   - codecov
