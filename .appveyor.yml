@@ -26,4 +26,5 @@ build: false
 
 test_script:
   - cmd: echo test
-  - python tests\\test_HelloWorld.py
+  - conda create -q -n test-environment python=$PYTHON_VERSION #dep1 dep2 ...
+  - conda activate test-environment
