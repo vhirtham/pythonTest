@@ -1,9 +1,7 @@
 language: python
 python:
-  - "3.6"      # current default Python on Travis CI
+  - "3.7"      # current default Python on Travis CI
 
-
-# command to install dependencies
 install:
   - sudo apt-get update
   # We do this conditionally because it saves us some downloading if the
@@ -18,17 +16,12 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  # Useful for debugging any issues with conda
   - conda info -a
 
   # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION #dep1 dep2 ...
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov codecov
   - conda activate test-environment
-  #- python setup.py install
-  - conda install pytest
-  - conda install pytest-cov
-  - conda install codecov
-  -
+
 script:
   - pytest --cov-report term --cov=MyPackages
 
