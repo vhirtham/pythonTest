@@ -1,1 +1,1 @@
-https://github.com/vhirtham/pythonTest/workflows/GitHub%20CI/badge.svg
+![](https://github.com/vhirtham/pythonTest/workflows/GitHub%20CI/badge.svg)
