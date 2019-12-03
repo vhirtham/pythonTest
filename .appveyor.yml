@@ -33,5 +33,5 @@ test_script:
   - dir
   - echo "%PYTHON%;%PYTHON%\Scripts;"
   - dir %PYTHON%\Scripts
-  - %PYTHON%\\Scripts\\conda.exe
+  - cmd: %PYTHON%\\Scripts\\conda.exe
   - conda
