@@ -20,9 +20,7 @@ environment:
 
 install:
   - ps: .\\scripts\\appveyor\\installMiniconda.ps1
-  - ps: conda install pytest
-  - ps: conda install pytest-cov
-  - ps: conda install codecov
+
 
 build: false
 
