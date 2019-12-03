@@ -20,3 +20,7 @@ coverage:
             default:
                 enabled: yes
                 target: 85%
+
+ignore:
+    - "tests"
+    - "*__init__.py"
