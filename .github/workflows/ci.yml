@@ -10,19 +10,5 @@ jobs:
         os: [ubuntu-16.04, ubuntu-18.04, ubuntu-latest]
     steps:
     - uses: actions/checkout@v1
-    - name: Update Conda environment
-      uses: ./
-      with:
-        args: conda env update -f ./test/requirements.yml
-    - name: Show Conda environment info
-      uses: ./
-      with:
-        args: conda info
-    - name: Prove that flake8 is installed
-      uses: ./
-      with:
-        args: flake8 --version
-    - name: Prove that Pytest is installed
-      uses: ./
-      with:
-        args: pytest ./test
+    - name: Include $CONDA in $PATH
+      run: echo ::add-path::$CONDA/bin
