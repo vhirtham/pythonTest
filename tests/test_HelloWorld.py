@@ -1,6 +1,6 @@
 import os
 import sys
-
+import pytest
 
 filePath = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(filePath + '\\..\\MyPackages')
@@ -15,4 +15,9 @@ def test_PrintHelloWorld():
 
 def test_MyFunc():
     MyFunc(True)
+
+def testAddNumbers():
+    assert AddNumbers(1,2) == 3
+    with pytest.raises(TypeError):
+        AddNumbers("1",2)
 
