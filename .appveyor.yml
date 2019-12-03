@@ -1,4 +1,7 @@
+install:
+  - cmd: .\\scripts\\appveyor\\installMiniconda.sh
+
 build: false
 
-install:
-  - cmd .\\scripts\\appveyor\\installMiniconda.sh
+test_script:
+  - cmd: echo test
