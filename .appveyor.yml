@@ -37,4 +37,4 @@ test_script:
   - dir %PYTHON%\Scripts
   - cmd: "%PYTHON%\\Scripts\\conda.exe"
   - conda
-  - dir C:
+  - "dir C:\\"
