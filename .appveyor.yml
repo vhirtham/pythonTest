@@ -7,7 +7,7 @@ environment:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
-   # CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous-integration\\appveyor\\run_with_env.cmd"
+   CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\scripts\\appveyor\\runWithEnv.cmd"
 
   matrix:
     - PYTHON: "C:\\Python34_64"
@@ -26,5 +26,4 @@ build: false
 
 test_script:
   - cmd: echo test
-  - cmd: conda create -q -n test-environment python=$PYTHON_VERSION #dep1 dep2 ...
-  - cmd: conda activate test-environment
+  - "%CMD_IN_ENV% conda create -q -n test-environment python=$PYTHON_VERSION"
