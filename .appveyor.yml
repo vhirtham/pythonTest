@@ -1,1 +1,4 @@
 build: false
+
+install:
+  - cmd .\\scripts\\appveyor\\installMiniconda.sh
