@@ -1,5 +1,5 @@
 install:
-  - cmd: .\\scripts\\appveyor\\installMiniconda.sh
+  - ps: .\\scripts\\appveyor\\installMiniconda.sh
 
 build: false
 
