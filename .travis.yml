@@ -30,7 +30,7 @@ install:
   - conda install codecov
   -
 script:
-  - pytest --cov-report term --cov=tests
+  - pytest --cov-report term --cov=MyPackages
 
 after_success:
   - codecov
