@@ -25,9 +25,13 @@ install:
 build: false
 
 test_script:
-  - cmd: echo test
-  - cmd: SETX PATH "%PYTHON%;%PYTHON%\Scripts;";conda
-  - cmd: dir %PYTHON%
-  - cmd: echo "%PYTHON%;%PYTHON%\Scripts;"
-  - cmd: dir %PYTHON%\Scripts
-  - cmd: conda
+  - echo test
+  - SETX PATH "%PYTHON%;%PYTHON%\Scripts;";conda
+  - dir %PYTHON%
+  - dir
+  - cd Scripts
+  - dir
+  - echo "%PYTHON%;%PYTHON%\Scripts;"
+  - dir %PYTHON%\Scripts
+  - cmd: ./Scripts/conda.exe
+  - conda
