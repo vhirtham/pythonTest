@@ -28,5 +28,6 @@ test_script:
   - cmd: echo test
   - cmd: SETX PATH "%PYTHON%;%PYTHON%\\Scripts;"
   - cmd: dir %PYTHON%
-  - cmd: echo %PYTHON%
+  - cmd: echo "%PYTHON%;%PYTHON%\\Scripts;"
+  - cmd: dir %PYTHON%\Scripts
   - cmd: conda
