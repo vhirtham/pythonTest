@@ -18,9 +18,13 @@ environment:
 install:
   #- ps: .\\scripts\\appveyor\\installMiniconda.ps1
   - "set path=%path%;%MINICONDA%;%MINICONDA%\\Scripts;"
-  - "conda create -yy -q -n test-environment python=%PYTHON_VERSION%" #dep1 dep2 ...
-  - conda activate test-environment
-  - conda install pytest
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+  #- "conda create -yy -q -n test-environment python=%PYTHON_VERSION%" #dep1 dep2 ...
+  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy nose"
+  - activate test-environment
+  - pip install coverage
 
 build: false
 
