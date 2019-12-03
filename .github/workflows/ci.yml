@@ -20,7 +20,7 @@ jobs:
       run: |
         conda create -q -n test-environment python=3.6 pytest pytest-cov codecov
         conda install pytest
-   #     activate test-environment
         pytest
+        conda info -a
     #- name: Run tests
      # run: pytest
