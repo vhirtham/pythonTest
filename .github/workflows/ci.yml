@@ -18,7 +18,8 @@ jobs:
     #  run: conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov codecov;
     - name: Start conda environment
       run: |
-        conda create -q -n test-environment python=3.6 pytest pytest-cov codecov;
+        conda create -q -n test-environment python=3.6 pytest pytest-cov codecov
+        conda install pytest
         activate test-environment
         pytest
     #- name: Run tests
