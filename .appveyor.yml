@@ -27,3 +27,4 @@ build: false
 test_script:
   - cmd: echo test
   - cmd: SETX PATH "$PYTHON;$PYTHON\Scripts;"
+  - cmd: conda
