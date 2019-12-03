@@ -20,13 +20,13 @@ environment:
 
 install:
   - ps: .\\scripts\\appveyor\\installMiniconda.ps1
-
+  - cmd: set PATH = "%PATH%;%PYTHON%;%PYTHON%\\Scripts;"
 
 build: false
 
 test_script:
   - echo test
-  - SETX PATH "%PYTHON%;%PYTHON%\\Scripts;"
+  - SETX PATH "%PYTHON%;%PYTHON%\\Scripts;" \\m
   - echo %PATH%
   - dir %PYTHON%
   - dir
