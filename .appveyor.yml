@@ -26,5 +26,5 @@ build: false
 
 test_script:
   - cmd: echo test
-  - conda create -q -n test-environment python=$PYTHON_VERSION #dep1 dep2 ...
-  - conda activate test-environment
+  - cmd: conda create -q -n test-environment python=$PYTHON_VERSION #dep1 dep2 ...
+  - cmd: conda activate test-environment
