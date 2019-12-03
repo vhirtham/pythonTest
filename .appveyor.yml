@@ -18,20 +18,11 @@ environment:
 install:
   #- ps: .\\scripts\\appveyor\\installMiniconda.ps1
   - "set path=%path%;%MINICONDA%;%MINICONDA%\\Scripts;"
-  - conda info -a
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION #dep1 dep2 ...
+  - conda activate test-environment
+  - conda install pytest
 
 build: false
 
 test_script:
-  - echo test
-  - SETX PATH "%PYTHON%;%PYTHON%\\Scripts;"
-  - echo %PATH%
-  - dir %PYTHON%
-  - dir
-  - cd Scripts
-  - dir
-  - echo "%PYTHON%;%PYTHON%\Scripts;"
-  - dir %PYTHON%\Scripts
-  - cmd: "%PYTHON%\\Scripts\\conda.exe"
-  - conda
-  - "dir C:\\"
+  - pytest
