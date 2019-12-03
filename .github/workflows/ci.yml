@@ -11,17 +11,14 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Include $CONDA in $PATH
-      uses: ./
       run: echo ::add-path::$CONDA/bin
     - name: Print conda info
-      uses: ./
       run: conda info -a
     - name: Create conda environment
-      uses: ./
-      run: conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov codecov
+      run: conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov codecov;
     - name: Start conda environment
-      uses: ./
-      run: activate test-environment
-    - name: Run tests
-      uses: ./
-      run: pytest
+      run: |
+        activate test-environment
+        pytest
+    #- name: Run tests
+     # run: pytest
