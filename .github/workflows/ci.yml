@@ -14,11 +14,12 @@ jobs:
       run: echo ::add-path::$CONDA/bin
     - name: Print conda info
       run: conda info -a
-    - name: Create conda environment
-      run: conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov codecov;
+    #- name: Create conda environment
+    #  run: conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov codecov;
     - name: Start conda environment
       run: |
-        activate test-environment
+        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov codecov;
+        conda activate test-environment
         pytest
     #- name: Run tests
      # run: pytest
