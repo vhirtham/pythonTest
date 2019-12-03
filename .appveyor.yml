@@ -20,7 +20,8 @@ environment:
 
 install:
   - ps: .\\scripts\\appveyor\\installMiniconda.ps1
-  - cmd: setx path "%path%;%PYTHON%;%PYTHON%\\Scripts;"
+  - "set path=%path%;%PYTHON%;%PYTHON%\\Scripts;"
+  - conda info -a
 
 build: false
 
