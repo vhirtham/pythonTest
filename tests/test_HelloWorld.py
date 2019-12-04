@@ -15,9 +15,11 @@ def test_PrintHelloWorld():
 
 def test_MyFunc():
     MyFunc(True)
+    with pytest.raises(TypeError):
+        MyFunc(True)
 
 def testAddNumbers():
     assert AddNumbers(1,2) == 3
     with pytest.raises(TypeError):
-        AddNumbers("1",2)rr
+        AddNumbers("1",2)
 
