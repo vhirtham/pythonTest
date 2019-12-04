@@ -23,4 +23,6 @@ jobs:
       run: conda create -yy -q -n test-environment python=3.6 pytest
     - name: Run tests
       #shell: cmd
-      run: activate test-environment && pytest
+      run: |
+        activate test-environment
+        pytest
