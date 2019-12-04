@@ -10,7 +10,7 @@ jobs:
         os: [windows-latest]
     steps:
     - uses: actions/checkout@v1
-    - name: Include conda paths
+    - name: Add conda directories to PATH
       shell: cmd
       run: |
         echo ::add-path::C:\Miniconda
@@ -23,6 +23,4 @@ jobs:
       run: conda create -yy -q -n test-environment python=3.6 pytest
     - name: Run tests
       shell: cmd
-      run: |
-        activate test-environment
-        pytest
+      run: activate test-environment && pytest
