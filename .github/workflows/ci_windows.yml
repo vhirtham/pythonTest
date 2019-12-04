@@ -21,6 +21,9 @@ jobs:
     - name: Create conda environment
       #shell: cmd
       run: conda create -yy -q -n test-environment python=3.6 pytest
+    - name: Init bash
+        #shell: cmd
+      run: conda init bash
     - name: Run tests
       #shell: cmd
       run: |
