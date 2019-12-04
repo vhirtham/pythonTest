@@ -10,8 +10,8 @@ jobs:
         os: [windows-latest]
     steps:
     - uses: actions/checkout@v1
-    - shell: cmd
     - name: Include conda paths
+      shell: cmd
       run: |
         echo ::add-path::C:\Miniconda
         echo ::add-path::C:\Miniconda\Scripts
