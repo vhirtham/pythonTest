@@ -17,10 +17,7 @@ jobs:
         echo ::add-path::C:\Miniconda\Scripts
     - name: Print conda info
       shell: cmd
-      run: |
-        set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
-        conda config --set always_yes yes --set changeps1 no
-        conda info -a
+      run: conda info -a
     - name: Create conda environment
       shell: cmd
       run: |
