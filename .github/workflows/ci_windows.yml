@@ -1,0 +1,22 @@
+name: CI Windows
+on: [push]
+
+jobs:
+  test:
+    name: CI Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Include $CONDA in $PATH
+      run: dir C:\Miniconda\condabin\
+    #- name: Print conda info
+    #  run: conda info -a
+    #- name: Create conda environment
+    #  run: conda create -q -n test-environment python=3.6 pytest pytest-cov codecov
+    #- name: Run tests
+    #  run: |
+    #    source activate test-environment
+    #    pytest
