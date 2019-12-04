@@ -28,5 +28,4 @@ jobs:
       shell: cmd
       run: |
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts
-        activate test-environment
-        pytest
+        cmd.exe /D /E:ON /V:OFF /S /C "CALL activate test-environment && pytest"

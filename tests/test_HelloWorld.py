@@ -19,5 +19,5 @@ def test_MyFunc():
 def testAddNumbers():
     assert AddNumbers(1,2) == 3
     with pytest.raises(TypeError):
-        AddNumbers("1",2)aa
+        AddNumbers("1",2)
 
