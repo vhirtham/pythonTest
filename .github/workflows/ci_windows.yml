@@ -10,11 +10,14 @@ jobs:
         os: [windows-latest]
     steps:
     - uses: actions/checkout@v1
+    - shell: cmd
+    - name: Include conda paths
+      run: |
+        echo ::add-path::C:\Miniconda
+        echo ::add-path::C:\Miniconda\Scripts
     - name: Print conda info
       shell: cmd
       run: |
-        setx path C:\Miniconda
-        setx path C:\Miniconda\Scripts
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
         conda config --set always_yes yes --set changeps1 no
         conda info -a
