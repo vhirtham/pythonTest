@@ -11,21 +11,16 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Add conda directories to PATH
-      #shell: cmd
       run: |
         echo ::add-path::C:\Miniconda
         echo ::add-path::C:\Miniconda\Scripts
     - name: Print conda info
-      #shell: cmd
       run: conda info -a
     - name: Create conda environment
-      #shell: cmd
-      run: conda create -yy -q -n test-environment python=3.6 pytest
+      run: conda create -yy -q -n test-environment python=3.7 pytest
     - name: Init bash
-        #shell: cmd
       run: conda init powershell
     - name: Run tests
-      #shell: cmd
       run: |
         conda activate test-environment
         pytest
