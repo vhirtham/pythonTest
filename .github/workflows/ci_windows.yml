@@ -19,7 +19,7 @@ jobs:
       shell: cmd
       run: |
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
-        conda create -q -n test-environment python=3.6 pytest pytest-cov codecov
+        conda create -yy -q -n test-environment python=3.6 pytest pytest-cov codecov
     #- name: Run tests
     #  run: |
     #    source activate test-environment
