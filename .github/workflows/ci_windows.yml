@@ -14,15 +14,16 @@ jobs:
       shell: cmd
       run: |
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
+        conda init cmd.exe
         conda info -a
     - name: Create conda environment
       shell: cmd
       run: |
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
-        conda create -yy -q -n test-environment python=3.6 pytest pytest-cov codecov
+        conda create -yy -q -n test-environment python=3.6 pytest
     - name: Run tests
       shell: cmd
       run: |
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
-        activate test-environment
+        conda activate test-environment
         pytest
