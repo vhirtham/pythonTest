@@ -11,7 +11,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Include $CONDA in $PATH
-      run: set path="%path%;C:\Miniconda;C:\Miniconda\Scripts;"
+      run: |
+        set path="%path%;C:\Miniconda;C:\Miniconda\Scripts;"
+        echo %path%
       shell: cmd
     - name: Print Path
       run: echo %path%
