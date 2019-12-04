@@ -15,8 +15,6 @@ def test_PrintHelloWorld():
 
 def test_MyFunc():
     MyFunc(True)
-    with pytest.raises(TypeError):
-        MyFunc(True)
 
 def testAddNumbers():
     assert AddNumbers(1,2) == 3
