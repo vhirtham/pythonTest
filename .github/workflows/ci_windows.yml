@@ -13,12 +13,13 @@ jobs:
     - name: Print conda info
       shell: cmd
       run: |
-        set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
+        setx path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
         conda init cmd.exe
         conda info -a
     - name: Create conda environment
       shell: cmd
       run: |
+        echo %path%
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
         conda create -yy -q -n test-environment python=3.6 pytest
     - name: Run tests
