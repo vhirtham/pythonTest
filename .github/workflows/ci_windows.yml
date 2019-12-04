@@ -11,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Include $CONDA in $PATH
-      run: dir C:\Miniconda\condabin\
+      run: dir C:\Miniconda\
     #- name: Print conda info
     #  run: conda info -a
     #- name: Create conda environment
