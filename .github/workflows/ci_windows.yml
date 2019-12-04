@@ -20,12 +20,7 @@ jobs:
       run: conda info -a
     - name: Create conda environment
       shell: cmd
-      run: |
-        echo %path%
-        set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
-        conda create -yy -q -n test-environment python=3.6 pytest
+      run: conda create -yy -q -n test-environment python=3.6 pytest
     - name: Run tests
       shell: cmd
-      run: |
-        set path=%path%;C:\Miniconda;C:\Miniconda\Scripts
-        cmd.exe /D /E:ON /V:OFF /S /C "CALL activate test-environment && pytest"
+      run: cmd.exe /D /E:ON /V:OFF /S /C "CALL activate test-environment && pytest"
