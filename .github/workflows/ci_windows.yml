@@ -17,7 +17,6 @@ jobs:
         setx path C:\Miniconda\Scripts
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
         conda config --set always_yes yes --set changeps1 no
-        conda init cmd.exe
         conda info -a
     - name: Create conda environment
       shell: cmd
@@ -28,6 +27,6 @@ jobs:
     - name: Run tests
       shell: cmd
       run: |
-        set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
+        set path=%path%;C:\Miniconda;C:\Miniconda\Scripts
         activate test-environment
         pytest
