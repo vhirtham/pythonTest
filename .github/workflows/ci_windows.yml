@@ -16,6 +16,7 @@ jobs:
         setx path C:\Miniconda
         setx path C:\Miniconda\Scripts
         set path=%path%;C:\Miniconda;C:\Miniconda\Scripts;
+        conda config --set always_yes yes --set changeps1 no
         conda init cmd.exe
         conda info -a
     - name: Create conda environment
