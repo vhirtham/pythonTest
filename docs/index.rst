@@ -6,19 +6,13 @@
 Welcome to PythonTest's documentation!
 ======================================
 
-//.. toctree::
-//   :maxdepth: 2
-//   :caption: Contents:
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   source/apiDoc
 
 
-
-.. currentmodule:: MyPackages
-
-.. autosummary::
-   :toctree: _autosummary
-
-   MyFuncs
-   MyFuncs.AddNumbers
 
 Indices and tables
 ==================
