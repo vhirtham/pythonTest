@@ -6,6 +6,7 @@ Contains some test functions
 def MyFunc(bool):
     """
     Prints a message
+
     :param bool: Selects one of two possible messages
     :return: ---
     """
@@ -18,6 +19,7 @@ def MyFunc(bool):
 def AddNumbers(a,b):
     """
     Adds 2 numbers
+
     :param a: First number
     :param b: Second number
     :return: Result of the addition

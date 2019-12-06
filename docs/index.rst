@@ -15,9 +15,10 @@ Welcome to PythonTest's documentation!
 .. currentmodule:: MyPackages
 
 .. autosummary::
-   :toctree:
+   :toctree: _autosummary
 
    MyFuncs
+   MyFuncs.AddNumbers
 
 Indices and tables
 ==================
