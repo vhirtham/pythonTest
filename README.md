@@ -6,3 +6,6 @@
 
 #### Code Status:
 [![codecov](https://codecov.io/gh/vhirtham/pythonTest/branch/master/graph/badge.svg)](https://codecov.io/gh/vhirtham/pythonTest)
+
+#### Documention:
+[![Documentation Status](https://readthedocs.org/projects/rtd-sphinx-theme-sample-project/badge/?version=latest)](https://rtd-sphinx-theme-sample-project.readthedocs.io/en/latest/?badge=latest)
