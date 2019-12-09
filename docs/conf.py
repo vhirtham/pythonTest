@@ -33,7 +33,6 @@ release = '0'
 # ones.
 extensions = [
 'sphinx.ext.autodoc',
-'sphinx.ext.coverage',
 'sphinx.ext.autosummary'
 ]
 autosummary_generate = True
