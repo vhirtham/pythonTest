@@ -21,6 +21,7 @@ dictionaries:
 # Any files/folders we should ignore?
 excluded_files:
   - ".*"
+  - "docs*"
 
 # Any typos we should ignore?
 excluded_words:
