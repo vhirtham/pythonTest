@@ -2,8 +2,6 @@ import pytest
 import MyPackages.my_funcs as mf
 
 
-
-
 def test_print_hello_world():
     print('Hello world')
 
