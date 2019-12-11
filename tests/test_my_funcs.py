@@ -13,13 +13,13 @@ import my_funcs as mf
 
 
 
-def test_PrintHelloWorld():
+def test_print_hello_world():
     print('Hello world')
 
-def test_MyFunc():
+def test_my_func():
     mf.my_func(True)
 
-def testAddNumbers():
+def test_add_numbers():
     assert mf.add_numbers(1,2) == 3
     with pytest.raises(TypeError):
         mf.add_numbers("1",2)
