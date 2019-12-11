@@ -14,7 +14,7 @@ dependencies:
   - asdf=2.3
   - deepdish=0.3.4
   - cx_oracle
-  - oracle-instantclient
+  # - oracle-instantclient
   - libaio
   - pytest
   - pytest-cov
