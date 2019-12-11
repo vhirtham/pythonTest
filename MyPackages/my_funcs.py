@@ -8,7 +8,7 @@ def my_func(sel):
     :param sel: Selects one of two possible messages
     :return: ---
     """
-    if bool:
+    if sel:
         print("The answer is 42")
         print("Tvis is bat inglish")
     else:
