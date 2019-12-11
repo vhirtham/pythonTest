@@ -16,6 +16,7 @@ dependencies:
   # - cx_oracle
   # - oracle-instantclient
   # - libaio
+  - flake8
   - pytest
   - pytest-cov
   - codecov
