@@ -1,14 +1,5 @@
-import os
-import sys
 import pytest
-
-
-
-filePath = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(filePath + '\\..\\MyPackages')
-sys.path.append(filePath + '/../MyPackages')
-
-import my_funcs as mf
+import MyPackages.my_funcs as mf
 
 
 
