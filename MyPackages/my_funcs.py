@@ -1,13 +1,11 @@
-"""
-Contains some test functions
-"""
+"""Contains some test functions"""
 
 
-def my_func(bool):
+def my_func(sel):
     """
     Prints a message
 
-    :param bool: Selects one of two possible messages
+    :param sel: Selects one of two possible messages
     :return: ---
     """
     if bool:
@@ -17,16 +15,16 @@ def my_func(bool):
         print("This branch is not covered")
 
 
-def add_numbers(a, b):
+def add_numbers(in0, in1):
     """
     Adds 2 numbers
 
-    :param a: First number
-    :param b: Second number
+    :param in0: First number
+    :param in1: Second number
     :return: Result of the addition
     """
-    if not (isinstance(a, int) or isinstance(a, float)):
+    if not isinstance(in0, (int, float)):
         raise TypeError("First argument must be a integer or float")
-    if not (isinstance(b, int) or isinstance(b, float)):
+    if not isinstance(in1, (int, float)):
         raise TypeError("Second argument must be a integer or float")
-    return a + b
+    return in0 + in1
