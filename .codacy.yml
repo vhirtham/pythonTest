@@ -4,6 +4,5 @@ engines:
    exclude_paths:
      - tests/**
 
-#exclude_paths:
-#  - '.bundle/**'
-#  - 'spec/**/*'
+exclude_paths:
+  - 'docs/**'
