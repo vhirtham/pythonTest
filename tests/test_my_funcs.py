@@ -7,17 +7,17 @@ sys.path.append(filePath + '\\..\\MyPackages')
 sys.path.append(filePath + '/../MyPackages')
 
 
-from MyFuncs import *
+from my_funcs import *
 
 
 def test_PrintHelloWorld():
     print('Hello world')
 
 def test_MyFunc():
-    MyFunc(True)
+    my_func(True)
 
 def testAddNumbers():
-    assert AddNumbers(1,2) == 3
+    assert add_numbers(1,2) == 3
     with pytest.raises(TypeError):
-        AddNumbers("1",2)
+        add_numbers("1",2)
 

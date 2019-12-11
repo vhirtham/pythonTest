@@ -3,7 +3,7 @@ Contains some test functions
 """
 
 
-def MyFunc(bool):
+def my_func(bool):
     """
     Prints a message
 
@@ -16,7 +16,8 @@ def MyFunc(bool):
     else:
         print("This branch is not covered")
 
-def AddNumbers(a  ,b):
+
+def add_numbers(a, b):
     """
     Adds 2 numbers
 
