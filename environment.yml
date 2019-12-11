@@ -15,7 +15,7 @@ dependencies:
   - deepdish=0.3.4
   - cx_oracle
   # - oracle-instantclient
-  - libaio
+  # - libaio
   - pytest
   - pytest-cov
   - codecov
