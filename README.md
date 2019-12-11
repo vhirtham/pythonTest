@@ -7,5 +7,7 @@
 #### Code Status
 [![codecov](https://codecov.io/gh/vhirtham/pythonTest/branch/master/graph/badge.svg)](https://codecov.io/gh/vhirtham/pythonTest)
 
+[![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/vhirtham/pythonTest/?ref=repository-badge)
+
 #### Documention
 [![Documentation Status](https://readthedocs.org/projects/rtd-sphinx-theme-sample-project/badge/?version=latest)](https://rtd-sphinx-theme-sample-project.readthedocs.io/en/latest/?badge=latest)
