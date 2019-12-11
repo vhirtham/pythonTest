@@ -18,8 +18,6 @@ install:
   - conda update -q conda
   - conda info -a
 
-  # Replace dep1 dep2 ... with your dependencies
-  #- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov codecov
   - conda env create -f ./environment.yml
   - conda activate test-environment
 

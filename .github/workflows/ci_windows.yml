@@ -17,7 +17,7 @@ jobs:
     - name: Print conda info
       run: conda info -a
     - name: Create conda environment
-      run: conda create -yy -q -n test-environment python=3.7 pytest
+      run: conda env create -f ./environment.yml
     - name: Init bash
       run: conda init powershell
     - name: Run tests
