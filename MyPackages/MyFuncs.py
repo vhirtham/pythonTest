@@ -16,7 +16,7 @@ def MyFunc(bool):
     else:
         print("This branch is not covered")
 
-def AddNumbers(a   ,b):
+def AddNumbers(a  ,b):
     """
     Adds 2 numbers
 
