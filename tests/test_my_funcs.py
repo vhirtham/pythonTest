@@ -22,5 +22,5 @@ def test_my_func():
 def test_add_numbers():
     assert mf.add_numbers(1,2) == 3
     with pytest.raises(TypeError):
-        mf.add_numbers("1",2)
+        mf.add_numbers("1",3)
 
