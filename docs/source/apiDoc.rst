@@ -1,10 +1,10 @@
 API Documentation
 =================
 
-.. currentmodule:: MyPackages
+.. currentmodule:: mypackage
 
 .. autosummary::
    :template: autosummary/modules.rst
    :toctree: _autosummary
 
-   MyFuncs
+   my_funcs

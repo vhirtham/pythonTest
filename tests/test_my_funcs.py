@@ -1,5 +1,5 @@
+import mypackage.my_funcs as mf
 import pytest
-import MyPackages.my_funcs as mf
 
 
 def test_print_hello_world():
