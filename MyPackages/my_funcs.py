@@ -1,9 +1,9 @@
-"""Contains some test functions"""
+"""Contains some test functions."""
 
 
 def my_func(sel):
     """
-    Prints a message
+    Print a message.
 
     :param sel: Selects one of two possible messages
     :return: ---
@@ -16,7 +16,7 @@ def my_func(sel):
 
 def add_numbers(in0, in1):
     """
-    Adds 2 numbers
+    Add 2 numbers.
 
     :param in0: First number
     :param in1: Second number
