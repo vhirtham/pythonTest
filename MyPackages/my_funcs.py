@@ -26,6 +26,4 @@ def add_numbers(in0, in1):
         raise TypeError("First argument must be a integer or float")
     if not isinstance(in1, (int, float)):
         raise TypeError("Second argument must be a integer or float")
-
-    assert(in0 > -100)
     return in0 + in1
