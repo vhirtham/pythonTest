@@ -24,4 +24,5 @@ dependencies:
   - sphinx
   - recommonmark
   - matplotlib
-  - seaborn
+  - seaborn # only needed for xarray tutorial
+  - openpyxl # only needed for pandas tutorial
