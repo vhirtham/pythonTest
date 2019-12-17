@@ -24,4 +24,4 @@ dependencies:
   - sphinx
   - recommonmark
   - matplotlib
-  - seaborn
+  - seaborn # only needed for xarray tutorial
