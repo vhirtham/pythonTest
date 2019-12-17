@@ -25,3 +25,4 @@ dependencies:
   - recommonmark
   - matplotlib
   - seaborn # only needed for xarray tutorial
+  - openpyxl # only needed for pandas tutorial
