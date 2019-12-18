@@ -22,16 +22,16 @@ def function_two():
     """
     xcoords = np.linspace(0, 1, 2)
     ycoords = np.linspace(0, 1, 2)
-    a = xr.DataArray(
+    my_array = xr.DataArray(
         [[True, False], [False, True]],
         name=["xcoords", "ycoords"],
         dims=["x", "y"],
         coords=dict(x=xcoords, y=ycoords),
     )
     try:
-        if a.sel(x=1, y=1, method="nearest", tolerance=0):
+        if my_array.sel(x=1, y=1, method="nearest", tolerance=0):
             raise KeyError
         else:
-            a.loc[dict(x=1, y=1)] = True
+            my_array.loc[dict(x=1, y=1)] = True
     except KeyError:
         print("Punkt schon vorhanden!")
