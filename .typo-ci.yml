@@ -26,3 +26,6 @@ excluded_files:
 # Any typos we should ignore?
 excluded_words:
   - typoci
+  - numpy
+  - vstack
+  - pytest
