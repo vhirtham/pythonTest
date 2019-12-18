@@ -46,15 +46,15 @@ class Shape2D:
         """
         return is_row_in_array(self._points[-1, :], self._points[:-1])
 
-    def add_segment(self, x, y):
+    def add_segment(self, x_coord, y_coord):
         """
         Add a new segment which is connected to previous one.
 
-        :param x: x-coordinate of the segments end point
-        :param y: y-coordinate of the segments end point
+        :param x_coord: x-coordinate of the segments end point
+        :param y_coord: y-coordinate of the segments end point
         :return: ---
         """
-        point = np.array([x, y])
+        point = np.array([x_coord, y_coord])
         if self.is_shape_closed():
             raise ValueError("Shape is already closed")
 
