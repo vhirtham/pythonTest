@@ -1,13 +1,11 @@
-"""
-Test Functions by Markus.
-"""
+"""Test Functions by Markus."""
 import xarray as xr
 import numpy as np
 
 
 def function_one():
     """
-    Print "Hello World"!
+    Print "Hello World".
 
     :param: ---
     :return: ---
@@ -17,7 +15,7 @@ def function_one():
 
 def function_two():
     """
-    Some stuff with Xarrays
+     Working with Xarrays.
 
     :param: ---
     :return: ---
