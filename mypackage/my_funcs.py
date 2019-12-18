@@ -4,7 +4,6 @@
 def my_func(sel):
     """
     Print a message.
-
     :param sel: Selects one of two possible messages
     :return: ---
     """
@@ -14,7 +13,7 @@ def my_func(sel):
         print("This branch is not covered")
 
 
-def addNumbers(in0, in1):
+def add_numbers(in0, in1):
     """
     Add 2 numbers.
 
