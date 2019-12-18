@@ -12,8 +12,8 @@ def test_my_func():
 
 
 def test_add_numbers():
-    assert mf.add_numbers(1, 2) == 3
+    assert mf.addNumbers(1, 2) == 3
     with pytest.raises(TypeError):
-        mf.add_numbers("1", 3)
+        mf.addNumbers("1", 3)
     with pytest.raises(TypeError):
-        mf.add_numbers(1, "3")
+        mf.addNumbers(1, "3")

@@ -14,7 +14,7 @@ def my_func(sel):
         print("This branch is not covered")
 
 
-def add_numbers(in0, in1):
+def addNumbers(in0, in1):
     """
     Add 2 numbers.
 
