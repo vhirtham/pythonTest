@@ -29,4 +29,11 @@ def function_two():
         dims=["x","y"],
         coords=dict(x=xcoords, y=ycoords),
     )
-    a.sel(x=1, y=1, method="nearest", tolerance=0)
+    try:
+        if a.sel(x=1, y=1, method="nearest", tolerance=0):
+            raise KeyError
+        else:
+            a.loc[dict(x=1, y=1)] = True
+            
+    except KeyError:
+        print("Punkt schon vorhanden!")
