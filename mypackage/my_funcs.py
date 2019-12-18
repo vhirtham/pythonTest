@@ -4,6 +4,7 @@
 def my_func(sel):
     """
     Print a message.
+
     :param sel: Selects one of two possible messages
     :return: ---
     """
