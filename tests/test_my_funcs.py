@@ -1,5 +1,4 @@
-# import mypackage.my_funcs as mf
-from mypackage.my_funcs import *
+import mypackage.my_funcs as mf
 import pytest
 
 
@@ -8,13 +7,13 @@ def test_print_hello_world():
 
 
 def test_my_func():
-    my_func(True)
-    my_func(False)
+    mf.my_func(True)
+    mf.my_func(False)
 
 
 def test_add_numbers():
-    assert add_numbers(1, 2) == 3
+    assert mf.add_numbers(1, 2) == 3
     with pytest.raises(TypeError):
-        add_numbers("1", 3)
+        mf.add_numbers("1", 3)
     with pytest.raises(TypeError):
-        add_numbers(1, "3")
+        mf.add_numbers(1, "3")
