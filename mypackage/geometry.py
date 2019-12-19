@@ -44,8 +44,6 @@ class Shape2D:
     class LineSegment(Segment):
         """Line segment."""
 
-        pass
-
     class ArcSegment(Segment):
         """Segment of a circle."""
 
