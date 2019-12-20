@@ -13,4 +13,4 @@
 
 #### Documention
 [![](https://github.com/vhirtham/pythonTest/workflows/pydocstyle/badge.svg)](https://github.com/vhirtham/pythonTest/actions?query=workflow%3A%22pydocstyle%22)
-[![Documentation Status](https://readthedocs.org/projects/rtd-sphinx-theme-sample-project/badge/?version=latest)](https://rtd-sphinx-theme-sample-project.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/vhirthampythontest/badge/?version=latest)](https://vhirthampythontest.readthedocs.io/en/latest/?badge=latest)
