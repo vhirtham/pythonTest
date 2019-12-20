@@ -3,6 +3,18 @@
 import numpy as np
 
 
+def check_point_data_valid(point):
+    """
+    Check if the data of a point is valid.
+
+    :param point: Point that should be checked
+    :return: ---
+    """
+    if not (np.ndim(point) == 1 and point.size == 2):
+        raise Exception(
+            "Point data is invalid. Must be an array with 2 values.")
+
+
 # https://codereview.stackexchange.com/questions/193835
 def is_row_in_array(row, array):
     """
@@ -53,7 +65,7 @@ class Shape2D:
             :param point_center: Center point of the arc
             """
             point_center = np.array(point_center)
-            Shape2D._check_point_data_valid(point_center)
+            check_point_data_valid(point_center)
 
             self._point_center = point_center
 
@@ -107,8 +119,8 @@ class Shape2D:
         :param point_end: End point of the segment
         :return: ---
         """
-        Shape2D._check_point_data_valid(point_start)
-        Shape2D._check_point_data_valid(point_end)
+        check_point_data_valid(point_start)
+        check_point_data_valid(point_end)
         Shape2D._check_segment_length_valid(point_start, point_end)
         Shape2D._check_segment_type_valid(segment)
         segment.check_valid(point_start, point_end)
@@ -135,18 +147,6 @@ class Shape2D:
         """
         if not isinstance(segment, Shape2D.Segment):
             raise TypeError("Invalid segment type")
-
-    @staticmethod
-    def _check_point_data_valid(point):
-        """
-        Check if the data of a point is valid.
-
-        :param point: Point that should be checked
-        :return: ---
-        """
-        if not (np.ndim(point) == 1 and point.size == 2):
-            raise Exception(
-                "Point data is invalid. Must be an array with 2 values.")
 
     # Public methods ----------------------------------------------------------
 
