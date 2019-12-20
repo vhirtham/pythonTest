@@ -3,6 +3,18 @@
 import numpy as np
 
 
+def check_point_data_valid(point):
+    """
+    Check if the data of a point is valid.
+
+    :param point: Point that should be checked
+    :return: ---
+    """
+    if not (np.ndim(point) == 1 and point.size == 2):
+        raise Exception(
+            "Point data is invalid. Must be an array with 2 values.")
+
+
 # https://codereview.stackexchange.com/questions/193835
 def is_row_in_array(row, array):
     """
@@ -18,16 +30,143 @@ def is_row_in_array(row, array):
 class Shape2D:
     """Defines a shape in 2 dimensions."""
 
-    def __init__(self, x0, y0, x1, y1):
-        """
-        Constructor.
+    # Member variables --------------------------------------------------------
 
-        :param x0: x-coordinate of first point
-        :param y0: y-coordinate of first point
-        :param x1: x-coordinate of second point
-        :param y1: y-coordinate of second point
+    min_segment_length = 1E-6
+    tolerance_comparison = 1E-6
+
+    # Member classes ----------------------------------------------------------
+
+    class Segment:
+        """Base class for segments."""
+
+        def check_valid(self, point_start, point_end):
+            """
+            Check if the segments data is valid.
+
+            Checks if the segments data is compatible with the passed start
+            and end points. Raises an Exception if not.
+
+            :param point_start: Starting point of the segment
+            :param point_end: End point of the segment
+            :return: ---
+            """
+
+    class LineSegment(Segment):
+        """Line segment."""
+
+    class ArcSegment(Segment):
+        """Segment of a circle."""
+
+        def __init__(self, point_center):
+            """
+            Constructor.
+
+            :param point_center: Center point of the arc
+            """
+            point_center = np.array(point_center)
+            check_point_data_valid(point_center)
+
+            self._point_center = point_center
+
+        def check_valid(self, point_start, point_end):
+            """
+            Check if the segments data is valid.
+
+            Checks if the segments data is compatible with the passed start
+            and end points. Raises an Exception if not.
+
+            :param point_start: Starting point of the segment
+            :param point_end: End point of the segment
+            :return: ---
+            """
+            tolerance = Shape2D.tolerance_comparison
+            point_center = self._point_center
+
+            dist_start_center = np.linalg.norm(point_start - point_center)
+            dist_end_center = np.linalg.norm(point_end - point_center)
+
+            if not np.abs(dist_end_center - dist_start_center) <= tolerance:
+                raise ValueError(
+                    "Segment start and end points are not compatible with "
+                    "given center of the arc.")
+
+    # Private methods ---------------------------------------------------------
+
+    def __init__(self, point0, point1, segment=LineSegment()):
         """
-        self._points = np.array([[x0, y0], [x1, y1]])
+        Construct the shape with an initial segment.
+
+        :param point0: first point
+        :param point1: second point
+        :param segment: segment
+        """
+        point0 = np.array(point0)
+        point1 = np.array(point1)
+
+        Shape2D._check_segment(segment, point0, point1)
+
+        self._points = np.array([point0, point1])
+        self._segments = [segment]
+
+    @staticmethod
+    def _check_segment(segment, point_start, point_end):
+        """
+        Check if segment is valid.
+
+        :param segment: segment
+        :param point_start: Starting point of the segment
+        :param point_end: End point of the segment
+        :return: ---
+        """
+        check_point_data_valid(point_start)
+        check_point_data_valid(point_end)
+        Shape2D._check_segment_length_valid(point_start, point_end)
+        Shape2D._check_segment_type_valid(segment)
+        segment.check_valid(point_start, point_end)
+
+    @staticmethod
+    def _check_segment_length_valid(point_start, point_end):
+        """
+        Check if a segment length is valid.
+
+        :param point_start: Starting point of the segment
+        :param point_end: End point of the segment
+        :return: ---
+        """
+        diff = point_start - point_end
+        if not np.linalg.norm(diff) >= Shape2D.min_segment_length:
+            raise Exception("Segment length is too small.")
+
+    @staticmethod
+    def _check_segment_type_valid(segment):
+        """
+        Check if the segment type is valid.
+
+        :return: ---
+        """
+        if not isinstance(segment, Shape2D.Segment):
+            raise TypeError("Invalid segment type")
+
+    # Public methods ----------------------------------------------------------
+
+    def add_segment(self, point, segment=LineSegment()):
+        """
+        Add a new segment which is connected to previous one.
+
+        :param point: end point of the new segment
+        :param segment: segment
+        :return: ---
+        """
+        point = np.array(point)
+
+        Shape2D._check_segment(segment, self._points[-1], point)
+
+        if self.is_shape_closed():
+            raise ValueError("Shape is already closed")
+
+        self._points = np.vstack((self._points, point))
+        self._segments.append(segment)
 
     def is_point_included(self, point):
         """
@@ -46,16 +185,18 @@ class Shape2D:
         """
         return is_row_in_array(self._points[-1, :], self._points[:-1])
 
-    def add_segment(self, x_coord, y_coord):
+    def num_segments(self):
         """
-        Add a new segment which is connected to previous one.
+        Get the number of segments of the shape.
 
-        :param x_coord: x-coordinate of the segments end point
-        :param y_coord: y-coordinate of the segments end point
-        :return: ---
+        :return: number of segments
         """
-        point = np.array([x_coord, y_coord])
-        if self.is_shape_closed():
-            raise ValueError("Shape is already closed")
+        return len(self._segments)
 
-        self._points = np.vstack((self._points, point))
+    def num_points(self):
+        """
+        Get the number of points of the shape.
+
+        :return: number of points
+        """
+        return self._points[:, 0].size
