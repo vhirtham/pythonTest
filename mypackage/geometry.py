@@ -39,7 +39,6 @@ class Shape2D:
             :param point_end: End point of the segment
             :return: ---
             """
-            pass
 
     class LineSegment(Segment):
         """Line segment."""
