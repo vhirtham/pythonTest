@@ -97,6 +97,7 @@ class Shape2D:
         self._points = np.array([point0, point1])
         self._segments = [segment]
 
+    @staticmethod
     def _check_segment(segment, point_start, point_end):
         """
         Check if segment is valid.
@@ -112,6 +113,7 @@ class Shape2D:
         Shape2D._check_segment_type_valid(segment)
         segment.check_valid(point_start, point_end)
 
+    @staticmethod
     def _check_segment_length_valid(point_start, point_end):
         """
         Check if a segment length is valid.
@@ -124,6 +126,7 @@ class Shape2D:
         if not np.linalg.norm(diff) >= Shape2D.min_segment_length:
             raise Exception("Segment length is too small.")
 
+    @staticmethod
     def _check_segment_type_valid(segment):
         """
         Check if the segment type is valid.
@@ -133,6 +136,7 @@ class Shape2D:
         if not isinstance(segment, Shape2D.Segment):
             raise TypeError("Invalid segment type")
 
+    @staticmethod
     def _check_point_data_valid(point):
         """
         Check if the data of a point is valid.
