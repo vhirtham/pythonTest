@@ -95,20 +95,7 @@ class Shape2D:
         Shape2D._check_segment(segment, point0, point1)
 
         self._points = np.array([point0, point1])
-        self._segments = []
-        self._append_segments(segment)
-
-    def _append_segments(self, segment):
-        """
-        Append the internal segment array.
-
-        :param segment: segment that should be added
-        :return: ---
-        """
-        if Shape2D.is_segment_type_valid(segment):
-            self._segments.append(segment)
-        else:
-            raise ValueError("Unknown segment type")
+        self._segments = [segment]
 
     def _check_segment(segment, point_start, point_end):
         """
@@ -122,6 +109,7 @@ class Shape2D:
         Shape2D._check_point_data_valid(point_start)
         Shape2D._check_point_data_valid(point_end)
         Shape2D._check_segment_length_valid(point_start, point_end)
+        Shape2D._check_segment_type_valid(segment)
         segment.check_valid(point_start, point_end)
 
     def _check_segment_length_valid(point_start, point_end):
@@ -135,6 +123,15 @@ class Shape2D:
         diff = point_start - point_end
         if not np.linalg.norm(diff) >= Shape2D.min_segment_length:
             raise Exception("Segment length is too small.")
+
+    def _check_segment_type_valid(segment):
+        """
+        Check if the segment type is valid.
+
+        :return: ---
+        """
+        if not isinstance(segment, Shape2D.Segment):
+            raise TypeError("Invalid segment type")
 
     def _check_point_data_valid(point):
         """
@@ -165,6 +162,7 @@ class Shape2D:
             raise ValueError("Shape is already closed")
 
         self._points = np.vstack((self._points, point))
+        self._segments.append(segment)
 
     def is_point_included(self, point):
         """
@@ -175,18 +173,6 @@ class Shape2D:
         """
         return is_row_in_array(point, self._points)
 
-    def is_segment_type_valid(segment):
-        """
-        Check if the passed segment type is valid.
-
-        :param segment: segment
-        :return: True or False
-        """
-        if isinstance(segment, Shape2D.Segment):
-            return True
-        else:
-            return False
-
     def is_shape_closed(self):
         """
         Check if the shape is already closed.
@@ -194,3 +180,19 @@ class Shape2D:
         :return: True or False
         """
         return is_row_in_array(self._points[-1, :], self._points[:-1])
+
+    def num_segments(self):
+        """
+        Get the number of segments of the shape.
+
+        :return: number of segments
+        """
+        return len(self._segments)
+
+    def num_points(self):
+        """
+        Get the number of points of the shape.
+
+        :return: number of points
+        """
+        return self._points[:, 0].size

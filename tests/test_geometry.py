@@ -60,3 +60,6 @@ def test_shape2d_segment_addition():
     # Test Exception: Shape is already closed
     with pytest.raises(ValueError):
         shape.add_segment([1, 0])
+
+    # Number of segments has to be one less than the number of points
+    assert shape.num_segments() == shape.num_points() - 1
