@@ -2,18 +2,6 @@ import pytest
 import mypackage.geometry as geo
 
 
-def test_shape2d_with_arc_segment():
-    # Invalid center point
-    with pytest.raises(ValueError):
-        geo.Shape2D([0, 0], [1, 1], geo.Shape2D.ArcSegment([0, 1.1]))
-
-    shape = geo.Shape2D([0, 0], [1, 1], segment=geo.Shape2D.ArcSegment([0, 1]))
-    shape.add_segment([2, 2], segment=geo.Shape2D.ArcSegment([2, 1]))
-    # Invalid center point
-    with pytest.raises(ValueError):
-        shape.add_segment([3, 1], segment=geo.Shape2D.ArcSegment([2.1, 1]))
-
-
 def test_shape2d_construction():
     # Test Exception: Segment length too small
     with pytest.raises(Exception):
@@ -63,3 +51,15 @@ def test_shape2d_segment_addition():
 
     # Number of segments has to be one less than the number of points
     assert shape.num_segments() == shape.num_points() - 1
+
+
+def test_shape2d_with_arc_segment():
+    # Invalid center point
+    with pytest.raises(ValueError):
+        geo.Shape2D([0, 0], [1, 1], geo.Shape2D.ArcSegment([0, 1.1]))
+
+    shape = geo.Shape2D([0, 0], [1, 1], segment=geo.Shape2D.ArcSegment([0, 1]))
+    shape.add_segment([2, 2], segment=geo.Shape2D.ArcSegment([2, 1]))
+    # Invalid center point
+    with pytest.raises(ValueError):
+        shape.add_segment([3, 1], segment=geo.Shape2D.ArcSegment([2.1, 1]))
