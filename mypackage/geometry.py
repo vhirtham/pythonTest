@@ -87,6 +87,56 @@ class Shape2D:
             self._point_center = point_center
             self._winding_ccw = winding_ccw
 
+        def _arc_angle_and_length(self, vec_start, vec_end):
+            winding_ccw = self._winding_ccw
+            radius = np.linalg.norm(vec_start)
+
+            unit_vec_start = vec_start / radius
+            unit_vec_end = vec_end / radius
+
+            arc_angle = np.arccos(np.dot(unit_vec_start, unit_vec_end))
+            determinant = np.linalg.det([vec_start, vec_end])
+
+            if (winding_ccw and determinant < 0) or (
+                    not winding_ccw and determinant > 0):
+                arc_angle = 2 * np.pi - arc_angle
+
+            arc_length = arc_angle * radius
+
+            return [arc_angle, arc_length]
+
+        def _rotation_angles(self, vec_start, vec_end, raster_width):
+            winding_ccw = self._winding_ccw
+            [angle_arc, arc_length] = self._arc_angle_and_length(vec_start,
+                                                                 vec_end)
+
+            num_raster_segments = int(np.round(arc_length / raster_width))
+            delta_angle = angle_arc / num_raster_segments
+
+            sign_multiplier = 1
+            if not winding_ccw:
+                sign_multiplier = -1
+
+            rotation_angles = np.arange(0, sign_multiplier * angle_arc,
+                                        sign_multiplier * delta_angle)
+
+            return rotation_angles
+
+        def _rasterize(self, vec_start, rotation_angles):
+            vec_start_3d = np.append(vec_start, [0])
+            raster_data = vec_start_3d * np.ones((len(rotation_angles), 3))
+
+            raster_data = raster_data[:, :, np.newaxis]
+
+            rotation_matrices = R.from_euler('z', rotation_angles).as_dcm()
+
+            raster_data = np.matmul(rotation_matrices, raster_data)
+
+            raster_data = raster_data + np.append(self._point_center, [0])[:,
+                                        np.newaxis]
+
+            return raster_data[:, :, 0]
+
         def check_valid(self, point_start, point_end):
             """
             Check if the segments data is valid.
@@ -111,46 +161,14 @@ class Shape2D:
 
         def rasterize(self, raster_width, point_start, point_end):
             point_center = self._point_center
-            winding_ccw = self._winding_ccw
 
             vec_start = point_start - point_center
             vec_end = point_end - point_center
 
-            radius = np.linalg.norm(vec_start)
+            rotation_angles = self._rotation_angles(vec_start, vec_end,
+                                                    raster_width)
 
-            unit_vec_start = vec_start / radius
-            unit_vec_end = vec_end / radius
-
-            # angle_start = np.arccos(unit_vec_start[0])
-            # if unit_vec_start[1] < 0:
-            #    angle_start = 2 * np.pi - angle_start
-
-            angle_arc = np.arccos(np.dot(unit_vec_start, unit_vec_end))
-            determinant = np.linalg.det([vec_start, vec_end])
-
-            if (winding_ccw and determinant < 0) or (
-                    not winding_ccw and determinant > 0):
-                angle_arc = 2 * np.pi - angle_arc
-
-            arc_length = angle_arc * radius
-
-            num_raster_segments = int(np.round(arc_length / raster_width))
-            delta_angle = angle_arc / num_raster_segments
-            rotation_angles = np.arange(0, angle_arc, delta_angle)
-
-            point_start_3d = np.append(vec_start, [0])
-            raster_data = point_start_3d * np.ones((num_raster_segments, 3))
-
-            raster_data = raster_data[:, :, np.newaxis]
-
-            r = R.from_euler('z', rotation_angles).as_dcm()
-
-            raster_data = np.matmul(r, raster_data)
-
-            raster_data = raster_data + np.append(point_center, [0])[:,
-                                        np.newaxis]
-
-            return raster_data[:, :, 0]
+            return self._rasterize(vec_start, rotation_angles)
 
     # Private methods ---------------------------------------------------------
 
