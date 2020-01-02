@@ -123,18 +123,15 @@ class Shape2D:
             return rotation_angles
 
         def _rasterize(self, vec_start, rotation_angles):
-            vec_start_3d = np.append(vec_start, [0])
-            raster_data = vec_start_3d * np.ones((len(rotation_angles), 3))
 
-            raster_data = raster_data[:, :, np.newaxis]
+            vec_start_3d = np.append(vec_start, [0])[np.newaxis, :, np.newaxis]
+            point_center_3d = np.append(self._point_center, [0])[:, np.newaxis]
 
             rotation_matrices = R.from_euler('z', rotation_angles).as_dcm()
 
-            raster_data = np.matmul(rotation_matrices, raster_data)
-
-            raster_data = raster_data + np.append(self._point_center, [0])[:,
-                                        np.newaxis]
-
+            raster_data = np.matmul(rotation_matrices,
+                                    vec_start_3d) + point_center_3d
+            
             return raster_data[:, :, 0]
 
         def check_valid(self, point_start, point_end):
