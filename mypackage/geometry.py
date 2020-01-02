@@ -1,6 +1,7 @@
 """Provides classes to define lines and surfaces."""
 
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
 def check_point_data_valid(point):
@@ -52,22 +53,39 @@ class Shape2D:
             :return: ---
             """
 
+        def rasterize(self, raster_width, point_start, point_end):
+            raise Exception("Function not defined for this segment type.")
+
     class LineSegment(Segment):
         """Line segment."""
+
+        def rasterize(self, raster_width, point_start, point_end):
+            length = np.linalg.norm(point_end - point_start)
+            num_raster_segments = np.round(length / raster_width)
+            nrw = 1. / num_raster_segments
+
+            multiplier = np.arange(0, 1 - nrw / 2, nrw)[np.newaxis].transpose()
+
+            raster_data = np.matmul((1 - multiplier),
+                                    point_start[np.newaxis]) + np.matmul(
+                multiplier, point_end[np.newaxis])
+
+            return raster_data
 
     class ArcSegment(Segment):
         """Segment of a circle."""
 
-        def __init__(self, point_center):
+        def __init__(self, center, winding_ccw=True):
             """
             Constructor.
 
             :param point_center: Center point of the arc
             """
-            point_center = np.array(point_center)
+            point_center = np.array(center)
             check_point_data_valid(point_center)
 
             self._point_center = point_center
+            self._winding_ccw = winding_ccw
 
         def check_valid(self, point_start, point_end):
             """
@@ -90,6 +108,49 @@ class Shape2D:
                 raise ValueError(
                     "Segment start and end points are not compatible with "
                     "given center of the arc.")
+
+        def rasterize(self, raster_width, point_start, point_end):
+            point_center = self._point_center
+            winding_ccw = self._winding_ccw
+
+            vec_start = point_start - point_center
+            vec_end = point_end - point_center
+
+            radius = np.linalg.norm(vec_start)
+
+            unit_vec_start = vec_start / radius
+            unit_vec_end = vec_end / radius
+
+            # angle_start = np.arccos(unit_vec_start[0])
+            # if unit_vec_start[1] < 0:
+            #    angle_start = 2 * np.pi - angle_start
+
+            angle_arc = np.arccos(np.dot(unit_vec_start, unit_vec_end))
+            determinant = np.linalg.det([vec_start, vec_end])
+
+            if (winding_ccw and determinant < 0) or (
+                    not winding_ccw and determinant > 0):
+                angle_arc = 2 * np.pi - angle_arc
+
+            arc_length = angle_arc * radius
+
+            num_raster_segments = int(np.round(arc_length / raster_width))
+            delta_angle = angle_arc / num_raster_segments
+            rotation_angles = np.arange(0, angle_arc, delta_angle)
+
+            point_start_3d = np.append(vec_start, [0])
+            raster_data = point_start_3d * np.ones((num_raster_segments, 3))
+
+            raster_data = raster_data[:, :, np.newaxis]
+
+            r = R.from_euler('z', rotation_angles).as_dcm()
+
+            raster_data = np.matmul(r, raster_data)
+
+            raster_data = raster_data + np.append(point_center, [0])[:,
+                                        np.newaxis]
+
+            return raster_data[:, :, 0]
 
     # Private methods ---------------------------------------------------------
 
@@ -200,3 +261,18 @@ class Shape2D:
         :return: number of points
         """
         return self._points[:, 0].size
+
+    def rasterize(self, raster_width):
+        points = self._points
+        segments = self._segments
+
+        raster_data = np.empty([0, 3])
+        for i in range(self.num_segments()):
+            raster_data = np.vstack((raster_data,
+                                     segments[i].rasterize(raster_width,
+                                                           points[i],
+                                                           points[i + 1])))
+
+        raster_data = np.vstack(
+            (raster_data, np.append(self._points[-1], [0])))
+        return raster_data
