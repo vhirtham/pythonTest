@@ -66,19 +66,9 @@ def test_shape2d_with_arc_segment():
         shape.add_segment([3, 1], segment=geo.Shape2D.ArcSegment([2.1, 1]))
 
 
-def test_line_segment_rasterizaion():
-    point_start = np.array([3, -5])
-    point_end = np.array([-4, 1])
-    raster_width = 0.2
-
-    line_segment = geo.Shape2D.LineSegment()
-
-    data = line_segment.rasterize(raster_width, point_start, point_end)
-
+def default_rasterization_tests(data, raster_width, point_start, point_end):
     # Check if first point of the data are identical to the segment start
     assert np.linalg.norm(data[0, 0:2] - point_start) < 1E-9
-
-    vec_start_end = point_end - point_start
 
     num_data_points = data[:, 0].size
     for i in range(num_data_points):
@@ -87,25 +77,40 @@ def test_line_segment_rasterizaion():
         # Check that z-component is 0
         assert point[2] == 0.
 
-        point = point[0:2]
-
-        # Check if point is on line
-        vec_start_point = point - point_start
-        assert np.abs(np.linalg.det([vec_start_end, vec_start_point])) < 1E-6
-
-        # Check if point lies between start and end
-        dot_product = np.dot(vec_start_point, vec_start_end)
-        assert dot_product >= 0
-        assert dot_product < np.dot(vec_start_end, vec_start_end)
-
         # Check if the raster width is close to the specified value
         if i < num_data_points - 1:
             next_point = data[i + 1, 0:2]
         else:
             next_point = point_end
 
-        raster_width_eff = np.linalg.norm(next_point - point)
+        raster_width_eff = np.linalg.norm(next_point - point[0:2])
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
+
+
+def test_line_segment_rasterizaion():
+    point_start = np.array([3, -5])
+    point_end = np.array([-4, 1])
+    raster_width = 0.2
+    vec_start_end = point_end - point_start
+
+    line_segment = geo.Shape2D.LineSegment()
+    data = line_segment.rasterize(raster_width, point_start, point_end)
+
+    # Perform standard segment rasterization tests
+    default_rasterization_tests(data, raster_width, point_start, point_end)
+
+    num_data_points = data[:, 0].size
+    for i in range(num_data_points):
+        point = data[i]
+
+        # Check if point is on line
+        vec_start_point = point[0:2] - point_start
+        assert np.abs(np.linalg.det([vec_start_end, vec_start_point])) < 1E-6
+
+        # Check if point lies between start and end
+        dot_product = np.dot(vec_start_point, vec_start_end)
+        assert dot_product >= 0
+        assert dot_product < np.dot(vec_start_end, vec_start_end)
 
 
 def arc_segment_test(point_center, point_start, point_end, raster_width,
@@ -121,33 +126,19 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
 
     data = arc_segment.rasterize(raster_width, point_start, point_end)
 
-    # Check if first point of the data are identical to the segment start
-    assert np.linalg.norm(data[0, 0:2] - point_start) < 1E-9
+    # Perform standard segment rasterization tests
+    default_rasterization_tests(data, raster_width, point_start, point_end)
 
     num_data_points = data[:, 0].size
     for i in range(num_data_points):
         point = data[i]
 
-        # Check that z-component is 0
-        assert point[2] == 0.
-
-        point = point[0:2]
-
         # Check if points are not rasterized clockwise
         assert (check_winding(point_start, point_center))
 
         # Check that points have the correct distance to the arcs center
-        distance_center_point = np.linalg.norm(point - point_center)
+        distance_center_point = np.linalg.norm(point[0:2] - point_center)
         assert np.abs(distance_center_point - radius_arc) < 1E-6
-
-        # Check if the raster width is close to the specified value
-        if i < num_data_points - 1:
-            next_point = data[i + 1, 0:2]
-        else:
-            next_point = point_end
-
-        raster_width_eff = np.linalg.norm(next_point - point)
-        assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
 
 def test_arc_segment_rasterizaion():
