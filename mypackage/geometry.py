@@ -53,21 +53,6 @@ class Shape2D:
             :return: ---
             """
 
-        def rasterize(self, raster_width, point_start, point_end):
-            """
-            Create an array of points that describe the segments contour.
-
-            The effective raster width may vary from the specified one,
-            since the algorithm enforces constant distances between two
-            raster points.
-
-            :param raster_width: The desired distance between two raster points
-            :param point_start: Starting point of the segment
-            :param point_end: End point of the segment
-            :return: Array of contour points (3d)
-            """
-            raise Exception("Function not defined for this segment type.")
-
     class LineSegment(Segment):
         """Line segment."""
 
