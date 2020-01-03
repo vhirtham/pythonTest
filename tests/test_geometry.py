@@ -97,7 +97,7 @@ def test_line_segment_rasterizaion():
         dot_product = np.dot(vec_start_point, vec_start_end)
         assert dot_product >= 0
         assert dot_product < np.dot(vec_start_end, vec_start_end)
-        
+
         # Check if the raster width is close to the specified value
         if i < num_data_points - 1:
             next_point = data[i + 1, 0:2]
@@ -159,9 +159,11 @@ def test_arc_segment_rasterizaion():
     point_end = [3, 4]
     raster_width = 0.2
 
-    def in_second_quadrant(p, c): return (p[0] <= c[0] and p[1] >= c[1])
+    def in_second_quadrant(p, c):
+        return p[0] <= c[0] and p[1] >= c[1]
 
-    def not_in_second_quadrant(p, c): return not (p[0] < c[0] and p[1] > c[1])
+    def not_in_second_quadrant(p, c):
+        return not (p[0] < c[0] and p[1] > c[1])
 
     arc_segment_test(point_center, point_start, point_end, raster_width, False,
                      in_second_quadrant)

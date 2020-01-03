@@ -85,7 +85,7 @@ class Shape2D:
             :return: Array of contour points (3d)
             """
             length = np.linalg.norm(point_end - point_start)
-            
+
             point_start = np.append(point_start, [0])
             point_end = np.append(point_end, [0])
 
@@ -162,9 +162,10 @@ class Shape2D:
             if not winding_ccw:
                 sign_multiplier = -1
 
-            rotation_angles = np.arange(0, sign_multiplier * (
-                    angle_arc - 0.5 * delta_angle),
-                                        sign_multiplier * delta_angle)
+            rotation_angles = np.arange(
+                0,
+                sign_multiplier * (angle_arc - 0.5 * delta_angle),
+                sign_multiplier * delta_angle)
 
             return rotation_angles
 
