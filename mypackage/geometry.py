@@ -56,7 +56,8 @@ class Shape2D:
     class LineSegment(Segment):
         """Line segment."""
 
-        def rasterize(self, raster_width, point_start, point_end):
+        @staticmethod
+        def rasterize(raster_width, point_start, point_end):
             """
             Create an array of points that describe the segments contour.
 
