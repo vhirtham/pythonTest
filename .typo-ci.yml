@@ -27,6 +27,9 @@ excluded_files:
 excluded_words:
   - typoci
   - numpy
+  - scipy
+  - matmul
+  - arange
   - vstack
   - pytest
   - linalg
