@@ -66,6 +66,48 @@ def test_shape2d_with_arc_segment():
         shape.add_segment([3, 1], segment=geo.Shape2D.ArcSegment([2.1, 1]))
 
 
+def test_line_segment_rasterizaion():
+    point_start = np.array([3, -5])
+    point_end = np.array([-4, 1])
+    raster_width = 0.2
+
+    line_segment = geo.Shape2D.LineSegment()
+
+    data = line_segment.rasterize(raster_width, point_start, point_end)
+
+    # Check if first point of the data are identical to the segment start
+    assert np.linalg.norm(data[0, 0:2] - point_start) < 1E-9
+
+    vec_start_end = point_end - point_start
+
+    num_data_points = data[:, 0].size
+    for i in range(num_data_points):
+        point = data[i]
+
+        # Check that z-component is 0
+        assert point[2] == 0.
+
+        point = point[0:2]
+
+        # Check if point is on line
+        vec_start_point = point - point_start
+        assert np.abs(np.linalg.det([vec_start_end, vec_start_point])) < 1E-6
+
+        # Check if point lies between start and end
+        dot_product = np.dot(vec_start_point, vec_start_end)
+        assert dot_product >= 0
+        assert dot_product < np.dot(vec_start_end, vec_start_end)
+        
+        # Check if the raster width is close to the specified value
+        if i < num_data_points - 1:
+            next_point = data[i + 1, 0:2]
+        else:
+            next_point = point_end
+
+        raster_width_eff = np.linalg.norm(next_point - point)
+        assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
+
+
 def arc_segment_test(point_center, point_start, point_end, raster_width,
                      winding_ccw, check_winding):
     point_center = np.array(point_center)
@@ -77,16 +119,14 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
     arc_segment = geo.Shape2D.ArcSegment(point_center, winding_ccw=winding_ccw)
     arc_segment.check_valid(point_start, point_end)
 
-    data_ccw = arc_segment.rasterize(raster_width, point_start, point_end)
+    data = arc_segment.rasterize(raster_width, point_start, point_end)
 
-    # Check if first and last point of the data are identical to the
-    # specified segment start and end
-    data_ccw_start = data_ccw[0]
-    assert np.linalg.norm(data_ccw_start[0:2] - point_start) < 1E-9
+    # Check if first point of the data are identical to the segment start
+    assert np.linalg.norm(data[0, 0:2] - point_start) < 1E-9
 
-    num_data_points = data_ccw[:, 0].size
+    num_data_points = data[:, 0].size
     for i in range(num_data_points):
-        point = data_ccw[i]
+        point = data[i]
 
         # Check that z-component is 0
         assert point[2] == 0.
@@ -102,15 +142,11 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
 
         # Check if the raster width is close to the specified value
         if i < num_data_points - 1:
-            next_point = data_ccw[i + 1, 0:2]
+            next_point = data[i + 1, 0:2]
         else:
             next_point = point_end
 
         raster_width_eff = np.linalg.norm(next_point - point)
-        if not np.abs(raster_width_eff - raster_width) < 0.1 * raster_width:
-            print(point)
-            print(next_point)
-            print(raster_width_eff)
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
 
