@@ -158,7 +158,8 @@ class Shape2D:
             if not winding_ccw:
                 sign_multiplier = -1
 
-            rotation_angles = np.arange(0, sign_multiplier * angle_arc,
+            rotation_angles = np.arange(0, sign_multiplier * (
+                        angle_arc - 0.5 * delta_angle),
                                         sign_multiplier * delta_angle)
 
             return rotation_angles
