@@ -173,3 +173,26 @@ def test_arc_segment_rasterizaion():
                      not_in_second_quadrant)
     arc_segment_test(point_center, point_start, point_end, raster_width, True,
                      in_second_quadrant)
+
+
+def test_shape2d_rasterization():
+    points = np.array([[0, 0],
+                       [0, 1],
+                       [1, 1],
+                       [1, 0]])
+    raster_width = 0.2
+
+    shape = geo.Shape2D(points[0], points[1])
+    shape.add_segment(points[2])
+    shape.add_segment(points[3])
+
+    data = shape.rasterize(raster_width)
+
+    # Segment points must be included
+    for point in points:
+        assert geo.is_row_in_array(point, data[:, 0:2])
+
+    # check effective raster width
+    for i in range(1, data[:, 0].size):
+        raster_width_eff = np.linalg.norm(data[i] - data[i - 1])
+        assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
