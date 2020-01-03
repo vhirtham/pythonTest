@@ -54,12 +54,36 @@ class Shape2D:
             """
 
         def rasterize(self, raster_width, point_start, point_end):
+            """
+            Create an array of points that describe the segments contour.
+
+            The effective raster width may vary from the specified one,
+            since the algorithm enforces constant distances between two
+            raster points.
+
+            :param raster_width: The desired distance between two raster points
+            :param point_start: Starting point of the segment
+            :param point_end: End point of the segment
+            :return: Array of contour points (3d)
+            """
             raise Exception("Function not defined for this segment type.")
 
     class LineSegment(Segment):
         """Line segment."""
 
         def rasterize(self, raster_width, point_start, point_end):
+            """
+            Create an array of points that describe the segments contour.
+
+            The effective raster width may vary from the specified one,
+            since the algorithm enforces constant distances between two
+            raster points.
+
+            :param raster_width: The desired distance between two raster points
+            :param point_start: Starting point of the segment
+            :param point_end: End point of the segment
+            :return: Array of contour points (3d)
+            """
             length = np.linalg.norm(point_end - point_start)
             num_raster_segments = np.round(length / raster_width)
             nrw = 1. / num_raster_segments
@@ -88,6 +112,13 @@ class Shape2D:
             self._winding_ccw = winding_ccw
 
         def _arc_angle_and_length(self, vec_start, vec_end):
+            """
+            Calculate the arcs angle and the arc length.
+
+            :param vec_start: Vector from the arcs center to the starting point
+            :param vec_end: Vector from the arcs center to the end point
+            :return: Array containing the arcs angle and arc length
+            """
             winding_ccw = self._winding_ccw
             radius = np.linalg.norm(vec_start)
 
@@ -106,6 +137,16 @@ class Shape2D:
             return [arc_angle, arc_length]
 
         def _rotation_angles(self, vec_start, vec_end, raster_width):
+            """
+            Calculate the rotation angle of each raster point.
+
+            The angles are referring to the vector to the starting point.
+
+            :param vec_start: Vector from the arcs center to the starting point
+            :param vec_end: Vector from the arcs center to the end point
+            :param raster_width: Desired raster width
+            :return: Array containing the rotation angles
+            """
             winding_ccw = self._winding_ccw
             [angle_arc, arc_length] = self._arc_angle_and_length(vec_start,
                                                                  vec_end)
@@ -123,7 +164,13 @@ class Shape2D:
             return rotation_angles
 
         def _rasterize(self, vec_start, rotation_angles):
+            """
+            Create an array of points that describe the segments contour.
 
+            :param vec_start: Vector from the arcs center to the starting point
+            :param rotation_angles: Array containing the rotation angles
+            :return: Array of contour points (3d)
+            """
             vec_start_3d = np.append(vec_start, [0])[np.newaxis, :, np.newaxis]
             point_center_3d = np.append(self._point_center, [0])[:, np.newaxis]
 
@@ -131,7 +178,7 @@ class Shape2D:
 
             raster_data = np.matmul(rotation_matrices,
                                     vec_start_3d) + point_center_3d
-            
+
             return raster_data[:, :, 0]
 
         def check_valid(self, point_start, point_end):
@@ -157,6 +204,18 @@ class Shape2D:
                     "given center of the arc.")
 
         def rasterize(self, raster_width, point_start, point_end):
+            """
+            Create an array of points that describe the segments contour.
+
+            The effective raster width may vary from the specified one,
+            since the algorithm enforces constant distances between two
+            raster points.
+
+            :param raster_width: The desired distance between two raster points
+            :param point_start: Starting point of the segment
+            :param point_end: End point of the segment
+            :return: Array of contour points (3d)
+            """
             point_center = self._point_center
 
             vec_start = point_start - point_center
@@ -278,6 +337,16 @@ class Shape2D:
         return self._points[:, 0].size
 
     def rasterize(self, raster_width):
+        """
+        Create an array of points that describe the shapes contour.
+
+        The effective raster width may vary from the specified one,
+        since the algorithm enforces constant distances between two
+        raster points inside of each segment.
+
+        :param raster_width: The desired distance between two raster points
+        :return: Array of contour points (3d)
+        """
         points = self._points
         segments = self._segments
 
