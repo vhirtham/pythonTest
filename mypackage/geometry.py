@@ -99,7 +99,10 @@ class Shape2D:
             check_point_data_valid(point_center)
 
             self._point_center = point_center
-            self._winding_ccw = winding_ccw
+            if winding_ccw:
+                self._sign_winding = 1
+            else:
+                self._sign_winding = -1
 
         def _arc_angle_and_length(self, vec_start, vec_end):
             """
@@ -109,18 +112,21 @@ class Shape2D:
             :param vec_end: Vector from the arcs center to the end point
             :return: Array containing the arcs angle and arc length
             """
-            winding_ccw = self._winding_ccw
+            sign_winding = self._sign_winding
             radius = np.linalg.norm(vec_start)
 
+            # Calculate angle between vectors (always the smaller one)
             unit_vec_start = vec_start / radius
             unit_vec_end = vec_end / radius
+            angle_vecs = np.arccos(np.dot(unit_vec_start, unit_vec_end))
 
-            arc_angle = np.arccos(np.dot(unit_vec_start, unit_vec_end))
+            # If the determinant is < 0 point_end is on the right of
+            # vec_start. Otherwise it is on the left-hand side.
             determinant = np.linalg.det([vec_start, vec_end])
+            sign_combined = np.sign(sign_winding * determinant)
 
-            if (winding_ccw and determinant < 0) or (
-                    not winding_ccw and determinant > 0):
-                arc_angle = 2 * np.pi - arc_angle
+            arc_angle = 2 * np.pi * np.ceil(
+                (1 - sign_combined) / 2) + sign_combined * angle_vecs
 
             arc_length = arc_angle * radius
 
@@ -137,21 +143,16 @@ class Shape2D:
             :param raster_width: Desired raster width
             :return: Array containing the rotation angles
             """
-            winding_ccw = self._winding_ccw
+            sign = self._sign_winding
             [angle_arc, arc_length] = self._arc_angle_and_length(vec_start,
                                                                  vec_end)
 
             num_raster_segments = int(np.round(arc_length / raster_width))
             delta_angle = angle_arc / num_raster_segments
 
-            sign_multiplier = 1
-            if not winding_ccw:
-                sign_multiplier = -1
-
-            rotation_angles = np.arange(
-                0,
-                sign_multiplier * (angle_arc - 0.5 * delta_angle),
-                sign_multiplier * delta_angle)
+            rotation_angles = np.arange(0,
+                                        sign * (angle_arc - 0.5 * delta_angle),
+                                        sign * delta_angle)
 
             return rotation_angles
 
