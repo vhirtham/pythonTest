@@ -217,10 +217,9 @@ class Shape2D:
             """
             point_center_copy = np.matmul(reflection_matrix,
                                           self._point_center - offset) + offset
-            if self._sign_winding < 0:
-                winding_ccw_new = True
-            else:
-                winding_ccw_new = False
+
+            winding_ccw_new = self._sign_winding < 0
+
             return Shape2D.ArcSegment(point_center_copy, winding_ccw_new)
 
         def rasterize(self, raster_width, point_start, point_end):
