@@ -202,23 +202,34 @@ def test_line_segment_copy_and_reflect():
     reflection_matrix = [[0, 1], [1, 0]]
 
     segment = geo.Shape2D.LineSegment()
-    segment_copy = segment.copy_and_reflect(reflection_matrix)
+    segment_copy = segment.copy_and_transform(reflection_matrix)
 
     # ensure that segment_copy is a deepcopy of segment
     assert segment_copy is not segment
 
 
 def test_arc_segment_copy_and_reflect():
-    reflection_matrix = [[0, 1], [1, 0]]
-    offset = [2, -1]
+    reflection_matrix = np.array([[0, 1], [1, 0]])
+    offset = np.array([2, -1])
     point_center = [2, 3]
 
     segment = geo.Shape2D.ArcSegment(point_center)
-    segment_copy = segment.copy_and_reflect(reflection_matrix, offset)
+    segment_copy = segment.copy_and_transform(reflection_matrix, -offset,
+                                              offset)
+    segment_copy2 = segment_copy.copy_and_transform(reflection_matrix, -offset,
+                                                    offset)
 
     # ensure that segment_copy is a deepcopy of segment
     assert segment_copy is not segment
+    assert segment_copy2 is not segment
+    assert segment_copy is not segment_copy2
 
     # Check if new center point is correct
     assert segment_copy._point_center[0] == 6
     assert segment_copy._point_center[1] == -1
+    assert segment_copy2._point_center[0] == point_center[0]
+    assert segment_copy2._point_center[1] == point_center[1]
+
+    # Check that winding order is changed
+    assert segment_copy._sign_winding == segment._sign_winding * -1
+    assert segment_copy2._sign_winding == segment._sign_winding

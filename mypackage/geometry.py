@@ -54,14 +54,20 @@ class Shape2D:
             :return: ---
             """
 
-        def copy_and_reflect(self, _unused_reflection_matrix,
-                             _unused_offset=np.array([0, 0])):
+        def copy_and_transform(self,
+                               _unused_transformation_matrix=np.array(
+                                   [[1, 0], [0, 1]]),
+                               _unused_translation_pre=np.array([0, 0]),
+                               _unused_translation_post=np.array([0, 0])):
             """
-            Create a reflected copy of the segment.
+            Create a transformed copy of the segment.
 
-            :param reflection_matrix: Reflection matrix
-            :param offset: Offset
-            :return: Reflected copy
+            :param _unused_transformation_matrix: Transformation matrix
+            :param _unused_translation_pre: Translation applied before the
+            matrix multiplication.
+            :param _unused_translation_post: Translation applied after the
+            matrix multiplication.
+            :return: Transformed copy
             """
             return copy.deepcopy(self)
 
@@ -208,16 +214,24 @@ class Shape2D:
                     "Segment start and end points are not compatible with "
                     "given center of the arc.")
 
-        def copy_and_reflect(self, reflection_matrix, offset=np.array([0, 0])):
+        def copy_and_transform(self,
+                               transformation_matrix=np.array(
+                                   [[1, 0], [0, 1]]),
+                               translation_pre=np.array([0, 0]),
+                               translation_post=np.array([0, 0])):
             """
-            Create a reflected copy of the arc segment.
+            Create a transformed copy of the segment.
 
-            :param reflection_matrix: Reflection matrix
-            :param offset: Offset
-            :return: Reflected copy of the segment
+            :param transformation_matrix: Transformation matrix
+            :param translation_pre: Translation applied before the matrix
+            multiplication.
+            :param translation_post: Translation applied after the matrix
+            multiplication.
+            :return: Transformed copy
             """
-            point_center_copy = np.matmul(reflection_matrix,
-                                          self._point_center - offset) + offset
+            point_center_copy = np.matmul(transformation_matrix,
+                                          self._point_center +
+                                          translation_pre) + translation_post
 
             winding_ccw_new = self._sign_winding < 0
 
