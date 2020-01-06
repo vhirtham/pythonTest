@@ -1,9 +1,17 @@
+"""Contains methods and classes to generate 3d point clouds."""
+
 import mypackage.geometry as geo
 
 
 class Profile:
-    def __init__(self, shapes):
+    """Defines a 2d profile."""
 
+    def __init__(self, shapes):
+        """
+        Check construction succeedConstruct profile class.
+
+        :param: shapes: Instance or list of geo.Shape2D class(es)
+        """
         if not isinstance(shapes, list):
             shapes = [shapes]
 
