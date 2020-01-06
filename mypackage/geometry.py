@@ -54,11 +54,12 @@ class Shape2D:
             :return: ---
             """
 
-        def copy_and_reflect(self, *kwargs):
+        def copy_and_reflect(self, reflection_matrix=None, offset=None):
             """
             Create a reflected copy of the segment.
 
-            :param kwargs: Key word arguments
+            :param reflection_matrix: Reflection matrix
+            :param offset: Offset
             :return: Reflected copy
             """
             return copy.deepcopy(self)
@@ -206,7 +207,7 @@ class Shape2D:
                     "Segment start and end points are not compatible with "
                     "given center of the arc.")
 
-        def copy_and_reflect(self, reflection_matrix, offset=[0, 0]):
+        def copy_and_reflect(self, reflection_matrix, offset=np.array([0, 0])):
             """
             Create a reflected copy of the arc segment.
 
