@@ -8,7 +8,7 @@ class Profile:
 
     def __init__(self, shapes):
         """
-        Check construction succeedConstruct profile class.
+        Construct profile class.
 
         :param: shapes: Instance or list of geo.Shape2D class(es)
         """
@@ -17,6 +17,6 @@ class Profile:
 
         if not all(isinstance(shape, geo.Shape2D) for shape in shapes):
             raise ValueError(
-                "Only instances or lists of Shape2d opbjects are accepted.")
+                "Only instances or lists of Shape2d objects are accepted.")
 
         self.shapes = shapes
