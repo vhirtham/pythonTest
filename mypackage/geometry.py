@@ -1,6 +1,7 @@
 """Provides classes to define lines and surfaces."""
 
 import numpy as np
+import copy
 from scipy.spatial.transform import Rotation as R
 
 
@@ -52,6 +53,15 @@ class Shape2D:
             :param point_end: End point of the segment
             :return: ---
             """
+
+        def copy_and_reflect(self, *kwargs):
+            """
+            Create a reflected copy of the segment.
+
+            :param kwargs: Key word arguments
+            :return: Reflected copy
+            """
+            return copy.deepcopy(self)
 
     class LineSegment(Segment):
         """Line segment."""
@@ -196,6 +206,22 @@ class Shape2D:
                     "Segment start and end points are not compatible with "
                     "given center of the arc.")
 
+        def copy_and_reflect(self, reflection_matrix, offset=[0, 0]):
+            """
+            Create a reflected copy of the arc segment.
+
+            :param reflection_matrix: Reflection matrix
+            :param offset: Offset
+            :return: Reflected copy of the segment
+            """
+            point_center_copy = np.matmul(reflection_matrix,
+                                          self._point_center - offset) + offset
+            if self._sign_winding < 0:
+                winding_ccw_new = True
+            else:
+                winding_ccw_new = False
+            return Shape2D.ArcSegment(point_center_copy, winding_ccw_new)
+
         def rasterize(self, raster_width, point_start, point_end):
             """
             Create an array of points that describe the segments contour.
@@ -219,7 +245,8 @@ class Shape2D:
 
             return self._rasterize(vec_start, rotation_angles)
 
-    # Private methods ---------------------------------------------------------
+            # Private methods
+            # ---------------------------------------------------------
 
     def __init__(self, point0, point1, segment=LineSegment()):
         """

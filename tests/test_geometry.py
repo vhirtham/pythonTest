@@ -196,3 +196,29 @@ def test_shape2d_rasterization():
     for i in range(1, data[:, 0].size):
         raster_width_eff = np.linalg.norm(data[i] - data[i - 1])
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
+
+
+def test_line_segment_copy_and_reflect():
+    reflection_matrix = [[0, 1], [1, 0]]
+
+    segment = geo.Shape2D.LineSegment()
+    segment_copy = segment.copy_and_reflect(reflection_matrix)
+
+    # ensure that segment_copy is a deepcopy of segment
+    assert segment_copy is not segment
+
+
+def test_arc_segment_copy_and_reflect():
+    reflection_matrix = [[0, 1], [1, 0]]
+    offset = [2, -1]
+    point_center = [2, 3]
+
+    segment = geo.Shape2D.ArcSegment(point_center)
+    segment_copy = segment.copy_and_reflect(reflection_matrix, offset)
+
+    # ensure that segment_copy is a deepcopy of segment
+    assert segment_copy is not segment
+
+    # Check if new center point is correct
+    assert segment_copy._point_center[0] == 6
+    assert segment_copy._point_center[1] == -1
