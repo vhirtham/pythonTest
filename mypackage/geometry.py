@@ -54,7 +54,8 @@ class Shape2D:
             :return: ---
             """
 
-        def copy_and_reflect(self, reflection_matrix=None, offset=None):
+        def copy_and_reflect(self, _unused_reflection_matrix,
+                             _unused_offset=np.array([0, 0])):
             """
             Create a reflected copy of the segment.
 
