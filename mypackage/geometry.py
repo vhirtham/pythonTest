@@ -230,8 +230,8 @@ class Shape2D:
             :return: Transformed copy
             """
             point_center_copy = np.matmul(transformation_matrix,
-                                          self._point_center +
-                                          translation_pre) + translation_post
+                                          self._point_center
+                                          + translation_pre) + translation_post
 
             winding_ccw_new = self._sign_winding < 0
 
