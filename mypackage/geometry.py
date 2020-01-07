@@ -348,6 +348,31 @@ class Shape2D:
         self._points = np.vstack((self._points, point))
         self._segments.append(segment)
 
+    def apply_transformation(self,
+                             transformation_matrix=np.array([[1, 0], [0, 1]]),
+                             translation_pre=np.array([0, 0]),
+                             translation_post=np.array([0, 0])):
+        """
+        Apply a transformation to the segment.
+
+        :param transformation_matrix: Transformation matrix
+        :param translation_pre: Translation applied before the matrix
+        multiplication.
+        :param translation_post: Translation applied after the matrix
+        multiplication.
+        :return: ---
+        """
+        self._points += translation_pre
+        self._points = np.matmul(self._points,
+                                 np.transpose(transformation_matrix))
+
+        self._points += translation_post
+
+        for i in range(self.num_segments()):
+            self._segments[i] = self._segments[
+                i].copy_and_transform(transformation_matrix, translation_pre,
+                                      translation_post)
+
     def copy_and_reflect(self, reflection_normal, distance_to_origin=0):
         """
         Create a copy of the shape and reflect it at a given axis.
@@ -365,16 +390,7 @@ class Shape2D:
             dot_product) * distance_to_origin
 
         shape_copy = copy.deepcopy(self)
-        shape_copy._points -= offset
-        shape_copy._points = np.matmul(shape_copy._points,
-                                       np.transpose(householder_matrix))
-
-        shape_copy._points += offset
-
-        for i in range(len(shape_copy._segments)):
-            shape_copy._segments[i] = shape_copy._segments[
-                i].copy_and_transform(householder_matrix, -offset,
-                                      offset)
+        shape_copy.apply_transformation(householder_matrix, -offset, offset)
 
         return shape_copy
 
