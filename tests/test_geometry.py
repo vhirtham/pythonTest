@@ -134,7 +134,7 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
         point = data[i]
 
         # Check if points are not rasterized clockwise
-        assert (check_winding(point_start, point_center))
+        assert (check_winding(point[0:2], point_center))
 
         # Check that points have the correct distance to the arcs center
         distance_center_point = np.linalg.norm(point[0:2] - point_center)
@@ -173,6 +173,41 @@ def test_arc_segment_rasterizaion():
                      not_in_second_quadrant)
     arc_segment_test(point_center, point_start, point_end, raster_width, True,
                      in_second_quadrant)
+
+    # center on segment line
+    # ----------------------
+
+    point_center = [3, 2]
+    point_start = [2, 2]
+    point_end = [4, 2]
+    raster_width = 0.1
+
+    def not_below_center(p, c):
+        return p[1] >= c[1]
+
+    def not_above_center(p, c):
+        return p[1] <= c[1]
+
+    arc_segment_test(point_center, point_start, point_end, raster_width, False,
+                     not_below_center)
+    arc_segment_test(point_center, point_start, point_end, raster_width, True,
+                     not_above_center)
+
+    # special testcase
+    # ----------------
+    # In a previous version the unit vectors to the start and end point were
+    # calculated using the norm of the vector to the start, since both
+    # vector length should be identical (radius). However, floating point
+    # errors caused the dot product to get greater than 1. In result,
+    # the angle between both vectors could not be calculated using the arccos.
+    # This test case will fail in this case.
+    point_center = [0, 0]
+    point_start = [-6.6 - 2.8]
+    point_end = [-6.4 - 4.2]
+    raster_width = 0.1
+
+    arc_segment = geo.Shape2D.ArcSegment(point_center)
+    arc_segment.rasterize(raster_width, point_start, point_end)
 
 
 def test_shape2d_rasterization():

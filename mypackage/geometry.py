@@ -122,48 +122,55 @@ class Shape2D:
             else:
                 self._sign_winding = -1
 
-        def _arc_angle_and_length(self, vec_start, vec_end):
+        def _arc_angle_and_length(self, vec_center_start, vec_center_end):
             """
             Calculate the arcs angle and the arc length.
 
-            :param vec_start: Vector from the arcs center to the starting point
-            :param vec_end: Vector from the arcs center to the end point
+            :param vec_center_start: Vector from the arcs center to the
+            starting point
+            :param vec_center_end: Vector from the arcs center to the end point
             :return: Array containing the arcs angle and arc length
             """
             sign_winding = self._sign_winding
-            radius = np.linalg.norm(vec_start)
+            radius = np.linalg.norm(vec_center_start)
 
             # Calculate angle between vectors (always the smaller one)
-            unit_vec_start = vec_start / radius
-            unit_vec_end = vec_end / radius
-            angle_vecs = np.arccos(np.dot(unit_vec_start, unit_vec_end))
+            unit_center_start = vec_center_start / radius
+            unit_center_end = vec_center_end / np.linalg.norm(vec_center_end)
+
+            angle_vecs = np.arccos(
+                np.dot(unit_center_start, unit_center_end))
 
             # If the determinant is < 0 point_end is on the right of
-            # vec_start. Otherwise it is on the left-hand side.
-            determinant = np.linalg.det([vec_start, vec_end])
-            sign_combined = np.sign(sign_winding * determinant)
+            # vec_center_start. Otherwise it is on the left-hand side.
+            determinant = np.linalg.det([vec_center_start, vec_center_end])
 
-            arc_angle = 2 * np.pi * np.ceil(
-                (1 - sign_combined) / 2) + sign_combined * angle_vecs
+            if np.abs(np.sign(determinant) + sign_winding) > 0:
+                arc_angle = angle_vecs
+            else:
+                arc_angle = 2 * np.pi - angle_vecs
 
             arc_length = arc_angle * radius
 
             return [arc_angle, arc_length]
 
-        def _rotation_angles(self, vec_start, vec_end, raster_width):
+        def _rotation_angles(self, vec_center_start, vec_center_end,
+                             raster_width):
             """
             Calculate the rotation angle of each raster point.
 
             The angles are referring to the vector to the starting point.
 
-            :param vec_start: Vector from the arcs center to the starting point
-            :param vec_end: Vector from the arcs center to the end point
+            :param vec_center_start: Vector from the arcs center to the
+            starting point
+            :param vec_center_end: Vector from the arcs center to the end point
             :param raster_width: Desired raster width
             :return: Array containing the rotation angles
             """
             sign = self._sign_winding
-            [angle_arc, arc_length] = self._arc_angle_and_length(vec_start,
-                                                                 vec_end)
+            [angle_arc, arc_length] = self._arc_angle_and_length(
+                vec_center_start,
+                vec_center_end)
 
             num_raster_segments = int(np.round(arc_length / raster_width))
             delta_angle = angle_arc / num_raster_segments
@@ -174,21 +181,23 @@ class Shape2D:
 
             return rotation_angles
 
-        def _rasterize(self, vec_start, rotation_angles):
+        def _rasterize(self, vec_center_start, rotation_angles):
             """
             Create an array of points that describe the segments contour.
 
-            :param vec_start: Vector from the arcs center to the starting point
+            :param vec_center_start: Vector from the arcs center to the
+            starting point
             :param rotation_angles: Array containing the rotation angles
             :return: Array of contour points (3d)
             """
-            vec_start_3d = np.append(vec_start, [0])[np.newaxis, :, np.newaxis]
+            vec_center_start_3d = np.append(vec_center_start,
+                                            [0])[np.newaxis, :, np.newaxis]
             point_center_3d = np.append(self._point_center, [0])[:, np.newaxis]
 
             rotation_matrices = R.from_euler('z', rotation_angles).as_dcm()
 
             raster_data = np.matmul(rotation_matrices,
-                                    vec_start_3d) + point_center_3d
+                                    vec_center_start_3d) + point_center_3d
 
             return raster_data[:, :, 0]
 
@@ -252,13 +261,14 @@ class Shape2D:
             """
             point_center = self._point_center
 
-            vec_start = point_start - point_center
-            vec_end = point_end - point_center
+            vec_center_start = point_start - point_center
+            vec_center_end = point_end - point_center
 
-            rotation_angles = self._rotation_angles(vec_start, vec_end,
+            rotation_angles = self._rotation_angles(vec_center_start,
+                                                    vec_center_end,
                                                     raster_width)
 
-            return self._rasterize(vec_start, rotation_angles)
+            return self._rasterize(vec_center_start, rotation_angles)
 
             # Private methods
             # ---------------------------------------------------------
@@ -337,6 +347,27 @@ class Shape2D:
 
         self._points = np.vstack((self._points, point))
         self._segments.append(segment)
+
+    def copy_and_reflect(self, normal_vec, offset=np.array([0, 0])):
+
+        offset = np.array(offset)
+
+        dot_product = np.dot(normal_vec, normal_vec)
+        outer_product = np.outer(normal_vec, normal_vec)
+        householder_matrix = np.identity(2) - 2 * outer_product / dot_product
+
+        shape_copy = copy.deepcopy(self)
+        shape_copy._points -= offset
+        shape_copy._points = np.matmul(shape_copy._points,
+                                       np.transpose(householder_matrix))
+        shape_copy._points += offset
+
+        for i in range(len(shape_copy._segments)):
+            shape_copy._segments[i] = shape_copy._segments[
+                i].copy_and_transform(householder_matrix, -offset,
+                                      offset)
+
+        return shape_copy
 
     def is_point_included(self, point):
         """
