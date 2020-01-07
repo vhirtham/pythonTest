@@ -349,8 +349,14 @@ class Shape2D:
         self._segments.append(segment)
 
     def copy_and_reflect(self, reflection_normal, distance_to_origin=0):
-        """Produces a copy of the shape and reflects it at a given axis"""
+        """
+        Create a copy of the shape and reflect it at a given axis.
 
+        :param reflection_normal: Normal of the reflection axis
+        :param distance_to_origin: Distance of the reflection axis to the
+        origin
+        :return: Reflected copy of the shape
+        """
         dot_product = np.dot(reflection_normal, reflection_normal)
         outer_product = np.outer(reflection_normal, reflection_normal)
         householder_matrix = np.identity(2) - 2 * outer_product / dot_product

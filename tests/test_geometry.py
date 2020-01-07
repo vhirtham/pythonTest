@@ -243,7 +243,7 @@ def test_line_segment_copy_and_reflect():
     assert segment_copy is not segment
 
 
-def test_arc_segment_copy_and_reflect():
+def test_arc_segment_copy_and_transform():
     reflection_matrix = np.array([[0, 1], [1, 0]])
     offset = np.array([2, -1])
     point_center = [2, 3]
@@ -268,3 +268,52 @@ def test_arc_segment_copy_and_reflect():
     # Check that winding order is changed
     assert segment_copy._sign_winding == segment._sign_winding * -1
     assert segment_copy2._sign_winding == segment._sign_winding
+
+
+def check_reflected_point(point, reflected_point, axis_offset,
+                          direction_reflection_axis):
+    """Check if the midpoint lies on the reflection axis."""
+    vec_original_reflected = reflected_point - point
+    mid_point = point + 0.5 * vec_original_reflected
+    shifted_mid_point = mid_point - axis_offset
+    determinant = np.linalg.det([shifted_mid_point, direction_reflection_axis])
+    assert np.abs(determinant) < 1E-8
+
+
+def shape2d_copy_and_reflect_testcase(normal, distance_to_origin):
+    points = np.array([[3, 4],
+                       [5, 0],
+                       [11, 3]])
+    point_center = np.array([6, 3])
+
+    direction_reflection_axis = np.array([normal[1], -normal[0]])
+    normal_length = np.linalg.norm(normal)
+    unit_normal = np.array(normal) / normal_length
+    offset = distance_to_origin * unit_normal
+
+    # create shape
+    arc_segment = geo.Shape2D.ArcSegment(point_center)
+    shape = geo.Shape2D(points[0], points[1], arc_segment)
+    shape.add_segment(points[2])
+
+    # create reflected shape
+    shape_reflected = shape.copy_and_reflect(normal, distance_to_origin)
+
+    # check reflected points
+    check_reflected_point(point_center,
+                          shape_reflected._segments[0]._point_center, offset,
+                          direction_reflection_axis)
+
+    for i in range(shape.num_points()):
+        check_reflected_point(shape._points[i], shape_reflected._points[i],
+                              offset, direction_reflection_axis)
+
+
+def test_shape2d_copy_and_reflect():
+    shape2d_copy_and_reflect_testcase([2, 1], np.linalg.norm([2, 1]))
+    shape2d_copy_and_reflect_testcase([0, 1], 5)
+    shape2d_copy_and_reflect_testcase([1, 0], 3)
+    shape2d_copy_and_reflect_testcase([1, 0], -3)
+    shape2d_copy_and_reflect_testcase([-7, 2], 4.12)
+    shape2d_copy_and_reflect_testcase([-7, -2], 4.12)
+    shape2d_copy_and_reflect_testcase([7, -2], 4.12)
