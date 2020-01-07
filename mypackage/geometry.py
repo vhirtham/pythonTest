@@ -138,8 +138,8 @@ class Shape2D:
             unit_center_start = vec_center_start / radius
             unit_center_end = vec_center_end / np.linalg.norm(vec_center_end)
 
-            angle_vecs = np.arccos(
-                np.dot(unit_center_start, unit_center_end))
+            dot_unit = np.dot(unit_center_start, unit_center_end)
+            angle_vecs = np.arccos(np.clip(dot_unit, -1, 1))
 
             # If the determinant is < 0 point_end is on the right of
             # vec_center_start. Otherwise it is on the left-hand side.
@@ -286,7 +286,7 @@ class Shape2D:
 
         Shape2D._check_segment(segment, point0, point1)
 
-        self._points = np.array([point0, point1])
+        self._points = np.array([point0, point1], dtype=float)
         self._segments = [segment]
 
     @staticmethod
@@ -348,18 +348,21 @@ class Shape2D:
         self._points = np.vstack((self._points, point))
         self._segments.append(segment)
 
-    def copy_and_reflect(self, normal_vec, offset=np.array([0, 0])):
+    def copy_and_reflect(self, reflection_normal, distance_to_origin=0):
+        """Produces a copy of the shape and reflects it at a given axis"""
 
-        offset = np.array(offset)
-
-        dot_product = np.dot(normal_vec, normal_vec)
-        outer_product = np.outer(normal_vec, normal_vec)
+        dot_product = np.dot(reflection_normal, reflection_normal)
+        outer_product = np.outer(reflection_normal, reflection_normal)
         householder_matrix = np.identity(2) - 2 * outer_product / dot_product
+
+        offset = np.array(reflection_normal) / np.sqrt(
+            dot_product) * distance_to_origin
 
         shape_copy = copy.deepcopy(self)
         shape_copy._points -= offset
         shape_copy._points = np.matmul(shape_copy._points,
                                        np.transpose(householder_matrix))
+
         shape_copy._points += offset
 
         for i in range(len(shape_copy._segments)):
