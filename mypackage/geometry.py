@@ -28,6 +28,28 @@ def is_row_in_array(row, array):
     return (array == row).all(axis=1).any()
 
 
+def reflection_multiplier(transformation_matrix):
+    """
+    Get a multiplier indicating if the transformation is a reflection.
+
+    Returns -1 if the transformation contains a reflection and 1 if not.
+
+    :param transformation_matrix: Transformation matrix
+    :return: 1 or -1 (see description)
+    """
+    points = np.identity(2)
+    transformed_points = np.matmul(points,
+                                   np.transpose(transformation_matrix))
+    determinant = np.linalg.det(
+        [transformed_points[1] - transformed_points[0],
+         -transformed_points[0]])
+
+    if determinant == 0:
+        raise Exception("Invalid transformation")
+
+    return np.sign(determinant)
+
+
 class Shape2D:
     """Defines a shape in 2 dimensions."""
 
@@ -243,8 +265,7 @@ class Shape2D:
                                            self._point_center)
             self._point_center += translation_post
 
-            self._sign_winding *= Shape2D._reflection_multiplier(
-                transformation_matrix)
+            self._sign_winding *= reflection_multiplier(transformation_matrix)
 
         def rasterize(self, raster_width, point_start, point_end):
             """
@@ -327,28 +348,6 @@ class Shape2D:
         """
         if not isinstance(segment, Shape2D.Segment):
             raise TypeError("Invalid segment type")
-
-    @staticmethod
-    def _reflection_multiplier(transformation_matrix):
-        """
-        Get a multiplier indicating if the transformation is a reflection.
-
-        Returns -1 if the transformation contains a reflection and 1 if not.
-
-        :param transformation_matrix: Transformation matrix
-        :return: 1 or -1 (see description)
-        """
-        points = np.identity(2)
-        transformed_points = np.matmul(points,
-                                       np.transpose(transformation_matrix))
-        determinant = np.linalg.det(
-            [transformed_points[1] - transformed_points[0],
-             -transformed_points[0]])
-
-        if determinant == 0:
-            raise Exception("Invalid transformation")
-
-        return np.sign(determinant)
 
     # Public methods ----------------------------------------------------------
 
