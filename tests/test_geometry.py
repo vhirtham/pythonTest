@@ -115,14 +115,15 @@ def test_line_segment_rasterizaion():
 
 
 def arc_segment_test(point_center, point_start, point_end, raster_width,
-                     winding_ccw, check_winding):
+                     arc_winding_ccw, check_winding):
     point_center = np.array(point_center)
     point_start = np.array(point_start)
     point_end = np.array(point_end)
 
     radius_arc = np.linalg.norm(point_start - point_center)
 
-    arc_segment = geo.Shape2D.ArcSegment(point_center, winding_ccw=winding_ccw)
+    arc_segment = geo.Shape2D.ArcSegment(point_center,
+                                         arc_winding_ccw=arc_winding_ccw)
     arc_segment.check_valid(point_start, point_end)
 
     data = arc_segment.rasterize(raster_width, point_start, point_end)
@@ -234,7 +235,7 @@ def test_shape2d_rasterization():
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
 
-def test_arc_segment_apply_transform():
+def test_arc_segment_apply_transformation():
     # create arc segment
     point_center = [2, 3]
     segment = geo.Shape2D.ArcSegment(point_center)
@@ -252,7 +253,7 @@ def test_arc_segment_apply_transform():
     assert segment_copy._point_center[1] == 2
 
     # Check that winding order is changed
-    assert segment_copy._sign_winding == segment._sign_winding * -1
+    assert segment_copy._sign_arc_winding == segment._sign_arc_winding * -1
 
     # check transformation without reflection
     rotation_matrix = np.array([[0, 1], [-1, 0]])
@@ -268,7 +269,7 @@ def test_arc_segment_apply_transform():
     assert segment_copy._point_center[1] == -8
 
     # Check that winding order is NOT changed
-    assert segment_copy._sign_winding == segment._sign_winding
+    assert segment_copy._sign_arc_winding == segment._sign_arc_winding
 
 
 def check_reflected_point(point, reflected_point, axis_offset,

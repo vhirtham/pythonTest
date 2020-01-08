@@ -28,6 +28,39 @@ def is_row_in_array(row, array):
     return (array == row).all(axis=1).any()
 
 
+def vector_points_to_left_of_vector(vector, vector_reference):
+    """
+    Determine if a vector points to the left of another vector.
+
+    Returns 1 if the vector points to the left of the reference vector and
+    -1 if it points to the right. In case both vectors point into the same
+    or the opposite directions, this function returns 0.
+
+    :param vector: Vector
+    :param vector_reference: Reference vector
+    :return: 1,-1 or 0 (see description)
+    """
+    return np.sign(np.linalg.det([vector_reference, vector]))
+
+
+def point_left_of_line(point, line_start, line_end):
+    """
+    Determine if a point lies left of a line.
+
+    Returns 1 if the point is left of the line and -1 if it is to the right.
+    If the point is located on the line, this function returns 0.
+
+    :param point: Point
+    :param line_start: Starting point of the line
+    :param line_end: End point of the line
+    :return: 1,-1 or 0 (see description)
+    """
+    vec_line_start_end = line_end - line_start
+    vec_line_start_point = point - line_start
+    return vector_points_to_left_of_vector(vec_line_start_point,
+                                           vec_line_start_end)
+
+
 def reflection_multiplier(transformation_matrix):
     """
     Get a multiplier indicating if the transformation is a reflection.
@@ -40,14 +73,14 @@ def reflection_multiplier(transformation_matrix):
     points = np.identity(2)
     transformed_points = np.matmul(points,
                                    np.transpose(transformation_matrix))
-    determinant = np.linalg.det(
-        [transformed_points[1] - transformed_points[0],
-         -transformed_points[0]])
+    origin_left_of_line = point_left_of_line(np.array([0, 0]),
+                                             transformed_points[0],
+                                             transformed_points[1])
 
-    if determinant == 0:
+    if origin_left_of_line == 0:
         raise Exception("Invalid transformation")
 
-    return np.sign(determinant)
+    return np.sign(origin_left_of_line)
 
 
 class Shape2D:
@@ -127,20 +160,22 @@ class Shape2D:
     class ArcSegment(Segment):
         """Segment of a circle."""
 
-        def __init__(self, center, winding_ccw=True):
+        def __init__(self, point_center, arc_winding_ccw=True):
             """
             Constructor.
 
             :param point_center: Center point of the arc
+            :param: arc_winding_ccw: Specifies if the arcs winding order is
+            counter-clockwise
             """
-            point_center = np.array(center, dtype=float)
+            point_center = np.array(point_center, dtype=float)
             check_point_data_valid(point_center)
 
             self._point_center = point_center
-            if winding_ccw:
-                self._sign_winding = 1
+            if arc_winding_ccw:
+                self._sign_arc_winding = 1
             else:
-                self._sign_winding = -1
+                self._sign_arc_winding = -1
 
         def _arc_angle_and_length(self, vec_center_start, vec_center_end):
             """
@@ -151,7 +186,7 @@ class Shape2D:
             :param vec_center_end: Vector from the arcs center to the end point
             :return: Array containing the arcs angle and arc length
             """
-            sign_winding = self._sign_winding
+            sign_arc_winding = self._sign_arc_winding
             radius = np.linalg.norm(vec_center_start)
 
             # Calculate angle between vectors (always the smaller one)
@@ -161,11 +196,10 @@ class Shape2D:
             dot_unit = np.dot(unit_center_start, unit_center_end)
             angle_vecs = np.arccos(np.clip(dot_unit, -1, 1))
 
-            # If the determinant is < 0 point_end is on the right of
-            # vec_center_start. Otherwise it is on the left-hand side.
-            determinant = np.linalg.det([vec_center_start, vec_center_end])
+            sign_winding_points = vector_points_to_left_of_vector(
+                vec_center_end, vec_center_start)
 
-            if np.abs(np.sign(determinant) + sign_winding) > 0:
+            if np.abs(sign_winding_points + sign_arc_winding) > 0:
                 arc_angle = angle_vecs
             else:
                 arc_angle = 2 * np.pi - angle_vecs
@@ -187,7 +221,7 @@ class Shape2D:
             :param raster_width: Desired raster width
             :return: Array containing the rotation angles
             """
-            sign = self._sign_winding
+            sign = self._sign_arc_winding
             [angle_arc, arc_length] = self._arc_angle_and_length(
                 vec_center_start,
                 vec_center_end)
@@ -265,7 +299,8 @@ class Shape2D:
                                            self._point_center)
             self._point_center += translation_post
 
-            self._sign_winding *= reflection_multiplier(transformation_matrix)
+            self._sign_arc_winding *= reflection_multiplier(
+                transformation_matrix)
 
         def rasterize(self, raster_width, point_start, point_end):
             """
