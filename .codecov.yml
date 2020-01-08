@@ -20,6 +20,7 @@ coverage:
       default:
         enabled: yes
         target: 85%
+        threshold: 5%
 
 ignore:
   - "tests"
