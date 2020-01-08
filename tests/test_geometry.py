@@ -295,7 +295,7 @@ def test_shape2d_rasterization():
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
 
-def test_arc_segment_apply_transformation():
+def test_arc_segment_transformations():
     # create arc segment
     point_center = [2, 3]
     segment = geo.Shape2D.ArcSegment(point_center)
@@ -305,15 +305,21 @@ def test_arc_segment_apply_transformation():
     translation_pre = np.array([-1, 1])
     translation_post = np.array([2, 1])
     segment_copy = copy.deepcopy(segment)
-    segment_copy.apply_transformation(reflection_matrix, translation_pre,
-                                      translation_post)
 
+    segment_copy.translate(translation_pre)
+    assert segment_copy._point_center[0] == 1
+    assert segment_copy._point_center[1] == 4
+
+    segment_copy.apply_transformation(reflection_matrix)
+    assert segment_copy._point_center[0] == 4
+    assert segment_copy._point_center[1] == 1
+    # Check that winding order is NOT changed
+    assert segment_copy._sign_arc_winding == segment._sign_arc_winding * -1
+
+    segment_copy.translate(translation_post)
     # Check if new center point is correct
     assert segment_copy._point_center[0] == 6
     assert segment_copy._point_center[1] == 2
-
-    # Check that winding order is changed
-    assert segment_copy._sign_arc_winding == segment._sign_arc_winding * -1
 
     # check transformation without reflection
     rotation_matrix = np.array([[0, 1], [-1, 0]])
@@ -321,15 +327,19 @@ def test_arc_segment_apply_transformation():
     translation_post = np.array([-3, -3])
 
     segment_copy = copy.deepcopy(segment)
-    segment_copy.apply_transformation(rotation_matrix, translation_pre,
-                                      translation_post)
+    segment_copy.translate(translation_pre)
+    assert segment_copy._point_center[0] == 5
+    assert segment_copy._point_center[1] == 1
 
-    # Check if new center point is correct
-    assert segment_copy._point_center[0] == -2
-    assert segment_copy._point_center[1] == -8
-
+    segment_copy.apply_transformation(rotation_matrix)
+    assert segment_copy._point_center[0] == 1
+    assert segment_copy._point_center[1] == -5
     # Check that winding order is NOT changed
     assert segment_copy._sign_arc_winding == segment._sign_arc_winding
+
+    segment_copy.translate(translation_post)
+    assert segment_copy._point_center[0] == -2
+    assert segment_copy._point_center[1] == -8
 
 
 def check_reflected_point(point, reflected_point, axis_offset,

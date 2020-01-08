@@ -108,19 +108,19 @@ class Shape2D:
             :return: ---
             """
 
-        def apply_transformation(self,
-                                 _unused_transformation_matrix=np.array(
-                                     [[1, 0], [0, 1]]),
-                                 _unused_translation_pre=np.array([0, 0]),
-                                 _unused_translation_post=np.array([0, 0])):
+        def translate(self, _unused_vector):
+            """
+            Apply a translation to the segment
+
+            :param _unused_vector: Translation vector
+            :return: ---
+            """
+
+        def apply_transformation(self, _unused_transformation_matrix):
             """
             Apply a transformation to the segment.
 
             :param _unused_transformation_matrix: Transformation matrix
-            :param _unused_translation_pre: Translation applied before the
-            matrix multiplication.
-            :param _unused_translation_post: Translation applied after the
-            matrix multiplication.
             :return: ---
             """
 
@@ -277,28 +277,16 @@ class Shape2D:
                     "Segment start and end points are not compatible with "
                     "given center of the arc.")
 
-        def apply_transformation(self,
-                                 transformation_matrix=np.array(
-                                     [[1, 0], [0, 1]]),
-                                 translation_pre=np.array([0, 0]),
-                                 translation_post=np.array([0, 0])):
+        def apply_transformation(self, transformation_matrix):
             """
             Apply a transformation to the segment.
 
             :param transformation_matrix: Transformation matrix
-            :param translation_pre: Translation applied before
-            the matrix
-            multiplication.
-            :param translation_post: Translation applied after
-            the matrix
-            multiplication.
             :return: ---
             """
-            self._point_center += translation_pre
+
             self._point_center = np.matmul(transformation_matrix,
                                            self._point_center)
-            self._point_center += translation_post
-
             self._sign_arc_winding *= reflection_multiplier(
                 transformation_matrix)
 
@@ -326,8 +314,14 @@ class Shape2D:
 
             return self._rasterize(vec_center_start, rotation_angles)
 
-            # Private methods
-            # ---------------------------------------------------------
+        def translate(self, vector):
+
+            """
+            Apply a translation to the segment
+            :param vector: Translation vector
+            :return: ---
+            """
+            self._point_center += vector
 
     def __init__(self, point0, point1, segment=LineSegment()):
         """
@@ -344,6 +338,8 @@ class Shape2D:
 
         self._points = np.array([point0, point1], dtype=float)
         self._segments = [segment]
+
+    # Private methods ---------------------------------------------------------
 
     @staticmethod
     def _check_segment(segment, point_start, point_end):
@@ -404,30 +400,18 @@ class Shape2D:
         self._points = np.vstack((self._points, point))
         self._segments.append(segment)
 
-    def apply_transformation(self,
-                             transformation_matrix=np.array([[1, 0], [0, 1]]),
-                             translation_pre=np.array([0, 0]),
-                             translation_post=np.array([0, 0])):
+    def apply_transformation(self, transformation_matrix):
         """
         Apply a transformation to the shape.
 
         :param transformation_matrix: Transformation matrix
-        :param translation_pre: Translation applied before the matrix
-        multiplication.
-        :param translation_post: Translation applied after the matrix
-        multiplication.
         :return: ---
         """
-        self._points += translation_pre
         self._points = np.matmul(self._points,
                                  np.transpose(transformation_matrix))
 
-        self._points += translation_post
-
         for i in range(self.num_segments()):
-            self._segments[i].apply_transformation(transformation_matrix,
-                                                   translation_pre,
-                                                   translation_post)
+            self._segments[i].apply_transformation(transformation_matrix)
 
     def reflect(self, reflection_normal, distance_to_origin=0):
         """
@@ -445,7 +429,21 @@ class Shape2D:
         offset = np.array(reflection_normal) / np.sqrt(
             dot_product) * distance_to_origin
 
-        self.apply_transformation(householder_matrix, -offset, offset)
+        self.translate(-offset)
+        self.apply_transformation(householder_matrix)
+        self.translate(offset)
+
+    def translate(self, vector):
+        """
+        Apply a translation to the shape.
+
+        :param vector: Translation vector
+        :return: ---
+        """
+        self._points += vector
+
+        for i in range(self.num_segments()):
+            self._segments[i].translate(vector)
 
     def is_point_included(self, point):
         """
