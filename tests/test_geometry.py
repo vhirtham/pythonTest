@@ -4,6 +4,66 @@ import numpy as np
 import copy
 
 
+def test_vector_points_to_left_of_vector():
+    assert geo.vector_points_to_left_of_vector([-0.1, 1], [0, 1]) > 0
+    assert geo.vector_points_to_left_of_vector([-0.1, -1], [0, 1]) > 0
+    assert geo.vector_points_to_left_of_vector([3, 5], [1, 0]) > 0
+    assert geo.vector_points_to_left_of_vector([-3, 5], [1, 0]) > 0
+    assert geo.vector_points_to_left_of_vector([0, -0.1], [-4, 2]) > 0
+    assert geo.vector_points_to_left_of_vector([-1, -0.1], [-4, 2]) > 0
+
+    assert geo.vector_points_to_left_of_vector([0.1, 1], [0, 1]) < 0
+    assert geo.vector_points_to_left_of_vector([0.1, -1], [0, 1]) < 0
+    assert geo.vector_points_to_left_of_vector([3, -5], [1, 0]) < 0
+    assert geo.vector_points_to_left_of_vector([-3, -5], [1, 0]) < 0
+    assert geo.vector_points_to_left_of_vector([0, 0.1], [-4, 2]) < 0
+    assert geo.vector_points_to_left_of_vector([1, -0.1], [-4, 2]) < 0
+
+    assert geo.vector_points_to_left_of_vector([4, 4], [2, 2]) == 0
+    assert geo.vector_points_to_left_of_vector([-4, -4], [2, 2]) == 0
+
+
+def test_point_left_of_line():
+    line_start = np.array([2, 3])
+    line_end = np.array([5, 6])
+    assert geo.point_left_of_line([-8, 10], line_start, line_end) > 0
+    assert geo.point_left_of_line([3, 0], line_start, line_end) < 0
+    assert geo.point_left_of_line(line_start, line_start, line_end) == 0
+
+    line_start = np.array([2, 3])
+    line_end = np.array([1, -4])
+    assert geo.point_left_of_line([3, 0], line_start, line_end) > 0
+    assert geo.point_left_of_line([-8, 10], line_start, line_end) < 0
+    assert geo.point_left_of_line(line_start, line_start, line_end) == 0
+
+
+def test_reflection_multiplier():
+    assert geo.reflection_multiplier([[-1, 0], [0, 1]]) == -1
+    assert geo.reflection_multiplier([[1, 0], [0, -1]]) == -1
+    assert geo.reflection_multiplier([[0, 1], [1, 0]]) == -1
+    assert geo.reflection_multiplier([[0, -1], [-1, 0]]) == -1
+    assert geo.reflection_multiplier([[-4, 0], [0, 2]]) == -1
+    assert geo.reflection_multiplier([[6, 0], [0, -4]]) == -1
+    assert geo.reflection_multiplier([[0, 3], [8, 0]]) == -1
+    assert geo.reflection_multiplier([[0, -3], [-2, 0]]) == -1
+
+    assert geo.reflection_multiplier([[1, 0], [0, 1]]) == 1
+    assert geo.reflection_multiplier([[-1, 0], [0, -1]]) == 1
+    assert geo.reflection_multiplier([[0, -1], [1, 0]]) == 1
+    assert geo.reflection_multiplier([[0, 1], [-1, 0]]) == 1
+    assert geo.reflection_multiplier([[5, 0], [0, 6]]) == 1
+    assert geo.reflection_multiplier([[-3, 0], [0, -7]]) == 1
+    assert geo.reflection_multiplier([[0, -8], [9, 0]]) == 1
+    assert geo.reflection_multiplier([[0, 3], [-2, 0]]) == 1
+
+    with pytest.raises(Exception):
+        geo.reflection_multiplier([[0, 0], [0, 0]])
+    with pytest.raises(Exception):
+        geo.reflection_multiplier([[1, 0], [0, 0]])
+    with pytest.raises(Exception):
+        geo.reflection_multiplier([[2, 2], [1, 1]])
+
+
 def test_shape2d_construction():
     # Test Exception: Segment length too small
     with pytest.raises(Exception):
