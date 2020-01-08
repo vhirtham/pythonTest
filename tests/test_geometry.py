@@ -1,6 +1,7 @@
 import pytest
 import mypackage.geometry as geo
 import numpy as np
+import copy
 
 
 def test_shape2d_construction():
@@ -233,41 +234,41 @@ def test_shape2d_rasterization():
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
 
-def test_line_segment_copy_and_reflect():
-    reflection_matrix = [[0, 1], [1, 0]]
-
-    segment = geo.Shape2D.LineSegment()
-    segment_copy = segment.copy_and_transform(reflection_matrix)
-
-    # ensure that segment_copy is a deepcopy of segment
-    assert segment_copy is not segment
-
-
-def test_arc_segment_copy_and_transform():
-    reflection_matrix = np.array([[0, 1], [1, 0]])
-    offset = np.array([2, -1])
+def test_arc_segment_apply_transform():
+    # create arc segment
     point_center = [2, 3]
-
     segment = geo.Shape2D.ArcSegment(point_center)
-    segment_copy = segment.copy_and_transform(reflection_matrix, -offset,
-                                              offset)
-    segment_copy2 = segment_copy.copy_and_transform(reflection_matrix, -offset,
-                                                    offset)
 
-    # ensure that segment_copy is a deepcopy of segment
-    assert segment_copy is not segment
-    assert segment_copy2 is not segment
-    assert segment_copy is not segment_copy2
+    # check transformation with reflection
+    reflection_matrix = np.array([[0, 1], [1, 0]])
+    translation_pre = np.array([-1, 1])
+    translation_post = np.array([2, 1])
+    segment_copy = copy.deepcopy(segment)
+    segment_copy.apply_transformation(reflection_matrix, translation_pre,
+                                      translation_post)
 
     # Check if new center point is correct
     assert segment_copy._point_center[0] == 6
-    assert segment_copy._point_center[1] == -1
-    assert segment_copy2._point_center[0] == point_center[0]
-    assert segment_copy2._point_center[1] == point_center[1]
+    assert segment_copy._point_center[1] == 2
 
     # Check that winding order is changed
     assert segment_copy._sign_winding == segment._sign_winding * -1
-    assert segment_copy2._sign_winding == segment._sign_winding
+
+    # check transformation without reflection
+    rotation_matrix = np.array([[0, 1], [-1, 0]])
+    translation_pre = np.array([3, -2])
+    translation_post = np.array([-3, -3])
+
+    segment_copy = copy.deepcopy(segment)
+    segment_copy.apply_transformation(rotation_matrix, translation_pre,
+                                      translation_post)
+
+    # Check if new center point is correct
+    assert segment_copy._point_center[0] == -2
+    assert segment_copy._point_center[1] == -8
+
+    # Check that winding order is NOT changed
+    assert segment_copy._sign_winding == segment._sign_winding
 
 
 def check_reflected_point(point, reflected_point, axis_offset,
@@ -280,7 +281,7 @@ def check_reflected_point(point, reflected_point, axis_offset,
     assert np.abs(determinant) < 1E-8
 
 
-def shape2d_copy_and_reflect_testcase(normal, distance_to_origin):
+def shape2d_reflect_testcase(normal, distance_to_origin):
     points = np.array([[3, 4],
                        [5, 0],
                        [11, 3]])
@@ -297,7 +298,8 @@ def shape2d_copy_and_reflect_testcase(normal, distance_to_origin):
     shape.add_segment(points[2])
 
     # create reflected shape
-    shape_reflected = shape.copy_and_reflect(normal, distance_to_origin)
+    shape_reflected = copy.deepcopy(shape)
+    shape_reflected.reflect(normal, distance_to_origin)
 
     # check reflected points
     check_reflected_point(point_center,
@@ -309,11 +311,11 @@ def shape2d_copy_and_reflect_testcase(normal, distance_to_origin):
                               offset, direction_reflection_axis)
 
 
-def test_shape2d_copy_and_reflect():
-    shape2d_copy_and_reflect_testcase([2, 1], np.linalg.norm([2, 1]))
-    shape2d_copy_and_reflect_testcase([0, 1], 5)
-    shape2d_copy_and_reflect_testcase([1, 0], 3)
-    shape2d_copy_and_reflect_testcase([1, 0], -3)
-    shape2d_copy_and_reflect_testcase([-7, 2], 4.12)
-    shape2d_copy_and_reflect_testcase([-7, -2], 4.12)
-    shape2d_copy_and_reflect_testcase([7, -2], 4.12)
+def test_shape2d_reflect():
+    shape2d_reflect_testcase([2, 1], np.linalg.norm([2, 1]))
+    shape2d_reflect_testcase([0, 1], 5)
+    shape2d_reflect_testcase([1, 0], 3)
+    shape2d_reflect_testcase([1, 0], -3)
+    shape2d_reflect_testcase([-7, 2], 4.12)
+    shape2d_reflect_testcase([-7, -2], 4.12)
+    shape2d_reflect_testcase([7, -2], 4.12)

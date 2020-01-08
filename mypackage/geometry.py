@@ -1,7 +1,6 @@
 """Provides classes to define lines and surfaces."""
 
 import numpy as np
-import copy
 from scipy.spatial.transform import Rotation as R
 
 
@@ -54,22 +53,21 @@ class Shape2D:
             :return: ---
             """
 
-        def copy_and_transform(self,
-                               _unused_transformation_matrix=np.array(
-                                   [[1, 0], [0, 1]]),
-                               _unused_translation_pre=np.array([0, 0]),
-                               _unused_translation_post=np.array([0, 0])):
+        def apply_transformation(self,
+                                 _unused_transformation_matrix=np.array(
+                                     [[1, 0], [0, 1]]),
+                                 _unused_translation_pre=np.array([0, 0]),
+                                 _unused_translation_post=np.array([0, 0])):
             """
-            Create a transformed copy of the segment.
+            Apply a transformation to the segment.
 
             :param _unused_transformation_matrix: Transformation matrix
             :param _unused_translation_pre: Translation applied before the
             matrix multiplication.
             :param _unused_translation_post: Translation applied after the
             matrix multiplication.
-            :return: Transformed copy
+            :return: ---
             """
-            return copy.deepcopy(self)
 
     class LineSegment(Segment):
         """Line segment."""
@@ -113,7 +111,7 @@ class Shape2D:
 
             :param point_center: Center point of the arc
             """
-            point_center = np.array(center)
+            point_center = np.array(center, dtype=float)
             check_point_data_valid(point_center)
 
             self._point_center = point_center
@@ -223,28 +221,30 @@ class Shape2D:
                     "Segment start and end points are not compatible with "
                     "given center of the arc.")
 
-        def copy_and_transform(self,
-                               transformation_matrix=np.array(
-                                   [[1, 0], [0, 1]]),
-                               translation_pre=np.array([0, 0]),
-                               translation_post=np.array([0, 0])):
+        def apply_transformation(self,
+                                 transformation_matrix=np.array(
+                                     [[1, 0], [0, 1]]),
+                                 translation_pre=np.array([0, 0]),
+                                 translation_post=np.array([0, 0])):
             """
-            Create a transformed copy of the segment.
+            Apply a transformation to the segment.
 
             :param transformation_matrix: Transformation matrix
-            :param translation_pre: Translation applied before the matrix
+            :param translation_pre: Translation applied before
+            the matrix
             multiplication.
-            :param translation_post: Translation applied after the matrix
+            :param translation_post: Translation applied after
+            the matrix
             multiplication.
-            :return: Transformed copy
+            :return: ---
             """
-            point_center_copy = np.matmul(transformation_matrix,
-                                          self._point_center +
-                                          translation_pre) + translation_post
+            self._point_center += translation_pre
+            self._point_center = np.matmul(transformation_matrix,
+                                           self._point_center)
+            self._point_center += translation_post
 
-            winding_ccw_new = self._sign_winding < 0
-
-            return Shape2D.ArcSegment(point_center_copy, winding_ccw_new)
+            self._sign_winding *= Shape2D._reflection_multiplier(
+                transformation_matrix)
 
         def rasterize(self, raster_width, point_start, point_end):
             """
@@ -328,6 +328,28 @@ class Shape2D:
         if not isinstance(segment, Shape2D.Segment):
             raise TypeError("Invalid segment type")
 
+    @staticmethod
+    def _reflection_multiplier(transformation_matrix):
+        """
+        Get a multiplier indicating if the transformation is a reflection.
+
+        Returns -1 if the transformation contains a reflection and 1 if not.
+
+        :param transformation_matrix: Transformation matrix
+        :return: 1 or -1 (see description)
+        """
+        points = np.identity(2)
+        transformed_points = np.matmul(points,
+                                       np.transpose(transformation_matrix))
+        determinant = np.linalg.det(
+            [transformed_points[1] - transformed_points[0],
+             -transformed_points[0]])
+
+        if determinant == 0:
+            raise Exception("Invalid transformation")
+
+        return np.sign(determinant)
+
     # Public methods ----------------------------------------------------------
 
     def add_segment(self, point, segment=LineSegment()):
@@ -353,7 +375,7 @@ class Shape2D:
                              translation_pre=np.array([0, 0]),
                              translation_post=np.array([0, 0])):
         """
-        Apply a transformation to the segment.
+        Apply a transformation to the shape.
 
         :param transformation_matrix: Transformation matrix
         :param translation_pre: Translation applied before the matrix
@@ -369,18 +391,18 @@ class Shape2D:
         self._points += translation_post
 
         for i in range(self.num_segments()):
-            self._segments[i] = self._segments[
-                i].copy_and_transform(transformation_matrix, translation_pre,
-                                      translation_post)
+            self._segments[i].apply_transformation(transformation_matrix,
+                                                   translation_pre,
+                                                   translation_post)
 
-    def copy_and_reflect(self, reflection_normal, distance_to_origin=0):
+    def reflect(self, reflection_normal, distance_to_origin=0):
         """
-        Create a copy of the shape and reflect it at a given axis.
+        Apply a reflection at the given axis to the shape.
 
         :param reflection_normal: Normal of the reflection axis
         :param distance_to_origin: Distance of the reflection axis to the
         origin
-        :return: Reflected copy of the shape
+        :return: ---
         """
         dot_product = np.dot(reflection_normal, reflection_normal)
         outer_product = np.outer(reflection_normal, reflection_normal)
@@ -389,10 +411,7 @@ class Shape2D:
         offset = np.array(reflection_normal) / np.sqrt(
             dot_product) * distance_to_origin
 
-        shape_copy = copy.deepcopy(self)
-        shape_copy.apply_transformation(householder_matrix, -offset, offset)
-
-        return shape_copy
+        self.apply_transformation(householder_matrix, -offset, offset)
 
     def is_point_included(self, point):
         """
