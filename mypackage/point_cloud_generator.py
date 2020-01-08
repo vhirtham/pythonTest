@@ -20,3 +20,22 @@ class Profile:
                 "Only instances or lists of Shape2d objects are accepted.")
 
         self.shapes = shapes
+
+    def add_shape(self, shape):
+        """
+        Add a shape to the profile.
+
+        :param shape: Shape that should be added.
+        :return: ---
+        """
+        if not isinstance(shape, geo.Shape2D):
+            raise ValueError("Only instances Shape2d objects are accepted.")
+        self.shapes.append(shape)
+
+    def num_shapes(self):
+        """
+        Get the number of shapes of the profile.
+
+        :return: Number of shapes
+        """
+        return len(self.shapes)
