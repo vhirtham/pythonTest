@@ -110,7 +110,7 @@ class Shape2D:
 
         def translate(self, _unused_vector):
             """
-            Apply a translation to the segment
+            Apply a translation to the segment.
 
             :param _unused_vector: Translation vector
             :return: ---
@@ -284,7 +284,6 @@ class Shape2D:
             :param transformation_matrix: Transformation matrix
             :return: ---
             """
-
             self._point_center = np.matmul(transformation_matrix,
                                            self._point_center)
             self._sign_arc_winding *= reflection_multiplier(
@@ -315,9 +314,9 @@ class Shape2D:
             return self._rasterize(vec_center_start, rotation_angles)
 
         def translate(self, vector):
-
             """
-            Apply a translation to the segment
+            Apply a translation to the segment.
+
             :param vector: Translation vector
             :return: ---
             """
