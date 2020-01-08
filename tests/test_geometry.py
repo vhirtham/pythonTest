@@ -342,6 +342,89 @@ def test_arc_segment_transformations():
     assert segment_copy._point_center[1] == -8
 
 
+def default_test_shape():
+    points = np.array([[3, 4],
+                       [5, 0],
+                       [11, 3]])
+    point_center = np.array([6, 3])
+
+    # create shape
+    arc_segment = geo.Shape2D.ArcSegment(point_center)
+    shape = geo.Shape2D(points[0], points[1], arc_segment)
+    shape.add_segment(points[2])
+
+    return shape
+
+
+def test_shape2d_translation():
+    def check_point(point, point_ref, translation):
+        assert point[0] - point_ref[0] - translation[0] < 1E-9
+        assert point[1] - point_ref[1] - translation[1] < 1E-9
+
+    translation = [3, 4]
+
+    shape_ref = default_test_shape()
+    shape = copy.deepcopy(shape_ref)
+
+    # apply translation
+    shape.translate(translation)
+
+    for i in range(shape.num_points()):
+        check_point(shape._points[i], shape_ref._points[i], translation)
+
+    arc_segment = shape._segments[0]
+    arc_segment_ref = shape_ref._segments[0]
+
+    check_point(arc_segment._point_center, arc_segment_ref._point_center,
+                translation)
+    assert arc_segment._sign_arc_winding == arc_segment_ref._sign_arc_winding
+
+
+def test_shape2d_transformation():
+    # without reflection
+    def check_point_rotation(point, point_ref):
+        assert point[0] == point_ref[1]
+        assert point[1] == -point_ref[0]
+
+    rotation_matrix = np.array([[0, 1], [-1, 0]])
+
+    shape_ref = default_test_shape()
+    shape = copy.deepcopy(shape_ref)
+
+    # apply transformation
+    shape.apply_transformation(rotation_matrix)
+
+    for i in range(shape.num_points()):
+        check_point_rotation(shape._points[i], shape_ref._points[i])
+
+    arc_segment = shape._segments[0]
+    arc_segment_ref = shape_ref._segments[0]
+    check_point_rotation(arc_segment._point_center,
+                         arc_segment_ref._point_center)
+    assert arc_segment._sign_arc_winding == arc_segment_ref._sign_arc_winding
+
+    # with reflection
+    def check_point_reflection(point, point_ref):
+        assert point[0] == point_ref[1]
+        assert point[1] == point_ref[0]
+
+    reflection_matrix = np.array([[0, 1], [1, 0]])
+
+    shape = copy.deepcopy(shape_ref)
+
+    # apply transformation
+    shape.apply_transformation(reflection_matrix)
+
+    for i in range(shape.num_points()):
+        check_point_reflection(shape._points[i], shape_ref._points[i])
+
+    arc_segment = shape._segments[0]
+    arc_segment_ref = shape_ref._segments[0]
+    check_point_reflection(arc_segment._point_center,
+                           arc_segment_ref._point_center)
+    assert arc_segment._sign_arc_winding == -arc_segment_ref._sign_arc_winding
+
+
 def check_reflected_point(point, reflected_point, axis_offset,
                           direction_reflection_axis):
     """Check if the midpoint lies on the reflection axis."""
@@ -353,27 +436,19 @@ def check_reflected_point(point, reflected_point, axis_offset,
 
 
 def shape2d_reflect_testcase(normal, distance_to_origin):
-    points = np.array([[3, 4],
-                       [5, 0],
-                       [11, 3]])
-    point_center = np.array([6, 3])
-
     direction_reflection_axis = np.array([normal[1], -normal[0]])
     normal_length = np.linalg.norm(normal)
     unit_normal = np.array(normal) / normal_length
     offset = distance_to_origin * unit_normal
 
-    # create shape
-    arc_segment = geo.Shape2D.ArcSegment(point_center)
-    shape = geo.Shape2D(points[0], points[1], arc_segment)
-    shape.add_segment(points[2])
+    shape = default_test_shape()
 
     # create reflected shape
     shape_reflected = copy.deepcopy(shape)
     shape_reflected.reflect(normal, distance_to_origin)
 
     # check reflected points
-    check_reflected_point(point_center,
+    check_reflected_point(shape._segments[0]._point_center,
                           shape_reflected._segments[0]._point_center, offset,
                           direction_reflection_axis)
 
