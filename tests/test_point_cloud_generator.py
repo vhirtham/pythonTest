@@ -39,3 +39,27 @@ def test_profile_construction_and_shape_addition():
     assert profile.num_shapes() == 3
     profile.add_shapes([shape, shape])
     assert profile.num_shapes() == 5
+
+
+def test_profile_rasterization():
+    raster_width = 0.1
+    shape0 = geo.Shape2D([-1, 0], [-raster_width, 0])
+    shape1 = geo.Shape2D([0, 0], [1, 0])
+    shape2 = geo.Shape2D([1 + raster_width, 0], [2, 0])
+
+    profile = pcg.Profile([shape0, shape1])
+    profile.add_shapes(shape2)
+
+    # rasterize
+    data = profile.rasterize(0.1)
+
+    # check raster data size
+    expected_number_raster_points = int(round(3 / raster_width)) + 1
+    assert len(data[:, 0]) == expected_number_raster_points
+
+    # Check that all shapes are rasterized correct
+    for i in range(int(round(3 / raster_width)) + 1):
+        expected_raster_point_x = i * raster_width - 1
+        assert data[i, 0] - expected_raster_point_x < 1E-9
+        assert data[i, 1] == 0
+        assert data[i, 2] == 0
