@@ -62,4 +62,3 @@ def test_profile_rasterization():
         expected_raster_point_x = i * raster_width - 1
         assert data[i, 0] - expected_raster_point_x < 1E-9
         assert data[i, 1] == 0
-        assert data[i, 2] == 0

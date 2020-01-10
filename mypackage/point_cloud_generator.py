@@ -49,7 +49,7 @@ class Profile:
         :param: raster_width: Raster width
         :return: Raster data
         """
-        raster_data = np.empty([0, 3])
+        raster_data = np.empty([0, 2])
         for shape in self.shapes:
             raster_data = np.vstack(
                 (raster_data, shape.rasterize(raster_width)))

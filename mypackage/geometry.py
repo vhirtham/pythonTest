@@ -143,9 +143,6 @@ class Shape2D:
             """
             length = np.linalg.norm(point_end - point_start)
 
-            point_start = np.append(point_start, [0])
-            point_end = np.append(point_end, [0])
-
             num_raster_segments = np.round(length / raster_width)
             nrw = 1. / num_raster_segments
 
@@ -244,12 +241,13 @@ class Shape2D:
             :param rotation_angles: Array containing the rotation angles
             :return: Array of contour points (3d)
             """
-            vec_center_start_3d = np.append(vec_center_start,
-                                            [0])[np.newaxis, :, np.newaxis]
-            point_center_3d = np.append(self._point_center, [0])[:, np.newaxis]
+            vec_center_start_3d = vec_center_start[np.newaxis, :, np.newaxis]
+            point_center_3d = self._point_center[:, np.newaxis]
 
             rotation_matrices = R.from_euler('z', rotation_angles).as_dcm()
+            rotation_matrices = rotation_matrices[:, 0:2, 0:2]
 
+            print(rotation_matrices)
             raster_data = np.matmul(rotation_matrices,
                                     vec_center_start_3d) + point_center_3d
 
@@ -491,7 +489,7 @@ class Shape2D:
         points = self._points
         segments = self._segments
 
-        raster_data = np.empty([0, 3])
+        raster_data = np.empty([0, 2])
         for i in range(self.num_segments()):
             raster_data = np.vstack((raster_data,
                                      segments[i].rasterize(raster_width,
@@ -499,5 +497,5 @@ class Shape2D:
                                                            points[i + 1])))
 
         raster_data = np.vstack(
-            (raster_data, np.append(self._points[-1], [0])))
+            (raster_data, self._points[-1]))
         return raster_data

@@ -131,12 +131,13 @@ def default_rasterization_tests(data, raster_width, point_start, point_end):
     # Check if first point of the data are identical to the segment start
     assert np.linalg.norm(data[0, 0:2] - point_start) < 1E-9
 
+    point_dimension = data[0, :].size
     num_data_points = data[:, 0].size
+
+    assert point_dimension == 2
+
     for i in range(num_data_points):
         point = data[i]
-
-        # Check that z-component is 0
-        assert point[2] == 0.
 
         # Check if the raster width is close to the specified value
         if i < num_data_points - 1:
