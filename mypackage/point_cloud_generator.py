@@ -66,16 +66,53 @@ def is_point_valid(point):
 
 
 def is_orthogonal(u, v, tolerance=1E-9):
-    return np.abs(np.cross(u, v) - 1) < tolerance
+    return np.abs(np.dot(u, v)) < tolerance
 
 
 class CartesianCoordinateSystem3d:
-    def __init__(self, x=None, y=None, z=None, positive_orientation=True):
+    def __init__(self, x=None, y=None, z=None, origin=[0, 0, 0],
+                 positive_orientation=True):
+        if positive_orientation:
+            sign_orientation = 1
+        else:
+            sign_orientation = -1
+
+        if x is None:
+            x = self._calcualte_third_axis(y, z) * sign_orientation
+        if y is None:
+            y = self._calcualte_third_axis(z, x) * sign_orientation
         if z is None:
-            if x is None or y is None:
-                raise Exception("Two axes need to be defined")
-            if not is_orthogonal(x, y):
-                raise Exception("Defined axes are not orthogonal")
+            z = self._calcualte_third_axis(x, y) * sign_orientation
+
+        e0 = x / np.linalg.norm(x)
+        e1 = y / np.linalg.norm(y)
+        e2 = z / np.linalg.norm(z)
+        self._basis = [e0, e1, e2]
+        self._origin = np.array(origin)
+
+    @staticmethod
+    def _calcualte_third_axis(a0, a1):
+        if a0 is None or a1 is None:
+            raise Exception("Two axes need to be defined")
+        if not is_orthogonal(a0, a1):
+            raise Exception("Defined axes are not orthogonal")
+        return np.cross(a0, a1)
+
+    @property
+    def basis(self):
+        return self._basis
+
+    @property
+    def origin(self):
+        return self._origin
+
+    @staticmethod
+    def change_of_base_rotation(css_from, css_to):
+        return np.linalg.solve(css_from.basis, css_to.basis)
+
+    @staticmethod
+    def change_of_base_translation(css_from, css_to):
+        return css_to.origin - css_from.origin
 
 
 def vector_to_vector_transformation(u, v):
