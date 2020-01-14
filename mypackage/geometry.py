@@ -247,7 +247,6 @@ class Shape2D:
             rotation_matrices = R.from_euler('z', rotation_angles).as_dcm()
             rotation_matrices = rotation_matrices[:, 0:2, 0:2]
 
-            print(rotation_matrices)
             raster_data = np.matmul(rotation_matrices,
                                     vec_center_start_3d) + point_center_3d
 
@@ -474,6 +473,14 @@ class Shape2D:
         :return: number of points
         """
         return self._points[:, 0].size
+
+    @property
+    def segments(self):
+        return self._segments
+
+    @property
+    def points(self):
+        return self._points
 
     def rasterize(self, raster_width):
         """
