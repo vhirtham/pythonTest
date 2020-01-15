@@ -1,5 +1,6 @@
 import mypackage.transformations as tf
 import numpy as np
+import pytest
 
 
 # cartesian coordinate system class -------------------------------------------
@@ -14,12 +15,15 @@ def check_coordinate_system(ccs, basis_expected, origin_expected,
     # check orientation is as expected
     assert is_orientation_positive(ccs) == positive_orientation_expected
 
+    # check basis vectors are orthogonal
+    assert tf.is_orthogonal(ccs.basis[0], ccs.basis[1])
+    assert tf.is_orthogonal(ccs.basis[1], ccs.basis[2])
+    assert tf.is_orthogonal(ccs.basis[2], ccs.basis[0])
+
     for i in range(3):
         unit_vec = tf.normalize(basis_expected[i])
 
         # check axis orientations match
-        if not np.abs(np.dot(ccs.basis[i], unit_vec) - 1) < 1E-9:
-            grr = 0
         assert np.abs(np.dot(ccs.basis[i], unit_vec) - 1) < 1E-9
 
         # check origin correct
@@ -53,6 +57,14 @@ def test_cartesian_coordinate_system_construction():
     basis_pos = [x, y, z]
     basis_neg = [x, y, -z]
 
+    # construction with basis -----------------------------
+
+    ccs_basis_pos = cls_ccs.construct_from_basis(basis_pos, origin)
+    ccs_basis_neg = cls_ccs.construct_from_basis(basis_neg, origin)
+
+    check_coordinate_system(ccs_basis_pos, basis_pos, origin, True)
+    check_coordinate_system(ccs_basis_neg, basis_neg, origin, False)
+
     # construction with x,y,z-vectors ---------------------
 
     ccs_xyz_pos = cls_ccs.construct_from_xyz(x, y, z, origin)
@@ -85,5 +97,6 @@ def test_cartesian_coordinate_system_construction():
     check_coordinate_system(ccs_xzo_pos, basis_pos, origin, True)
     check_coordinate_system(ccs_xzo_neg, basis_neg, origin, False)
 
-
-test_cartesian_coordinate_system_construction()
+    # check exceptions ------------------------------------
+    with pytest.raises(Exception):
+        cls_ccs([x, y, [0, 0, 1]])
