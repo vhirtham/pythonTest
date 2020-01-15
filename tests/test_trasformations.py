@@ -3,6 +3,54 @@ import numpy as np
 import pytest
 
 
+# functions -------------------------------------------------------------------
+def check_matrix_orthogonal(matrix):
+    transposed = np.transpose(matrix)
+
+    product = np.matmul(transposed, matrix)
+    unit = np.identity(3)
+    for i in range(3):
+        for j in range(3):
+            assert np.abs(product[i][j] - unit[i][j]) < 1E-9
+
+
+def check_matrix_does_not_reflect(matrix):
+    assert np.linalg.det(matrix) >= 0
+
+
+def test_single_axis_rotation_matrices():
+    matrix_funcs = [tf.rotation_matrix_x, tf.rotation_matrix_y,
+                    tf.rotation_matrix_z]
+    vec = np.array([1, 1, 1])
+
+    for i in range(3):
+        for j in range(36):
+            angle = j / 18 * np.pi
+            matrix = matrix_funcs[i](angle)
+
+            # rotation matrices are orthogonal
+            check_matrix_orthogonal(matrix)
+
+            # matrix should not reflect
+            check_matrix_does_not_reflect(matrix)
+
+            # rotate vector
+            res = np.matmul(matrix, vec)
+
+            # check component of rotation axis
+            assert np.abs(res[i] - 1) < 1E-9
+
+            # check other components
+            i_1 = (i + 1) % 3
+            i_2 = (i + 2) % 3
+
+            exp_1 = np.cos(angle) - np.sin(angle)
+            exp_2 = np.cos(angle) + np.sin(angle)
+
+            assert np.abs(res[i_1] - exp_1) < 1E-9
+            assert np.abs(res[i_2] - exp_2) < 1E-9
+
+
 # cartesian coordinate system class -------------------------------------------
 
 def is_orientation_positive(ccs):
