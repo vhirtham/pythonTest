@@ -1,7 +1,11 @@
 import pytest
 import mypackage.point_cloud_generator as pcg
 import mypackage.geometry as geo
+import mypackage.transformations as tf
+import numpy as np
 
+
+# profile class ---------------------------------------------------------------
 
 def test_profile_construction_and_shape_addition():
     shape = geo.Shape2D([0, 0], [1, 0])

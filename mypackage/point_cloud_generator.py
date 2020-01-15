@@ -3,6 +3,7 @@
 import mypackage.geometry as geo
 import numpy as np
 import copy
+import mypackage.transformations as tf
 from scipy.spatial.transform import Rotation as R
 
 
@@ -16,7 +17,6 @@ class Profile:
         :param: shapes: Instance or list of geo.Shape2D class(es)
         """
         self._shapes = []
-
         self.add_shapes(shapes)
 
     def add_shapes(self, shapes):
@@ -80,84 +80,6 @@ def is_point3d(point):
     return True
 
 
-def is_orthogonal(u, v, tolerance=1E-9):
-    return np.abs(np.dot(u, v)) < tolerance
-
-
-class CartesianCoordinateSystem3d:
-    def __init__(self, basis=None, x=None, y=None, z=None,
-                 origin=np.array([0, 0, 0]),
-                 positive_orientation=True):
-        if positive_orientation:
-            sign_orientation = 1
-        else:
-            sign_orientation = -1
-        if basis is not None:
-            x = basis[0]
-            y = basis[1]
-            z = basis[2]
-
-        if x is None and y is None and z is None:
-            e0 = np.array([1, 0, 0])
-            e1 = np.array([0, 1, 0])
-            e2 = np.array([0, 0, 1]) * sign_orientation
-        elif x is not None and y is not None and z is not None:
-            if not (is_orthogonal(x, y) and
-                    is_orthogonal(y, z) and
-                    is_orthogonal(z, x)):
-                raise Exception("Basis vectors must be orthogonal")
-            e0 = x / np.linalg.norm(x)
-            e1 = y / np.linalg.norm(y)
-            e2 = z / np.linalg.norm(z)
-        else:
-            if x is None:
-                x = self._calcualte_third_axis(y, z) * sign_orientation
-            if y is None:
-                y = self._calcualte_third_axis(z, x) * sign_orientation
-            if z is None:
-                z = self._calcualte_third_axis(x, y) * sign_orientation
-
-            e0 = x / np.linalg.norm(x)
-            e1 = y / np.linalg.norm(y)
-            e2 = z / np.linalg.norm(z)
-
-        self._basis = [e0, e1, e2]
-        self._origin = np.array(origin)
-
-    @staticmethod
-    def _calcualte_third_axis(a0, a1):
-        if a0 is None or a1 is None:
-            raise Exception("Two axes need to be defined")
-        if not is_orthogonal(a0, a1):
-            raise Exception("Defined axes are not orthogonal")
-        return np.cross(a0, a1)
-
-    @property
-    def basis(self):
-        return self._basis
-
-    @property
-    def origin(self):
-        return self._origin
-
-    @staticmethod
-    def change_of_base_rotation(css_from, css_to):
-        return np.linalg.solve(css_from.basis, css_to.basis)
-
-    @staticmethod
-    def change_of_base_translation(css_from, css_to):
-        return css_from.origin - css_to.origin
-
-
-def vector_to_vector_transformation(u, v):
-    r = np.cross(u, v)
-    w = np.sqrt(np.dot(u, u) * np.dot(v, v)) + np.dot(u, v)
-    quaternion = np.concatenate((r, [w]))
-    unit_quaternion = quaternion / np.linalg.norm(quaternion)
-
-    return R.from_quat(unit_quaternion).as_dcm()
-
-
 class LinearHorizontalTraceSegment:
 
     def __init__(self, point_start, point_end):
@@ -180,16 +102,19 @@ class LinearHorizontalTraceSegment:
         return self._length
 
     def local_coordinate_system(self, weight):
+        ccs = tf.CartesianCoordinateSystem3d
         weight = np.clip(weight, 0, 1)
         direction = np.append(self._direction_vector, [0])
-        return CartesianCoordinateSystem3d(y=direction, z=[0, 0, 1],
-                                           origin=self._position(weight))
+        return ccs.construct_from_yz_and_orientation(direction,
+                                                     [0, 0, 1],
+                                                     True,
+                                                     self._position(weight))
 
 
 class Trace:
     def __init__(self,
                  segments,
-                 coordinate_system=CartesianCoordinateSystem3d()):
+                 coordinate_system=tf.CartesianCoordinateSystem3d()):
         self._segments = segments
         self._coordinate_system = coordinate_system
         length = 0
@@ -202,7 +127,7 @@ class Trace:
 
     def local_coordinate_system(self, position):
         position = np.clip(position, 0, self._length)
-        cs_base = CartesianCoordinateSystem3d()
+        cs_base = tf.CartesianCoordinateSystem3d()
         cs_stack = copy.deepcopy(self._coordinate_system)
 
         for i in range(len(self._segments)):
@@ -213,19 +138,16 @@ class Trace:
                 weight = 1
 
             cs_local = self._segments[i].local_coordinate_system(weight)
-            tra = CartesianCoordinateSystem3d.change_of_base_translation(
-                cs_local, cs_base)
-            rot = CartesianCoordinateSystem3d.change_of_base_rotation(
-                cs_base, cs_local)
-            rot_tra = CartesianCoordinateSystem3d.change_of_base_rotation(
-                cs_stack, cs_base)
+            tra = tf.change_of_base_translation(cs_local, cs_base)
+            rot = tf.change_of_base_rotation(cs_base, cs_local)
+            rot_tra = tf.change_of_base_rotation(cs_stack, cs_base)
 
             tra = np.matmul(rot_tra, tra)
 
             basis = np.matmul(rot, cs_stack.basis)
             origin = cs_stack.origin + tra
-            cs_stack = CartesianCoordinateSystem3d(basis=basis,
-                                                   origin=origin)
+            cs_stack = tf.CartesianCoordinateSystem3d(basis=basis,
+                                                      origin=origin)
 
             if position <= segment_length:
                 return cs_stack
@@ -331,18 +253,15 @@ class Section:
 
         raster_data = np.empty([0, 3])
         trace = self.trace
-        global_cs = CartesianCoordinateSystem3d()
+        global_cs = tf.CartesianCoordinateSystem3d()
         for position in np.arange(0, trace.length() + 0.01, 0.5):
             profile = self._interpolated_profile(position)
             profile_raster_data = profile.rasterize(raster_width)
             profile_raster_data = np.insert(profile_raster_data, 1, 0, axis=1)
             trace_cs = trace.local_coordinate_system(position)
 
-            rotation = CartesianCoordinateSystem3d.change_of_base_rotation(
-                trace_cs, global_cs)
-            translation = \
-                CartesianCoordinateSystem3d.change_of_base_translation(
-                    trace_cs, global_cs)
+            rotation = tf.change_of_base_rotation(trace_cs, global_cs)
+            translation = tf.change_of_base_translation(trace_cs, global_cs)
 
             profile_raster_data = np.matmul(profile_raster_data,
                                             np.transpose(rotation))
