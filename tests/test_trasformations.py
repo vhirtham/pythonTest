@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 import random
 import math
+import copy
 
 
 # helpers for tests -----------------------------------------------------------
@@ -41,6 +42,12 @@ def check_matrix_orthogonal(matrix):
             assert np.abs(product[i][j] - unit[i][j]) < 1E-9
 
 
+def check_matrix_identical(a, b):
+    for i in range(3):
+        for j in range(3):
+            assert math.isclose(a[i, j], b[i, j], abs_tol=1E-9)
+
+
 def is_orientation_positive(ccs):
     return tf.orientation_point_plane_containing_origin(ccs.basis[2],
                                                         ccs.basis[0],
@@ -57,15 +64,13 @@ def random_non_unit_vector():
     return vec
 
 
-def rotated_positive_orthogonal_base():
+def rotated_positive_orthogonal_base(angle_x=np.pi / 3, angle_y=np.pi / 4,
+                                     angle_z=np.pi / 5):
     x = [1, 0, 0]
     y = [0, 1, 0]
     z = [0, 0, 1]
 
     # rotate axes to produce a more general test case
-    angle_x = np.pi / 3
-    angle_y = np.pi / 4
-    angle_z = np.pi / 5
     r_x = tf.rotation_matrix_x(angle_x)
     r_y = tf.rotation_matrix_y(angle_y)
     r_z = tf.rotation_matrix_z(angle_z)
@@ -216,6 +221,50 @@ def test_is_orthogonal():
     with pytest.raises(Exception):
         tf.is_orthogonal([0, 0, 0], [0, 0, 0])
 
+
+def test_change_of_base_rotation():
+    diff_angle = np.pi / 2
+    ref_mat = [tf.rotation_matrix_x(-diff_angle),
+               tf.rotation_matrix_y(-diff_angle),
+               tf.rotation_matrix_z(-diff_angle)]
+
+    for i in range(3):
+        angles_from = np.pi * np.array([1 / 3., 1 / 5., 1 / 4])
+        for j in np.arange(i + 1, 3):
+            angles_from[j] = 0
+
+        angles_to = copy.deepcopy(angles_from)
+        angles_to[i] += diff_angle
+
+        base_from = rotated_positive_orthogonal_base(*angles_from)
+        base_to = rotated_positive_orthogonal_base(*angles_to)
+
+        ccs_from = tf.CartesianCoordinateSystem3d(base_from,
+                                                  random_non_unit_vector())
+        ccs_to = tf.CartesianCoordinateSystem3d(base_to,
+                                                random_non_unit_vector())
+
+        matrix = tf.change_of_base_rotation(ccs_from, ccs_to)
+
+        check_matrix_identical(matrix, ref_mat[i])
+
+
+def test_change_of_base_translation():
+    for i in range(20):
+        origin_from = random_non_unit_vector()
+        origin_to = random_non_unit_vector()
+        base_from = rotated_positive_orthogonal_base(*random_non_unit_vector())
+        base_to = rotated_positive_orthogonal_base(*random_non_unit_vector())
+
+        ccs_from = tf.CartesianCoordinateSystem3d(base_from, origin_from)
+        ccs_to = tf.CartesianCoordinateSystem3d(base_to, origin_to)
+
+        diff = tf.change_of_base_translation(ccs_from, ccs_to)
+
+        expected_diff = origin_from - origin_to
+        for j in range(3):
+            assert math.isclose(diff[j], expected_diff[j])
+        
 
 # test cartesian coordinate system class --------------------------------------
 

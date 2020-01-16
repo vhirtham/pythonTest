@@ -3,6 +3,8 @@ import math
 from scipy.spatial.transform import Rotation as Rot
 
 
+# functions -------------------------------------------------------------------
+
 def rotation_matrix_x(angle):
     """
     Create a rotation matrix that rotates around the x-axis.
@@ -120,12 +122,21 @@ def is_orthogonal(u, v, tolerance=1E-9):
 
 
 def change_of_base_rotation(css_from, css_to):
+    """
+    Calculate the rotatory transformation between 2 coordinate systems.
+
+    :param css_from: Source coordinate system
+    :param css_to: Target coordinate system
+    :return: Rotation matrix
+    """
     return np.linalg.solve(css_from.basis, css_to.basis)
 
 
 def change_of_base_translation(css_from, css_to):
     return css_from.origin - css_to.origin
 
+
+# cartesian coordinate system class -------------------------------------------
 
 class CartesianCoordinateSystem3d:
     """Defines a 3d cartesian coordinate system."""
