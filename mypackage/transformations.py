@@ -33,6 +33,12 @@ def rotation_matrix_z(angle):
 
 
 def normalize(u):
+    """
+    Normalize a vector.
+
+    :param u: Vector
+    :return: Normalized vector
+    """
     norm = np.linalg.norm(u)
     if norm == 0.:
         raise Exception("Vector length is 0.")

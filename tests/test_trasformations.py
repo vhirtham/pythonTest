@@ -1,6 +1,8 @@
 import mypackage.transformations as tf
 import numpy as np
 import pytest
+import random
+import math
 
 
 # functions -------------------------------------------------------------------
@@ -49,6 +51,39 @@ def test_single_axis_rotation_matrices():
 
             assert np.abs(res[i_1] - exp_1) < 1E-9
             assert np.abs(res[i_2] - exp_2) < 1E-9
+
+
+def random_non_unit_vector():
+    vec = np.array([random.random(), random.random(),
+                    random.random()]) * 10 * random.random()
+    while math.isclose(np.linalg.norm(vec), 1) or math.isclose(
+            np.linalg.norm(vec), 0):
+        vec = np.array([random.random(), random.random(),
+                        random.random()]) * 10 * random.random()
+    return vec
+
+
+def test_normalize():
+    for i in range(20):
+        vec = random_non_unit_vector()
+
+        unit = tf.normalize(vec)
+
+        # check that vector is modified
+        for i in range(vec.size):
+            assert not math.isclose(unit[i], vec[i])
+
+        # check length is 1
+        assert math.isclose(np.linalg.norm(unit), 1)
+
+        # check that both vectors point into the same direction
+        vec2 = unit * np.linalg.norm(vec)
+        for i in range(vec.size):
+            assert math.isclose(vec2[i], vec[i])
+
+    # check exception if length is 0
+    with pytest.raises(Exception):
+        tf.normalize(np.array([0, 0, 0]))
 
 
 # cartesian coordinate system class -------------------------------------------
