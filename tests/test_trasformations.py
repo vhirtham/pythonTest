@@ -162,7 +162,32 @@ def test_orientation_point_plane_containing_origin():
     assert orientation == 0
 
 
-test_orientation_point_plane_containing_origin()
+def test_orientation_point_plane():
+    [b, c, n] = rotated_positive_orthogonal_base()
+    a = [3.2, -2.1, 5.4]
+    b = b * 6.5 + a
+    c = c * 0.3 + a
+
+    for length in np.arange(-9.5, 9.51, 1):
+        orientation = tf.orientation_point_plane(n * length + a, a, b, c)
+        assert np.sign(length) == orientation
+
+    # check exceptions
+    with pytest.raises(Exception):
+        tf.orientation_point_plane(n, a, a, c)
+    with pytest.raises(Exception):
+        tf.orientation_point_plane(n, a, b, b)
+    with pytest.raises(Exception):
+        tf.orientation_point_plane(n, c, b, c)
+    with pytest.raises(Exception):
+        tf.orientation_point_plane(n, a, a, a)
+
+    # check special case point on plane
+    a = np.array([1, 0, 0])
+    b = np.array([0, 1, 0])
+    c = np.array([0, 0, 1])
+    orientation = tf.orientation_point_plane(a, a, b, c)
+    assert orientation == 0
 
 
 # test cartesian coordinate system class --------------------------------------
