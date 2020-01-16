@@ -105,7 +105,18 @@ def orientation_point_plane(point, a, b, c):
 
 
 def is_orthogonal(u, v, tolerance=1E-9):
-    return np.abs(np.dot(normalize(u), normalize(v))) < tolerance
+    """
+    Check if vectors are orthogonal.
+
+    :param u: First vector
+    :param v: Second vector
+    :param tolerance: Numerical tolerance
+    :return: True or False
+    """
+    if math.isclose(np.dot(u, u), 0) or math.isclose(np.dot(v, v), 0):
+        raise Exception("One or both vectors have zero length.")
+
+    return math.isclose(np.dot(u, v), 0, abs_tol=tolerance)
 
 
 def change_of_base_rotation(css_from, css_to):

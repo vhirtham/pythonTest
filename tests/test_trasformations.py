@@ -190,6 +190,33 @@ def test_orientation_point_plane():
     assert orientation == 0
 
 
+def test_is_orthogonal():
+    [x, y, z] = rotated_positive_orthogonal_base()
+
+    assert tf.is_orthogonal(x, y)
+    assert tf.is_orthogonal(y, x)
+    assert tf.is_orthogonal(y, z)
+    assert tf.is_orthogonal(z, y)
+    assert tf.is_orthogonal(z, x)
+    assert tf.is_orthogonal(x, z)
+
+    assert not tf.is_orthogonal(x, x)
+    assert not tf.is_orthogonal(y, y)
+    assert not tf.is_orthogonal(z, z)
+
+    # check tolerance is working
+    assert not tf.is_orthogonal(x + 0.00001, z, 1E-6)
+    assert tf.is_orthogonal(x + 0.00001, z, 1E-4)
+
+    # check zero length vectors cause exception
+    with pytest.raises(Exception):
+        tf.is_orthogonal([0, 0, 0], z)
+    with pytest.raises(Exception):
+        tf.is_orthogonal(x, [0, 0, 0])
+    with pytest.raises(Exception):
+        tf.is_orthogonal([0, 0, 0], [0, 0, 0])
+
+
 # test cartesian coordinate system class --------------------------------------
 
 def test_cartesian_coordinate_system_construction():
