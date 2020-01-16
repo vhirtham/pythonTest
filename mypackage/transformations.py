@@ -3,14 +3,32 @@ from scipy.spatial.transform import Rotation as Rot
 
 
 def rotation_matrix_x(angle):
+    """
+    Create a rotation matrix that rotates around the x-axis.
+
+    :param angle: Rotation angle
+    :return: Rotation matrix
+    """
     return Rot.from_euler("x", angle).as_dcm()
 
 
 def rotation_matrix_y(angle):
+    """
+    Create a rotation matrix that rotates around the y-axis.
+
+    :param angle: Rotation angle
+    :return: Rotation matrix
+    """
     return Rot.from_euler("y", angle).as_dcm()
 
 
 def rotation_matrix_z(angle):
+    """
+    Create a rotation matrix that rotates around the z-axis.
+
+    :param angle: Rotation angle
+    :return: Rotation matrix
+    """
     return Rot.from_euler("z", angle).as_dcm()
 
 
