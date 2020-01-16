@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from scipy.spatial.transform import Rotation as Rot
 
 
@@ -45,18 +46,61 @@ def normalize(u):
     return u / norm
 
 
-def point_left_of_plane_by_vectors(point, plane_vec0, plane_vec1):
-    # right is the direction of the cross product
-    print([plane_vec0, plane_vec1, point])
-    print(np.sign(np.linalg.det([plane_vec0, plane_vec1, point])))
-    return np.sign(np.linalg.det([plane_vec0, plane_vec1, point]))
+def orientation_point_plane_containing_origin(point, a, b):
+    """
+    Determine a points orientation relative to a plane containing the origin.
+
+    The side is defined by the winding order of the triangle 'origin - A -
+    B'. When looking at it from the left-hand side, the ordering is clockwise
+    and counter-clockwise when looking from the right-hand side.
+
+    The function returns 1 if the point lies left of the plane, -1 if it is
+    on the right and 0 if it lies on the plane.
+
+    Note, that this function is not appropriate to check if a point lies on
+    a plane since it has no tolerance to compensate for numerical errors.
+
+    Additional note: The points A and B can also been considered as two
+    vectors spanning the plane.
+
+    :param point: Point
+    :param a: Second point of the triangle 'origin - A - B'.
+    :param b: Third point of the triangle 'origin - A - B'.
+    :return: 1, -1 or 0 (see description)
+    """
+    if (math.isclose(np.linalg.norm(a), 0) or
+            math.isclose(np.linalg.norm(b), 0) or
+            math.isclose(np.linalg.norm(b - a), 0)):
+        raise Exception(
+            "One or more points describing the plane are identical.")
+
+    return np.sign(np.linalg.det([a, b, point]))
 
 
-def point_left_of_plane_by_points(point, plane_a, plane_b, plane_c):
-    vec_a_b = plane_b - plane_a
-    vec_a_c = plane_c - plane_a
-    vec_a_point = point - plane_a
-    return point_left_of_plane_by_vectors(vec_a_b, vec_a_c, vec_a_point)
+def point_left_of_plane_by_points(point, a, b, c):
+    """
+    Determine a points orientation relative to a plane.
+
+    The side is defined by the winding order of the triangle 'A -B - C'.
+    When looking at it from the left-hand side, the ordering is clockwise
+    and counter-clockwise when looking from the right-hand side.
+
+    The function returns 1 if the point lies left of the plane, -1 if it is
+    on the right and 0 if it lies on the plane.
+
+    Note, that this function is not appropriate to check if a point lies on
+    a plane since it has no tolerance to compensate for numerical errors.
+
+    :param a: First point of the triangle 'A - B - C'.
+    :param b: Second point of the triangle 'A - B - C'.
+    :param b: Third point of the triangle 'A - B - C'.
+    :return: 1, -1 or 0 (see description)
+    """
+    vec_a_b = b - a
+    vec_a_c = c - a
+    vec_a_point = point - a
+    return orientation_point_plane_containing_origin(vec_a_b, vec_a_c,
+                                                     vec_a_point)
 
 
 def is_orthogonal(u, v, tolerance=1E-9):
