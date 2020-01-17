@@ -59,6 +59,11 @@ class Profile:
 
     @property
     def shapes(self):
+        """
+        Get the profiles shapes.
+
+        :return: Shapes
+        """
         return self._shapes
 
 
@@ -80,35 +85,41 @@ def is_point3d(point):
     return True
 
 
+# Trace segment classes -------------------------------------------------------
+
 class LinearHorizontalTraceSegment:
+    """Trace segment with a linear path and constant z-component."""
 
-    def __init__(self, point_start, point_end):
-        point_start = np.array(point_start)
-        point_end = np.array(point_end)
+    def __init__(self, length):
+        """
+        Constructor.
 
-        check_is_point2d(point_start)
-        check_is_point2d(point_end)
+        :param length: Length of the segment
+        """
+        if length <= 0:
+            raise ValueError("'length' must have a positive value.")
+        self._length = length
 
-        self._points = np.array([point_start, point_end])
-        self._direction_vector = self._points[1] - self._points[0]
-        self._length = np.linalg.norm(self._direction_vector)
-
-    def _position(self, weight):
-        weight = np.clip(weight, 0, 1)
-        current_position = self._points[0] + weight * self._direction_vector
-        return np.append(current_position, [0])
-
+    @property
     def length(self):
+        """
+        Get the length of the segment.
+
+        :return: Length of the segment
+        """
         return self._length
 
-    def local_coordinate_system(self, weight):
-        ccs = tf.CartesianCoordinateSystem3d
-        weight = np.clip(weight, 0, 1)
-        direction = np.append(self._direction_vector, [0])
-        return ccs.construct_from_yz_and_orientation(direction,
-                                                     [0, 0, 1],
-                                                     True,
-                                                     self._position(weight))
+    def local_coordinate_system(self, relative_position):
+        """
+        Calculate a local coordinate system along the trace segment.
+
+        :param relative_position: Relative position on the trace [0 .. 1]
+        :return: Local coordinate system
+        """
+        relative_position = np.clip(relative_position, 0, 1)
+
+        origin = np.array([0, 1, 0]) * relative_position * self._length
+        return tf.CartesianCoordinateSystem3d(origin=origin)
 
 
 class Trace:
@@ -119,7 +130,7 @@ class Trace:
         self._coordinate_system = coordinate_system
         length = 0
         for segment in self._segments:
-            length += segment.length()
+            length += segment.length
         self._length = length
 
     def length(self):
@@ -131,7 +142,7 @@ class Trace:
         cs_stack = copy.deepcopy(self._coordinate_system)
 
         for i in range(len(self._segments)):
-            segment_length = self._segments[i].length()
+            segment_length = self._segments[i].length
             if position <= segment_length:
                 weight = position / segment_length
             else:
