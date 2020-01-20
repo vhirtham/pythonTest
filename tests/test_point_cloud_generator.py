@@ -148,9 +148,11 @@ def test_linear_horizontal_trace_segment():
     length = 7.13
     segment = pcg.LinearHorizontalTraceSegment(length)
 
-    assert math.isclose(segment.length, length)
-
     default_trace_segment_tests(segment)
 
+    assert math.isclose(segment.length, length)
 
-test_linear_horizontal_trace_segment()
+    with pytest.raises(ValueError):
+        pcg.LinearHorizontalTraceSegment(0)
+    with pytest.raises(ValueError):
+        pcg.LinearHorizontalTraceSegment(-4.61)

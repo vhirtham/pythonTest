@@ -121,19 +121,20 @@ def is_orthogonal(u, v, tolerance=1E-9):
     return math.isclose(np.dot(u, v), 0, abs_tol=tolerance)
 
 
-def change_of_base_rotation(css_from, css_to):
+def change_of_basis_rotation(ccs_from, ccs_to):
     """
     Calculate the rotatory transformation between 2 coordinate systems.
 
-    :param css_from: Source coordinate system
-    :param css_to: Target coordinate system
+    :param ccs_from: Source coordinate system
+    :param ccs_to: Target coordinate system
     :return: Rotation matrix
     """
-    return np.linalg.solve(css_from.basis, css_to.basis)
+    return np.matmul(ccs_from.basis, np.transpose(ccs_to.basis))
+    # return np.linalg.solve(ccs_from.basis, ccs_to.basis)
 
 
-def change_of_base_translation(css_from, css_to):
-    return css_from.origin - css_to.origin
+def change_of_basis_translation(ccs_from, ccs_to):
+    return ccs_from.origin - ccs_to.origin
 
 
 # cartesian coordinate system class -------------------------------------------
@@ -185,7 +186,7 @@ class CartesianCoordinateSystem3d:
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        basis = [x, y, z]
+        basis = np.transpose([x, y, z])
         return cls(basis, origin=origin)
 
     @classmethod
@@ -203,7 +204,7 @@ class CartesianCoordinateSystem3d:
         """
         z = cls._calcualte_orthogonal_axis(x, y) * cls._sign_orientation(
             positive_orientation)
-        basis = [x, y, z]
+        basis = np.transpose([x, y, z])
         return cls(basis, origin=origin)
 
     @classmethod
@@ -221,7 +222,7 @@ class CartesianCoordinateSystem3d:
         """
         x = cls._calcualte_orthogonal_axis(y, z) * cls._sign_orientation(
             positive_orientation)
-        basis = [x, y, z]
+        basis = np.transpose([x, y, z])
         return cls(basis, origin=origin)
 
     @classmethod
@@ -239,7 +240,7 @@ class CartesianCoordinateSystem3d:
         """
         y = cls._calcualte_orthogonal_axis(z, x) * cls._sign_orientation(
             positive_orientation)
-        basis = [x, y, z]
+        basis = np.transpose([x, y, z])
         return cls(basis, origin=origin)
 
     @staticmethod

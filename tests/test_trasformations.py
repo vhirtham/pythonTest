@@ -19,10 +19,10 @@ def check_coordinate_system(ccs, basis_expected, origin_expected,
     assert tf.is_orthogonal(ccs.basis[2], ccs.basis[0])
 
     for i in range(3):
-        unit_vec = tf.normalize(basis_expected[i])
+        unit_vec = tf.normalize(basis_expected[:, i])
 
         # check axis orientations match
-        assert np.abs(np.dot(ccs.basis[i], unit_vec) - 1) < 1E-9
+        assert np.abs(np.dot(ccs.basis[:, i], unit_vec) - 1) < 1E-9
 
         # check origin correct
         assert np.abs(origin_expected[i] - ccs.origin[i]) < 1E-9
@@ -81,7 +81,7 @@ def rotated_positive_orthogonal_base(angle_x=np.pi / 3, angle_y=np.pi / 4,
     y = np.matmul(r_tot, y)
     z = np.matmul(r_tot, z)
 
-    return [x, y, z]
+    return np.transpose([x, y, z])
 
 
 # test functions --------------------------------------------------------------
@@ -196,7 +196,10 @@ def test_orientation_point_plane():
 
 
 def test_is_orthogonal():
-    [x, y, z] = rotated_positive_orthogonal_base()
+    basis = rotated_positive_orthogonal_base()
+    x = basis[:, 0]
+    y = basis[:, 1]
+    z = basis[:, 2]
 
     assert tf.is_orthogonal(x, y)
     assert tf.is_orthogonal(y, x)
@@ -222,7 +225,7 @@ def test_is_orthogonal():
         tf.is_orthogonal([0, 0, 0], [0, 0, 0])
 
 
-def test_change_of_base_rotation():
+def test_change_of_basis_rotation():
     diff_angle = np.pi / 2
     ref_mat = [tf.rotation_matrix_x(-diff_angle),
                tf.rotation_matrix_y(-diff_angle),
@@ -244,12 +247,12 @@ def test_change_of_base_rotation():
         ccs_to = tf.CartesianCoordinateSystem3d(base_to,
                                                 random_non_unit_vector())
 
-        matrix = tf.change_of_base_rotation(ccs_from, ccs_to)
+        matrix = tf.change_of_basis_rotation(ccs_from, ccs_to)
 
         check_matrix_identical(matrix, ref_mat[i])
 
 
-def test_change_of_base_translation():
+def test_change_of_basis_translation():
     for i in range(20):
         origin_from = random_non_unit_vector()
         origin_to = random_non_unit_vector()
@@ -259,12 +262,12 @@ def test_change_of_base_translation():
         ccs_from = tf.CartesianCoordinateSystem3d(base_from, origin_from)
         ccs_to = tf.CartesianCoordinateSystem3d(base_to, origin_to)
 
-        diff = tf.change_of_base_translation(ccs_from, ccs_to)
+        diff = tf.change_of_basis_translation(ccs_from, ccs_to)
 
         expected_diff = origin_from - origin_to
         for j in range(3):
             assert math.isclose(diff[j], expected_diff[j])
-        
+
 
 # test cartesian coordinate system class --------------------------------------
 
@@ -274,10 +277,13 @@ def test_cartesian_coordinate_system_construction():
 
     # setup -----------------------------------------------
     origin = [4, -2, 6]
-    [x, y, z] = rotated_positive_orthogonal_base()
+    basis_pos = rotated_positive_orthogonal_base()
 
-    basis_pos = [x, y, z]
-    basis_neg = [x, y, -z]
+    x = basis_pos[:, 0]
+    y = basis_pos[:, 1]
+    z = basis_pos[:, 2]
+
+    basis_neg = np.transpose([x, y, -z])
 
     # construction with basis -----------------------------
 

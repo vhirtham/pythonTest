@@ -122,6 +122,67 @@ class LinearHorizontalTraceSegment:
         return tf.CartesianCoordinateSystem3d(origin=origin)
 
 
+class RadialHorizontalTraceSegment:
+    """Trace segment describing an arc with constant z-component."""
+
+    def __init__(self, radius, angle, clockwise=False):
+        """
+        Constructor.
+
+        :param radius: Radius of the arc
+        :param angle: Angle of the arc
+        :param clockwise: If True, the rotation is clockwise. Otherwise it
+        is counter-clockwise.
+        """
+        if radius <= 0:
+            raise ValueError("'radius' must have a positive value.")
+        if angle <= 0:
+            raise ValueError("'angle' must have a positive value.")
+        self._radius = radius
+        self._angle = angle
+        self._length = self._arc_length(radius, angle)
+        if clockwise:
+            self._sign_winding = -1
+        else:
+            self._sign_winding = 1
+
+    @staticmethod
+    def _arc_length(radius, angle):
+        """
+        Calculate the arc length
+        :param radius: Radius
+        :param angle: Angle (rad)
+        :return: Arc length
+        """
+        return angle * radius
+
+    @property
+    def length(self):
+        """
+        Get the length of the segment.
+
+        :return: Length of the segment
+        """
+        return self._length
+
+    def local_coordinate_system(self, relative_position):
+        """
+        Calculate a local coordinate system along the trace segment.
+
+        :param relative_position: Relative position on the trace [0 .. 1]
+        :return: Local coordinate system
+        """
+        relative_position = np.clip(relative_position, 0, 1)
+
+        basis = tf.rotation_matrix_z(
+            self._angle * relative_position * self._sign_winding)
+        # print(basis[0])
+        translation = np.array([1, 0, 0]) * self._radius * self._sign_winding
+
+        origin = np.matmul(basis, translation) - translation
+        return tf.CartesianCoordinateSystem3d(basis, origin)
+
+
 class Trace:
     def __init__(self,
                  segments,
@@ -149,9 +210,9 @@ class Trace:
                 weight = 1
 
             cs_local = self._segments[i].local_coordinate_system(weight)
-            tra = tf.change_of_base_translation(cs_local, cs_base)
-            rot = tf.change_of_base_rotation(cs_base, cs_local)
-            rot_tra = tf.change_of_base_rotation(cs_stack, cs_base)
+            tra = tf.change_of_basis_translation(cs_local, cs_base)
+            rot = tf.change_of_basis_rotation(cs_local, cs_base)
+            rot_tra = tf.change_of_basis_rotation(cs_stack, cs_base)
 
             tra = np.matmul(rot_tra, tra)
 
@@ -271,8 +332,8 @@ class Section:
             profile_raster_data = np.insert(profile_raster_data, 1, 0, axis=1)
             trace_cs = trace.local_coordinate_system(position)
 
-            rotation = tf.change_of_base_rotation(trace_cs, global_cs)
-            translation = tf.change_of_base_translation(trace_cs, global_cs)
+            rotation = tf.change_of_basis_rotation(trace_cs, global_cs)
+            translation = tf.change_of_basis_translation(trace_cs, global_cs)
 
             profile_raster_data = np.matmul(profile_raster_data,
                                             np.transpose(rotation))
