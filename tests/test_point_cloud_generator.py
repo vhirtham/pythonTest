@@ -156,3 +156,12 @@ def test_linear_horizontal_trace_segment():
         pcg.LinearHorizontalTraceSegment(0)
     with pytest.raises(ValueError):
         pcg.LinearHorizontalTraceSegment(-4.61)
+
+
+def test_radial_horizontal_trace_segment():
+    radius = 4.74
+    angle = np.pi / 1.23
+    segment_cw = pcg.RadialHorizontalTraceSegment(radius, angle, True)
+    segment_ccw = pcg.RadialHorizontalTraceSegment(radius, angle, False)
+
+    default_trace_segment_tests(segment_cw)

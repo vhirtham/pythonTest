@@ -130,7 +130,6 @@ def change_of_basis_rotation(ccs_from, ccs_to):
     :return: Rotation matrix
     """
     return np.matmul(ccs_from.basis, np.transpose(ccs_to.basis))
-    # return np.linalg.solve(ccs_from.basis, ccs_to.basis)
 
 
 def change_of_basis_translation(ccs_from, ccs_to):
