@@ -67,24 +67,6 @@ class Profile:
         return self._shapes
 
 
-def check_is_point2d(point):
-    if not isinstance(point, np.ndarray):
-        raise TypeError("Point data must be a numpy array")
-    if not len(point.shape) == 1:
-        raise ValueError("Point must be a 1d array")
-    if not point.size == 2:
-        raise ValueError("Point must have a size of 2")
-    return True
-
-
-def is_point3d(point):
-    if not isinstance(point, np.ndarray):
-        return False
-    if not point.size == 3:
-        return False
-    return True
-
-
 # Trace segment classes -------------------------------------------------------
 
 class LinearHorizontalTraceSegment:
