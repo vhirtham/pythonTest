@@ -72,7 +72,7 @@ def test_profile_rasterization():
 
 # Test trace segment classes --------------------------------------------------
 
-def check_trace_segment_length(segment):
+def check_trace_segment_length(segment, tolerance=1E-9):
     lcs = segment.local_coordinate_system(1)
     length_numeric_prev = np.linalg.norm(lcs.origin)
 
@@ -97,12 +97,12 @@ def check_trace_segment_length(segment):
         length_numeric_prev = copy.deepcopy(length_numeric)
         num_segments *= 2
 
-        if math.isclose(relative_change, 1):
+        if math.isclose(relative_change, 1, abs_tol=tolerance / 10):
             break
         assert i < num_iterations - 1, "Segment length could not be " \
                                        "determined numerically"
 
-    assert math.isclose(length_numeric, segment.length)
+    assert math.isclose(length_numeric, segment.length, abs_tol=tolerance)
 
 
 def are_vectors_identical(a, b, tolerance=1E-9):
@@ -117,7 +117,7 @@ def are_vectors_identical(a, b, tolerance=1E-9):
 def check_trace_segment_orientation(segment):
     # The initial orientation of a segment must be [0, 1, 0]
     lcs = segment.local_coordinate_system(0)
-    assert are_vectors_identical(lcs.basis[1], np.array([0, 1, 0]))
+    assert are_vectors_identical(lcs.basis[:, 1], np.array([0, 1, 0]))
 
     delta = 1E-9
     for rel_pos in np.arange(0.1, 1.01, 0.1):
@@ -126,11 +126,11 @@ def check_trace_segment_orientation(segment):
         trace_direction_numerical = tf.normalize(lcs.origin - lcs_d.origin)
 
         # Check that the y-axis is always aligned with the trace's direction
-        assert are_vectors_identical(lcs.basis[1], trace_direction_numerical,
-                                     1E-6)
+        assert are_vectors_identical(lcs.basis[:, 1],
+                                     trace_direction_numerical, 1E-6)
 
 
-def default_trace_segment_tests(segment):
+def default_trace_segment_tests(segment, tolerance_length=1E-9):
     lcs = segment.local_coordinate_system(0)
 
     # test that function actually returns a coordinate system class
@@ -140,7 +140,7 @@ def default_trace_segment_tests(segment):
     for i in range(3):
         assert math.isclose(lcs.origin[i], 0)
 
-    check_trace_segment_length(segment)
+    check_trace_segment_length(segment, tolerance_length)
     check_trace_segment_orientation(segment)
 
 
@@ -148,10 +148,13 @@ def test_linear_horizontal_trace_segment():
     length = 7.13
     segment = pcg.LinearHorizontalTraceSegment(length)
 
+    # default tests
     default_trace_segment_tests(segment)
 
+    # getter tests
     assert math.isclose(segment.length, length)
 
+    # invalid inputs
     with pytest.raises(ValueError):
         pcg.LinearHorizontalTraceSegment(0)
     with pytest.raises(ValueError):
@@ -164,4 +167,36 @@ def test_radial_horizontal_trace_segment():
     segment_cw = pcg.RadialHorizontalTraceSegment(radius, angle, True)
     segment_ccw = pcg.RadialHorizontalTraceSegment(radius, angle, False)
 
-    default_trace_segment_tests(segment_cw)
+    # default tests
+    default_trace_segment_tests(segment_cw, 1E-4)
+    default_trace_segment_tests(segment_ccw, 1E-4)
+
+    # getter tests
+    assert math.isclose(segment_cw.angle, angle)
+    assert math.isclose(segment_ccw.angle, angle)
+    assert math.isclose(segment_cw.radius, radius)
+    assert math.isclose(segment_ccw.radius, radius)
+
+    # check positions
+    for weight in np.arange(0.1, 1, 0.1):
+        current_angle = angle * weight
+        x_exp = (1 - np.cos(current_angle)) * radius
+        y_exp = np.sin(current_angle) * radius
+
+        lcs_cw = segment_cw.local_coordinate_system(weight)
+        lcs_ccw = segment_ccw.local_coordinate_system(weight)
+
+        assert math.isclose(lcs_cw.origin[0], x_exp)
+        assert math.isclose(lcs_cw.origin[1], y_exp)
+        assert math.isclose(lcs_ccw.origin[0], -x_exp)
+        assert math.isclose(lcs_ccw.origin[1], y_exp)
+
+    # invalid inputs
+    with pytest.raises(ValueError):
+        pcg.RadialHorizontalTraceSegment(0, np.pi)
+    with pytest.raises(ValueError):
+        pcg.RadialHorizontalTraceSegment(-0.53, np.pi)
+    with pytest.raises(ValueError):
+        pcg.RadialHorizontalTraceSegment(1, 0)
+    with pytest.raises(ValueError):
+        pcg.RadialHorizontalTraceSegment(1, -np.pi)

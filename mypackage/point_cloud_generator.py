@@ -157,6 +157,15 @@ class RadialHorizontalTraceSegment:
         return angle * radius
 
     @property
+    def angle(self):
+        """
+        Get the angle of the segment.
+
+        :return: Angle of the segment
+        """
+        return self._angle
+
+    @property
     def length(self):
         """
         Get the length of the segment.
@@ -164,6 +173,15 @@ class RadialHorizontalTraceSegment:
         :return: Length of the segment
         """
         return self._length
+
+    @property
+    def radius(self):
+        """
+        Get the radius of the segment.
+
+        :return: Radius of the segment
+        """
+        return self._radius
 
     def local_coordinate_system(self, relative_position):
         """
