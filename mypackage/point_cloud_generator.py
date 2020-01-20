@@ -4,8 +4,19 @@ import mypackage.geometry as geo
 import numpy as np
 import copy
 import mypackage.transformations as tf
-from scipy.spatial.transform import Rotation as R
 
+
+# Helper functions ------------------------------------------------------------
+
+def to_list(var):
+    if isinstance(var, list):
+        return var
+    if var is None:
+        return []
+    return [var]
+
+
+# Profile class ---------------------------------------------------------------
 
 class Profile:
     """Defines a 2d profile."""
@@ -165,6 +176,9 @@ class RadialHorizontalTraceSegment:
         """
         return self._radius
 
+    def is_clockwise(self):
+        return self._sign_winding < 0
+
     def local_coordinate_system(self, relative_position):
         """
         Calculate a local coordinate system along the trace segment.
@@ -176,26 +190,75 @@ class RadialHorizontalTraceSegment:
 
         basis = tf.rotation_matrix_z(
             self._angle * relative_position * self._sign_winding)
-        # print(basis[0])
         translation = np.array([1, 0, 0]) * self._radius * self._sign_winding
 
         origin = np.matmul(basis, translation) - translation
         return tf.CartesianCoordinateSystem3d(basis, origin)
 
 
+# Trace class -----------------------------------------------------------------
+
 class Trace:
-    def __init__(self,
-                 segments,
+    """Defines a 3d trace."""
+
+    def __init__(self, segments,
                  coordinate_system=tf.CartesianCoordinateSystem3d()):
-        self._segments = segments
+        """
+        Constructor.
+
+        :param segments: Single segment or list of segments
+        :param coordinate_system: Coordinate system of the trace
+        """
+        if not isinstance(coordinate_system, tf.CartesianCoordinateSystem3d):
+            raise TypeError(
+                "'coordinate_system' must be of type "
+                "transformations.CartesianCoordinateSystem3d")
+
+        self._segments = to_list(segments)
         self._coordinate_system = coordinate_system
+
         length = 0
         for segment in self._segments:
             length += segment.length
+        if length <= 0:
+            raise Exception("Trace has no length.")
+
         self._length = length
 
+    @property
+    def coordinate_system(self):
+        """
+        Get the trace's coordinate system.
+
+        :return: Coordinate system of the trace
+        """
+        return self._coordinate_system
+
+    @property
     def length(self):
+        """
+        Get the length of the trace.
+
+        :return: Length of the trace.
+        """
         return self._length
+
+    @property
+    def segments(self):
+        """
+        Get the trace's segments.
+
+        :return: Segments of the trace
+        """
+        return self._segments
+
+    def num_segments(self):
+        """
+        Get the number of segments.
+
+        :return: Number of segments
+        """
+        return len(self._segments)
 
     def local_coordinate_system(self, position):
         position = np.clip(position, 0, self._length)
@@ -263,14 +326,6 @@ class ProfileInterpolationLSBS:
         return Profile(shapes)
 
 
-def to_list(var):
-    if isinstance(var, list):
-        return var
-    if var is None:
-        return []
-    return [var]
-
-
 class Section:
     """Defines a section"""
 
@@ -299,7 +354,7 @@ class Section:
 
         self._profiles = profiles
         self._interpolations = profile_interpolations
-        self._positions = [0] + profile_positions + [trace.length()]
+        self._positions = [0] + profile_positions + [trace.length]
         self.trace = trace
 
     def _profile_segment_index(self, position):
@@ -326,7 +381,7 @@ class Section:
         raster_data = np.empty([0, 3])
         trace = self.trace
         global_cs = tf.CartesianCoordinateSystem3d()
-        for position in np.arange(0, trace.length() + 0.01, 0.5):
+        for position in np.arange(0, trace.length + 0.01, 0.5):
             profile = self._interpolated_profile(position)
             profile_raster_data = profile.rasterize(raster_width)
             profile_raster_data = np.insert(profile_raster_data, 1, 0, axis=1)

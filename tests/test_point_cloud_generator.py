@@ -5,6 +5,8 @@ import mypackage.transformations as tf
 import math
 import numpy as np
 import copy
+import tests.helpers as helpers
+import types
 
 
 # Test profile class ----------------------------------------------------------
@@ -105,19 +107,10 @@ def check_trace_segment_length(segment, tolerance=1E-9):
     assert math.isclose(length_numeric, segment.length, abs_tol=tolerance)
 
 
-def are_vectors_identical(a, b, tolerance=1E-9):
-    if not a.size == b.size:
-        return False
-    for i in range(a.size):
-        if not math.isclose(a[i], b[i], abs_tol=tolerance):
-            return False
-    return True
-
-
 def check_trace_segment_orientation(segment):
     # The initial orientation of a segment must be [0, 1, 0]
     lcs = segment.local_coordinate_system(0)
-    assert are_vectors_identical(lcs.basis[:, 1], np.array([0, 1, 0]))
+    helpers.check_vectors_identical(lcs.basis[:, 1], np.array([0, 1, 0]))
 
     delta = 1E-9
     for rel_pos in np.arange(0.1, 1.01, 0.1):
@@ -126,8 +119,8 @@ def check_trace_segment_orientation(segment):
         trace_direction_numerical = tf.normalize(lcs.origin - lcs_d.origin)
 
         # Check that the y-axis is always aligned with the trace's direction
-        assert are_vectors_identical(lcs.basis[:, 1],
-                                     trace_direction_numerical, 1E-6)
+        helpers.check_vectors_identical(lcs.basis[:, 1],
+                                        trace_direction_numerical, 1E-6)
 
 
 def default_trace_segment_tests(segment, tolerance_length=1E-9):
@@ -176,6 +169,8 @@ def test_radial_horizontal_trace_segment():
     assert math.isclose(segment_ccw.angle, angle)
     assert math.isclose(segment_cw.radius, radius)
     assert math.isclose(segment_ccw.radius, radius)
+    assert segment_cw.is_clockwise() is True
+    assert segment_ccw.is_clockwise() is False
 
     # check positions
     for weight in np.arange(0.1, 1, 0.1):
@@ -200,3 +195,67 @@ def test_radial_horizontal_trace_segment():
         pcg.RadialHorizontalTraceSegment(1, 0)
     with pytest.raises(ValueError):
         pcg.RadialHorizontalTraceSegment(1, -np.pi)
+
+
+# Test trace class ------------------------------------------------------------
+
+def test_trace_construction():
+    linear_segment = pcg.LinearHorizontalTraceSegment(1)
+    radial_segment = pcg.RadialHorizontalTraceSegment(1, np.pi)
+    ccs_origin = np.array([2, 3, -2])
+    ccs = helpers.rotated_coordinate_system(origin=ccs_origin)
+
+    # test single segment construction --------------------
+    trace = pcg.Trace(linear_segment, ccs)
+    assert math.isclose(trace.length, linear_segment.length)
+    assert trace.num_segments() == 1
+
+    segments = trace.segments
+    assert len(segments) == 1
+    assert isinstance(segments[0], type(linear_segment))
+    assert math.isclose(linear_segment.length, segments[0].length)
+
+    helpers.check_matrices_identical(ccs.basis, trace.coordinate_system.basis)
+    helpers.check_vectors_identical(ccs.origin, trace.coordinate_system.origin)
+
+    # test multi segment construction ---------------------
+    trace = pcg.Trace([radial_segment, linear_segment])
+    assert math.isclose(trace.length,
+                        linear_segment.length + radial_segment.length)
+    assert trace.num_segments() == 2
+
+    segments = trace.segments
+    assert len(segments) == 2
+    assert isinstance(segments[0], type(radial_segment))
+    assert isinstance(segments[1], type(linear_segment))
+
+    assert math.isclose(radial_segment.radius, segments[0].radius)
+    assert math.isclose(radial_segment.angle, segments[0].angle)
+    assert math.isclose(radial_segment.is_clockwise(),
+                        segments[0].is_clockwise())
+    assert math.isclose(linear_segment.length, segments[1].length)
+
+    helpers.check_matrices_identical(np.identity(3),
+                                     trace.coordinate_system.basis)
+    helpers.check_vectors_identical(np.array([0, 0, 0]),
+                                    trace.coordinate_system.origin)
+
+    # check invalid inputs --------------------------------
+    with pytest.raises(TypeError):
+        pcg.Trace(radial_segment, linear_segment)
+    with pytest.raises(TypeError):
+        pcg.Trace(radial_segment, 2)
+    with pytest.raises(Exception):
+        pcg.Trace(None)
+
+    # check construction with custom segment --------------
+    custom_segment = types.SimpleNamespace()
+    custom_segment.length = 3
+    pcg.Trace(custom_segment)
+
+    with pytest.raises(Exception):
+        custom_segment.length = -12
+        pcg.Trace(custom_segment)
+    with pytest.raises(Exception):
+        custom_segment.length = 0
+        pcg.Trace(custom_segment)
