@@ -4,6 +4,7 @@ import pytest
 import random
 import math
 import copy
+import tests.helpers as helper
 
 
 # helpers for tests -----------------------------------------------------------
@@ -338,3 +339,31 @@ def test_cartesian_coordinate_system_construction():
     # check exceptions ------------------------------------
     with pytest.raises(Exception):
         cls_ccs([x, y, [0, 0, 1]])
+
+
+def test_cartesian_coordinate_system_addition():
+    cls_ccs = tf.CartesianCoordinateSystem3d
+
+    orientation0 = tf.rotation_matrix_z(np.pi / 2)
+    origin0 = [1, 3, 2]
+    ccs0 = cls_ccs(orientation0, origin0)
+
+    orientation1 = tf.rotation_matrix_y(np.pi / 2)
+    origin1 = [4, -2, 1]
+    ccs1 = cls_ccs(orientation1, origin1)
+
+    orientation2 = tf.rotation_matrix_x(np.pi / 2)
+    origin2 = [-3, 4, 2]
+    ccs2 = cls_ccs(orientation2, origin2)
+
+    # check i
+    ccs_tot_0 = ccs0 + (ccs1 + ccs2)
+    ccs_tot_1 = (ccs0 + ccs1) + ccs2
+    helper.check_matrices_identical(ccs_tot_0.basis, ccs_tot_1.basis)
+    helper.check_vectors_identical(ccs_tot_0.origin, ccs_tot_1.origin)
+
+    expected_origin = np.array([-1, 9, 6])
+    expected_orientation = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]])
+
+    helper.check_matrices_identical(ccs_tot_0.basis, expected_orientation)
+    helper.check_vectors_identical(ccs_tot_0.origin, expected_origin)
