@@ -150,18 +150,44 @@ class CartesianCoordinateSystem3d:
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        basis[0] = normalize(basis[0])
-        basis[1] = normalize(basis[1])
-        basis[2] = normalize(basis[2])
+        basis = np.array(basis, dtype=float)
+        basis[:, 0] = normalize(basis[:, 0])
+        basis[:, 1] = normalize(basis[:, 1])
+        basis[:, 2] = normalize(basis[:, 2])
 
-        if not (is_orthogonal(basis[0], basis[1]) and
-                is_orthogonal(basis[1], basis[2]) and
-                is_orthogonal(basis[2], basis[0])):
+        if not (is_orthogonal(basis[:, 0], basis[:, 1]) and
+                is_orthogonal(basis[:, 1], basis[:, 2]) and
+                is_orthogonal(basis[:, 2], basis[:, 0])):
             raise Exception("Basis vectors must be orthogonal")
 
         self._basis = basis
 
         self._origin = np.array(origin)
+
+    def __add__(self, rhs_cs):
+        """
+        Add 2 coordinate systems.
+
+        Generates a new coordinate system by treating the right-hand side
+        coordinate system as being defined in the left hand-side coordinate
+        system.
+        The transformations from the base coordinate system to the new
+        coordinate system are equivalent to the combination of the
+        transformations from both added coordinate systems:
+
+        R_n = R_l * R_r
+        T_n = R_l * T_r + T_l
+
+        R_r and T_r are rotation matrix and translation vector of the
+        right-hand side coordinate system, R_l and T_l of the left-hand side
+        coordinate system and R_n and T_n of the resulting coordinate system.
+
+        :param rhs_cs: Right-hand side coordinate system
+        :return: Resulting coordinate system.
+        """
+        basis = np.matmul(self.basis, rhs_cs.basis)
+        origin = np.matmul(self.basis, rhs_cs.origin) + self.origin
+        return CartesianCoordinateSystem3d(basis, origin)
 
     @classmethod
     def construct_from_basis(cls, basis, origin=np.array([0, 0, 0])):
@@ -221,7 +247,7 @@ class CartesianCoordinateSystem3d:
         """
         x = cls._calcualte_orthogonal_axis(y, z) * cls._sign_orientation(
             positive_orientation)
-        basis = np.transpose([x, y, z])
+        basis = np.transpose(np.array([x, y, z]))
         return cls(basis, origin=origin)
 
     @classmethod

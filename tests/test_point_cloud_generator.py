@@ -6,7 +6,6 @@ import math
 import numpy as np
 import copy
 import tests.helpers as helpers
-import types
 
 
 # Test profile class ----------------------------------------------------------
@@ -270,7 +269,11 @@ def test_trace_construction():
         pcg.Trace(None)
 
     # check construction with custom segment --------------
-    custom_segment = types.SimpleNamespace()
+    class CustomSegment():
+        def local_coordinate_system(self, *args):
+            return tf.CartesianCoordinateSystem3d
+
+    custom_segment = CustomSegment()
     custom_segment.length = 3
     pcg.Trace(custom_segment)
 
@@ -280,3 +283,68 @@ def test_trace_construction():
     with pytest.raises(Exception):
         custom_segment.length = 0
         pcg.Trace(custom_segment)
+
+
+def test_trace_local_coordinate_system():
+    radial_segment = pcg.RadialHorizontalTraceSegment(1, np.pi)
+    linear_segment = pcg.LinearHorizontalTraceSegment(1)
+
+    # check with default coordinate system ----------------
+    trace = pcg.Trace([radial_segment, linear_segment])
+
+    # check first segment
+    for i in range(11):
+        weight = i / 10
+        position = radial_segment.length * weight
+        cs_trace = trace.local_coordinate_system(position)
+        cs_segment = radial_segment.local_coordinate_system(weight)
+
+        helpers.check_matrices_identical(cs_trace.basis, cs_segment.basis)
+        helpers.check_vectors_identical(cs_trace.origin, cs_segment.origin)
+
+    # check second segment
+    expected_basis = radial_segment.local_coordinate_system(1).basis
+    for i in range(11):
+        weight = i / 10
+        position_on_segment = linear_segment.length * weight
+        position = radial_segment.length + position_on_segment
+
+        expected_origin = np.array([-2, -position_on_segment, 0])
+        cs_trace = trace.local_coordinate_system(position)
+
+        helpers.check_matrices_identical(cs_trace.basis, expected_basis)
+        helpers.check_vectors_identical(cs_trace.origin, expected_origin)
+
+    # check with arbitrary coordinate system --------------
+    basis = tf.rotation_matrix_x(np.pi / 2)
+    origin = np.array([-3, 2.5, 5])
+    cs_base = tf.CartesianCoordinateSystem3d(basis, origin)
+
+    trace = pcg.Trace([radial_segment, linear_segment], cs_base)
+
+    # check first segment
+    for i in range(11):
+        weight = i / 10
+        position = radial_segment.length * weight
+        cs_trace = trace.local_coordinate_system(position)
+        cs_segment = radial_segment.local_coordinate_system(weight)
+
+        expected_basis = np.matmul(basis, cs_segment.basis)
+        expected_origin = np.matmul(basis, cs_segment.origin) + origin
+
+        helpers.check_matrices_identical(cs_trace.basis, expected_basis)
+        helpers.check_vectors_identical(cs_trace.origin, expected_origin)
+
+    # check second segment
+    expected_basis = np.matmul(basis,
+                               radial_segment.local_coordinate_system(1).basis)
+    for i in range(11):
+        weight = i / 10
+        position_on_segment = linear_segment.length * weight
+        position = radial_segment.length + position_on_segment
+
+        expected_origin = np.array([-2, 0, -position_on_segment]) + origin
+        cs_trace = trace.local_coordinate_system(position)
+
+        helpers.check_matrices_identical(cs_trace.basis, expected_basis)
+        helpers.check_vectors_identical(cs_trace.origin, expected_origin)

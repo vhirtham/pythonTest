@@ -215,15 +215,50 @@ class Trace:
                 "transformations.CartesianCoordinateSystem3d")
 
         self._segments = to_list(segments)
-        self._coordinate_system = coordinate_system
+        self._create_lookups(coordinate_system)
 
-        length = 0
-        for segment in self._segments:
-            length += segment.length
-        if length <= 0:
+        if self.length <= 0:
             raise Exception("Trace has no length.")
 
-        self._length = length
+    def _create_lookups(self, coordinate_system_start):
+        """
+        Create lookup tables.
+
+        :param coordinate_system_start: Coordinate system at the start of
+        the trace.
+        :return: ---
+        """
+        self._coordinate_system_lookup = [coordinate_system_start]
+        self._total_length_lookup = [0]
+        self._segment_length_lookup = []
+
+        segments = self._segments
+
+        # Fill coordinate system lookup
+        for i in range(len(segments) - 1):
+            lcs_segment_end = segments[i].local_coordinate_system(1)
+            cs = self._coordinate_system_lookup[i] + lcs_segment_end
+            self._coordinate_system_lookup += [cs]
+
+        # Fill length lookups
+        total_length = 0
+        for i in range(len(segments)):
+            segment_length = segments[i].length
+            total_length += segment_length
+            self._segment_length_lookup += [segment_length]
+            self._total_length_lookup += [total_length]
+
+    def _get_segment_index(self, position):
+        """
+        Get the segment index for a certain position.
+
+        :param position: Position
+        :return: Segment index
+        """
+        position = np.clip(position, 0, self.length)
+        for i in range(len(self._total_length_lookup) - 1):
+            if position <= self._total_length_lookup[i + 1]:
+                return i
 
     @property
     def coordinate_system(self):
@@ -232,7 +267,7 @@ class Trace:
 
         :return: Coordinate system of the trace
         """
-        return self._coordinate_system
+        return self._coordinate_system_lookup[0]
 
     @property
     def length(self):
@@ -241,7 +276,7 @@ class Trace:
 
         :return: Length of the trace.
         """
-        return self._length
+        return self._total_length_lookup[-1]
 
     @property
     def segments(self):
@@ -261,32 +296,22 @@ class Trace:
         return len(self._segments)
 
     def local_coordinate_system(self, position):
-        position = np.clip(position, 0, self._length)
-        cs_base = tf.CartesianCoordinateSystem3d()
-        cs_stack = copy.deepcopy(self._coordinate_system)
+        """
+        Get the local coordinate system at a specific position on the trace.
 
-        for i in range(len(self._segments)):
-            segment_length = self._segments[i].length
-            if position <= segment_length:
-                weight = position / segment_length
-            else:
-                weight = 1
+        :param position: Position
+        :return: Local coordinate system
+        """
+        idx = self._get_segment_index(position)
 
-            cs_local = self._segments[i].local_coordinate_system(weight)
-            tra = tf.change_of_basis_translation(cs_local, cs_base)
-            rot = tf.change_of_basis_rotation(cs_local, cs_base)
-            rot_tra = tf.change_of_basis_rotation(cs_stack, cs_base)
+        total_length_start = self._total_length_lookup[idx]
+        segment_length = self._segment_length_lookup[idx]
+        weight = (position - total_length_start) / segment_length
 
-            tra = np.matmul(rot_tra, tra)
+        segment_cs = self.segments[idx].local_coordinate_system(weight)
+        start_cs = self._coordinate_system_lookup[idx]
 
-            basis = np.matmul(rot, cs_stack.basis)
-            origin = cs_stack.origin + tra
-            cs_stack = tf.CartesianCoordinateSystem3d(basis=basis,
-                                                      origin=origin)
-
-            if position <= segment_length:
-                return cs_stack
-            position -= segment_length
+        return start_cs + segment_cs
 
 
 class ProfileInterpolationLSBS:

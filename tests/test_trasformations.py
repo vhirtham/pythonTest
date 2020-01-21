@@ -325,6 +325,16 @@ def test_cartesian_coordinate_system_construction():
     check_coordinate_system(ccs_xzo_pos, basis_pos, origin, True)
     check_coordinate_system(ccs_xzo_neg, basis_neg, origin, False)
 
+    # test integers as inputs -----------------------------
+    x_i = [1, 1, 0]
+    y_i = [-1, 1, 0]
+    z_i = [0, 0, 1]
+
+    cls_ccs.construct_from_xyz(x_i, y_i, z_i, origin)
+    cls_ccs.construct_from_xy_and_orientation(x_i, y_i)
+    cls_ccs.construct_from_yz_and_orientation(y_i, z_i)
+    cls_ccs.construct_from_xz_and_orientation(z_i, x_i)
+
     # check exceptions ------------------------------------
     with pytest.raises(Exception):
         cls_ccs([x, y, [0, 0, 1]])
