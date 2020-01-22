@@ -2,6 +2,7 @@
 
 import numpy as np
 import math
+import mypackage.transformations as tf
 from scipy.spatial.transform import Rotation as R
 
 
@@ -84,6 +85,8 @@ def reflection_multiplier(transformation_matrix):
     return np.sign(origin_left_of_line)
 
 
+# Segments --------------------------------------------------------------------
+
 class LineSegment:
     """Line segment."""
 
@@ -148,6 +151,113 @@ class LineSegment:
         weight_matrix = np.array([1 - multiplier, multiplier])
 
         return np.matmul(self._points, weight_matrix)
+
+
+class ArcSegment:
+    """Arc segment."""
+
+    def __init__(self, point_start, point_end, point_center,
+                 arc_winding_ccw=True):
+        """
+        Constructor.
+
+        :param point_start: Starting point of the segment
+        :param point_end: End point of the segment
+        :param point_center: Center point of the arc
+        :param: arc_winding_ccw: Specifies if the arcs winding order is
+        counter-clockwise
+        """
+        if arc_winding_ccw:
+            self._sign_arc_winding = 1
+        else:
+            self._sign_arc_winding = -1
+
+        self._points = np.transpose(
+            np.array([point_start, point_end, point_center], dtype=float))
+        self._radius = np.linalg.norm(self._points[:, 0] - self._points[:, 2])
+        self._calculate_arc_angle()
+        self._arc_length = self._arc_angle * self._radius
+
+        self._check_valid()
+
+    def _calculate_arc_angle(self):
+        """
+        Calculate the arc angle.
+
+        :return: ---
+        """
+        point_start = self._points[:, 0]
+        point_end = self._points[:, 1]
+        point_center = self._points[:, 2]
+
+        # Calculate angle between vectors (always the smaller one)
+        unit_center_start = tf.normalize(point_start - point_center)
+        unit_center_end = tf.normalize(point_end - point_center)
+
+        dot_unit = np.dot(unit_center_start, unit_center_end)
+        angle_vecs = np.arccos(np.clip(dot_unit, -1, 1))
+
+        sign_winding_points = vector_points_to_left_of_vector(
+            unit_center_end, unit_center_start)
+
+        if np.abs(sign_winding_points + self._sign_arc_winding) > 0:
+            self._arc_angle = angle_vecs
+        else:
+            self._arc_angle = 2 * np.pi - angle_vecs
+
+    def _check_valid(self):
+        """
+        Check if the segments data is valid.
+        :return: ---
+        """
+        point_start = self._points[:, 0]
+        point_end = self._points[:, 1]
+        point_center = self._points[:, 2]
+
+        vec_start_center = np.linalg.norm(point_start - point_center)
+        vec_end_center = np.linalg.norm(point_end - point_center)
+
+        if not math.isclose(vec_end_center - vec_start_center, 0):
+            raise ValueError("Radius is not constant.")
+        if math.isclose(self._radius, 0):
+            raise Exception("Radius is 0.")
+        if math.isclose(self._arc_length, 0):
+            raise Exception("Arc length is 0.")
+
+    @property
+    def arc_angle(self):
+        """
+        Get the arc angle.
+
+        :return: Arc angle
+        """
+        return self._arc_angle
+
+    @property
+    def arc_length(self):
+        """
+        Get the arc length.
+
+        :return: Arc length
+        """
+        return self._arc_length
+
+    @property
+    def radius(self):
+        """
+        Get the radius.
+
+        :return: Radius
+        """
+        return self._radius
+
+    def is_arc_winding_ccw(self):
+        """
+        Get True if the winding order is counter-clockwise. False if clockwise.
+
+        :return: True or False
+        """
+        return self._sign_arc_winding > 0
 
 
 class Shape2D:

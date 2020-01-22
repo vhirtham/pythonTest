@@ -130,6 +130,38 @@ def test_line_segment_rasterization():
         segment.rasterize(0)
 
 
+# test ArcSegment ------------------------------------------------------------
+
+def test_arc_segment_construction():
+    segment_cw = geo.ArcSegment([3, 3], [6, 6], [6, 3], False)
+    segment_ccw = geo.ArcSegment([3, 3], [6, 6], [6, 3], True)
+
+    assert not segment_cw.is_arc_winding_ccw()
+    assert segment_ccw.is_arc_winding_ccw()
+
+    assert math.isclose(segment_cw.radius, 3)
+    assert math.isclose(segment_ccw.radius, 3)
+
+    assert math.isclose(segment_cw.arc_angle, 1 / 2 * np.pi)
+    assert math.isclose(segment_ccw.arc_angle, 3 / 2 * np.pi)
+
+    assert math.isclose(segment_cw.arc_length, 3 / 2 * np.pi)
+    assert math.isclose(segment_ccw.arc_length, 9 / 2 * np.pi)
+
+    # check exceptions ------------------------------------
+    # radius differs
+    with pytest.raises(Exception):
+        geo.ArcSegment([3, 3], [6, 10], [6, 3], False)
+    # radius is zero
+    with pytest.raises(Exception):
+        geo.ArcSegment([3, 3], [3, 3], [3, 3], False)
+    # arc length zero
+    with pytest.raises(Exception):
+        geo.ArcSegment([3, 3], [3, 3], [6, 3], False)
+    with pytest.raises(Exception):
+        geo.ArcSegment([3, 3], [3, 3], [6, 3], True)
+
+
 # test Shape2d ----------------------------------------------------------------
 
 def test_shape2d_construction():
