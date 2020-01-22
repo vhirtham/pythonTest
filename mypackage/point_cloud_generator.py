@@ -308,17 +308,26 @@ class Trace:
         segment_length = self._segment_length_lookup[idx]
         weight = (position - total_length_start) / segment_length
 
-        segment_cs = self.segments[idx].local_coordinate_system(weight)
-        start_cs = self._coordinate_system_lookup[idx]
+        local_segment_cs = self.segments[idx].local_coordinate_system(weight)
+        segment_start_cs = self._coordinate_system_lookup[idx]
 
-        return start_cs + segment_cs
+        return segment_start_cs + local_segment_cs
 
 
-class ProfileInterpolationLSBS:
-    """Linear segment by segment profile interpolation class."""
+class LinearProfileInterpolationSBS:
+    """Linear segment by segment interpolation class for profiles."""
 
     @staticmethod
     def interpolate(a, b, weight):
+        """
+        Interpolate 2 profiles.
+
+        :param a: First profile
+        :param b: Second profile
+        :param weight: Weighting factor [0 .. 1]. If 0, the profile is
+        identical to 'a' and if 1, it is identical to b.
+        :return: Interpolated profile
+        """
         weight = np.clip(weight, 0, 1)
         if not len(a.shapes) == len(b.shapes):
             raise Exception("Number of profile shapes do not match.")

@@ -1,6 +1,7 @@
 """Provides classes to define lines and surfaces."""
 
 import numpy as np
+import math
 from scipy.spatial.transform import Rotation as R
 
 
@@ -81,6 +82,72 @@ def reflection_multiplier(transformation_matrix):
         raise Exception("Invalid transformation")
 
     return np.sign(origin_left_of_line)
+
+
+class LineSegment:
+    """Line segment."""
+
+    def __init__(self, point_start, point_end):
+        """
+        Constructor.
+
+        :param point_start: Starting point of the segment
+        :param point_end: End point of the segment
+        """
+        self._points = np.transpose(
+            np.array([point_start, point_end], dtype=float))
+        self._calculate_length()
+
+    def _calculate_length(self):
+        """
+        Calculate the segment length from its points.
+
+        :return: ---
+        """
+        self._length = np.linalg.norm(self._points[:, 1] - self._points[:, 0])
+        if math.isclose(self._length, 0):
+            raise ValueError("Segment length is 0.")
+
+    @property
+    def length(self):
+        """
+        Get the segment length.
+
+        :return: Segment length
+        """
+        return self._length
+
+    def rasterize(self, raster_width, num_points_excluded_end=0):
+        """
+        Create an array of points that describe the segments contour.
+
+        The effective raster width may vary from the specified one,
+        since the algorithm enforces constant distances between two
+        raster points.
+
+        :param raster_width: The desired distance between two raster points
+        :param num_points_excluded_end: Specifies how many points from the
+        end should be excluded from the rasterization. The main purpose of
+        this parameter is to avoid point duplication when rasterizing
+        multiple segments.
+        :return: Array of contour points
+        """
+        raster_width = np.clip(np.abs(raster_width), 0, self.length)
+        if not raster_width > 0:
+            raise ValueError("'raster_width' is zero")
+
+        num_raster_segments = np.round(self.length / raster_width)
+
+        # normalized effective raster width
+        nerw = 1. / num_raster_segments
+
+        range_modifier = (0.5 - np.floor(
+            np.abs(num_points_excluded_end))) * nerw
+
+        multiplier = np.arange(0, 1 + range_modifier, nerw)
+        weight_matrix = np.array([1 - multiplier, multiplier])
+
+        return np.matmul(self._points, weight_matrix)
 
 
 class Shape2D:

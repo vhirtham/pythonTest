@@ -1,7 +1,9 @@
 import pytest
 import mypackage.geometry as geo
 import numpy as np
+import math
 import copy
+import tests.helpers as helper
 
 
 def test_vector_points_to_left_of_vector():
@@ -63,6 +65,72 @@ def test_reflection_multiplier():
     with pytest.raises(Exception):
         geo.reflection_multiplier([[2, 2], [1, 1]])
 
+
+# test LineSegment ------------------------------------------------------------
+
+def test_line_segment():
+    segment = geo.LineSegment([3, 3], [4, 5])
+    assert math.isclose(segment.length, np.sqrt(5))
+
+    with pytest.raises(ValueError):
+        geo.LineSegment([0, 1], [0, 1])
+
+
+def test_line_segment_rasterization():
+    point_start = np.array([3, 3])
+    point_end = np.array([4, 5])
+    vec_start_end = point_end - point_start
+    unit_vec_start_end = vec_start_end / np.linalg.norm(vec_start_end)
+
+    segment = geo.LineSegment(point_start, point_end)
+    raster_data = segment.rasterize(0.1)
+
+    shape = raster_data.shape
+    assert len(shape) == 2
+
+    point_size = shape[0]
+    num_points = shape[1]
+    assert point_size == 2
+
+    for i in range(num_points):
+        point = raster_data[:, i]
+
+        if i == 0:
+            helper.check_vectors_identical(point, point_start)
+        elif i == num_points - 1:
+            helper.check_vectors_identical(point, point_end)
+        else:
+            vec_start_point = point - point_start
+            unit_vec_start_point = vec_start_point / np.linalg.norm(
+                vec_start_point)
+
+            assert math.isclose(
+                np.dot(unit_vec_start_point, unit_vec_start_end),
+                1)
+
+    # check rasterization with excluded points
+    raster_data_m2 = segment.rasterize(0.1, 2)
+
+    num_points_m2 = raster_data_m2.shape[1]
+
+    assert num_points - 2 == num_points_m2
+    for i in range(num_points_m2):
+        helper.check_vectors_identical(raster_data[:, i], raster_data_m2[:, i])
+
+    # check that rasterization with to large raster width still works
+    raster_data_200 = segment.rasterize(200)
+
+    num_points_200 = raster_data_200.shape[1]
+    assert num_points_200 == 2
+    helper.check_vectors_identical(point_start, raster_data_200[:, 0])
+    helper.check_vectors_identical(point_end, raster_data_200[:, 1])
+
+    # check exceptions
+    with pytest.raises(ValueError):
+        segment.rasterize(0)
+
+
+# test Shape2d ----------------------------------------------------------------
 
 def test_shape2d_construction():
     # Test Exception: Segment length too small

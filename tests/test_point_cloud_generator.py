@@ -348,3 +348,28 @@ def test_trace_local_coordinate_system():
 
         helpers.check_matrices_identical(cs_trace.basis, expected_basis)
         helpers.check_vectors_identical(cs_trace.origin, expected_origin)
+
+
+# Profile interpolation classes -----------------------------------------------
+
+def test_linear_profile_interpolation_sbs():
+    interpolator = pcg.LinearProfileInterpolationSBS
+
+    a_0 = [0, 0]
+    a_1 = [8, 16]
+    a_2 = [16, 0]
+    shape_a0 = geo.Shape2D(a_0, a_1)
+    shape_a0 = geo.Shape2D(a_0, a_1)
+
+    b_0 = [-4, 8]
+    b_1 = [0, 8]
+    b_2 = [16, -16]
+    shape_b0 = geo.Shape2D(b_0, b_1)
+    shape_b0 = geo.Shape2D(b_0, b_1)
+
+    # check weight 0 gives a
+    # profile_c = interpolator.interpolate(profile_a, profile_b, 0)
+
+    # exp0 = [-1, 2]
+    # exp1 = [2, 14]
+    # exp2 = [16, -4]
