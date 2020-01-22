@@ -219,8 +219,6 @@ class ArcSegment:
 
         if not math.isclose(vec_end_center - vec_start_center, 0):
             raise ValueError("Radius is not constant.")
-        if math.isclose(self._radius, 0):
-            raise Exception("Radius is 0.")
         if math.isclose(self._arc_length, 0):
             raise Exception("Arc length is 0.")
 
@@ -258,6 +256,44 @@ class ArcSegment:
         :return: True or False
         """
         return self._sign_arc_winding > 0
+
+    def rasterize(self, raster_width, num_points_excluded_end=0):
+        """
+        Create an array of points that describe the segments contour.
+
+        The effective raster width may vary from the specified one,
+        since the algorithm enforces constant distances between two
+        raster points.
+
+        :param raster_width: The desired distance between two raster points
+        :param num_points_excluded_end: Specifies how many points from the
+        end should be excluded from the rasterization. The main purpose of
+        this parameter is to avoid point duplication when rasterizing
+        multiple segments.
+        :return: Array of contour points
+        """
+        point_start = self._points[:, 0]
+        point_center = self._points[:, 2]
+        vec_center_start = (point_start - point_center)
+
+        raster_width = np.clip(raster_width, 0, self.arc_length)
+        if not raster_width > 0:
+            raise ValueError("'raster_width' is 0")
+
+        num_raster_segments = int(np.round(self._arc_length / raster_width))
+        delta_angle = self._arc_angle / num_raster_segments
+
+        range_modifier = (0.5 - np.floor(
+            np.abs(num_points_excluded_end))) * delta_angle
+        max_angle = self._sign_arc_winding * (self._arc_angle + range_modifier)
+
+        angles = np.arange(0, max_angle, self._sign_arc_winding * delta_angle)
+
+        rotation_matrices = R.from_euler('z', angles).as_dcm()[:, 0:2, 0:2]
+
+        data = np.matmul(rotation_matrices, vec_center_start) + point_center
+
+        return data.transpose()
 
 
 class Shape2D:

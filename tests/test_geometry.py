@@ -66,6 +66,54 @@ def test_reflection_multiplier():
         geo.reflection_multiplier([[2, 2], [1, 1]])
 
 
+# helper for segment tests ----------------------------------------------------
+
+def default_segment_rasterization_tests(segment, raster_width, point_start,
+                                        point_end):
+    data = segment.rasterize(raster_width)
+
+    # check dimensions are correct
+    assert len(data.shape) == 2
+
+    point_dimension = data.shape[0]
+    num_points = data.shape[1]
+    assert point_dimension == 2
+
+    # Check if first and last point of the data are identical to the segment
+    # start and end
+    helper.check_vectors_identical(data[:, 0], point_start)
+    helper.check_vectors_identical(data[:, -1], point_end)
+
+    for i in range(num_points - 1):
+        point = data[:, i]
+        next_point = data[:, i + 1]
+
+        raster_width_eff = np.linalg.norm(next_point - point)
+        assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
+
+    # check rasterization with excluded points
+    data_m2 = segment.rasterize(raster_width, 2)
+
+    num_points_m2 = data_m2.shape[1]
+
+    assert num_points - 2 == num_points_m2
+
+    for i in range(num_points_m2):
+        helper.check_vectors_identical(data[:, i], data_m2[:, i])
+
+    # check that rasterization with to large raster width still works
+    data_200 = segment.rasterize(200)
+
+    num_points_200 = data_200.shape[1]
+    assert num_points_200 == 2
+    helper.check_vectors_identical(point_start, data_200[:, 0])
+    helper.check_vectors_identical(point_end, data_200[:, 1])
+
+    # check exceptions
+    with pytest.raises(ValueError):
+        segment.rasterize(0)
+
+
 # test LineSegment ------------------------------------------------------------
 
 def test_line_segment():
@@ -77,60 +125,64 @@ def test_line_segment():
 
 
 def test_line_segment_rasterization():
+    raster_width = 0.1
+
     point_start = np.array([3, 3])
     point_end = np.array([4, 5])
     vec_start_end = point_end - point_start
     unit_vec_start_end = vec_start_end / np.linalg.norm(vec_start_end)
 
     segment = geo.LineSegment(point_start, point_end)
-    raster_data = segment.rasterize(0.1)
 
-    shape = raster_data.shape
-    assert len(shape) == 2
+    # perform default tests
+    default_segment_rasterization_tests(segment, raster_width, point_start,
+                                        point_end)
 
-    point_size = shape[0]
-    num_points = shape[1]
-    assert point_size == 2
-
-    for i in range(num_points):
+    # check that points lie between start and end
+    raster_data = segment.rasterize(raster_width)
+    num_points = raster_data.shape[1]
+    for i in np.arange(1, num_points - 1, 1):
         point = raster_data[:, i]
 
-        if i == 0:
-            helper.check_vectors_identical(point, point_start)
-        elif i == num_points - 1:
-            helper.check_vectors_identical(point, point_end)
-        else:
-            vec_start_point = point - point_start
-            unit_vec_start_point = vec_start_point / np.linalg.norm(
-                vec_start_point)
+        vec_start_point = point - point_start
+        unit_vec_start_point = vec_start_point / np.linalg.norm(
+            vec_start_point)
 
-            assert math.isclose(
-                np.dot(unit_vec_start_point, unit_vec_start_end),
-                1)
-
-    # check rasterization with excluded points
-    raster_data_m2 = segment.rasterize(0.1, 2)
-
-    num_points_m2 = raster_data_m2.shape[1]
-
-    assert num_points - 2 == num_points_m2
-    for i in range(num_points_m2):
-        helper.check_vectors_identical(raster_data[:, i], raster_data_m2[:, i])
-
-    # check that rasterization with to large raster width still works
-    raster_data_200 = segment.rasterize(200)
-
-    num_points_200 = raster_data_200.shape[1]
-    assert num_points_200 == 2
-    helper.check_vectors_identical(point_start, raster_data_200[:, 0])
-    helper.check_vectors_identical(point_end, raster_data_200[:, 1])
-
-    # check exceptions
-    with pytest.raises(ValueError):
-        segment.rasterize(0)
+        assert math.isclose(np.dot(unit_vec_start_point, unit_vec_start_end),
+                            1)
 
 
 # test ArcSegment ------------------------------------------------------------
+
+
+def arc_segment_test(point_center, point_start, point_end, raster_width,
+                     arc_winding_ccw, check_winding):
+    point_center = np.array(point_center)
+    point_start = np.array(point_start)
+    point_end = np.array(point_end)
+
+    radius_arc = np.linalg.norm(point_start - point_center)
+
+    arc_segment = geo.ArcSegment(point_start, point_end, point_center,
+                                 arc_winding_ccw=arc_winding_ccw)
+
+    # Perform standard segment rasterization tests
+    default_segment_rasterization_tests(arc_segment, raster_width, point_start,
+                                        point_end)
+
+    data = arc_segment.rasterize(raster_width)
+
+    num_points = data.shape[1]
+    for i in range(num_points):
+        point = data[:, i]
+
+        # Check that winding is correct
+        assert (check_winding(point, point_center))
+
+        # Check that points have the correct distance to the arcs center
+        distance_center_point = np.linalg.norm(point - point_center)
+        assert math.isclose(distance_center_point, radius_arc, abs_tol=1E-6)
+
 
 def test_arc_segment_construction():
     segment_cw = geo.ArcSegment([3, 3], [6, 6], [6, 3], False)
@@ -160,6 +212,75 @@ def test_arc_segment_construction():
         geo.ArcSegment([3, 3], [3, 3], [6, 3], False)
     with pytest.raises(Exception):
         geo.ArcSegment([3, 3], [3, 3], [6, 3], True)
+
+
+def test_arc_segment_rasterization():
+    # center right of segment line
+    # ----------------------------
+
+    point_center = [3, 2]
+    point_start = [1, 2]
+    point_end = [3, 4]
+    raster_width = 0.2
+
+    def in_second_quadrant(p, c):
+        return p[0] - 1E-9 <= c[0] and p[1] >= c[1] - 1E-9
+
+    def not_in_second_quadrant(p, c):
+        return not (p[0] + 1E-9 < c[0] and p[1] > c[1] + 1E-9)
+
+    arc_segment_test(point_center, point_start, point_end, raster_width, False,
+                     in_second_quadrant)
+    arc_segment_test(point_center, point_start, point_end, raster_width, True,
+                     not_in_second_quadrant)
+
+    # center left of segment line
+    # ----------------------------
+
+    point_center = [-4, -7]
+    point_start = [-4, -2]
+    point_end = [-9, -7]
+    raster_width = 0.1
+
+    arc_segment_test(point_center, point_start, point_end, raster_width, False,
+                     not_in_second_quadrant)
+    arc_segment_test(point_center, point_start, point_end, raster_width, True,
+                     in_second_quadrant)
+
+    # center on segment line
+    # ----------------------
+
+    point_center = [3, 2]
+    point_start = [2, 2]
+    point_end = [4, 2]
+    raster_width = 0.1
+
+    def not_below_center(p, c):
+        return p[1] >= c[1] - 1E-9
+
+    def not_above_center(p, c):
+        return p[1] - 1E-9 <= c[1]
+
+    arc_segment_test(point_center, point_start, point_end, raster_width, False,
+                     not_below_center)
+    arc_segment_test(point_center, point_start, point_end, raster_width, True,
+                     not_above_center)
+
+    # special testcase
+    # ----------------
+    # In a previous version the unit vectors to the start and end point were
+    # calculated using the norm of the vector to the start, since both
+    # vector length should be identical (radius). However, floating point
+    # errors caused the dot product to get greater than 1. In result,
+    # the angle between both vectors could not be calculated using the arccos.
+    # This test case will fail in this case.
+    point_center = [0, 0]
+    point_start = [-6.6 - 2.8]
+    point_end = [-6.4 - 4.2]
+    raster_width = 0.1
+
+    arc_segment = geo.Shape2D.ArcSegment(point_center)
+    arc_segment.rasterize(raster_width, point_start, point_end)
 
 
 # test Shape2d ----------------------------------------------------------------
@@ -227,7 +348,8 @@ def test_shape2d_with_arc_segment():
         shape.add_segment([3, 1], segment=geo.Shape2D.ArcSegment([2.1, 1]))
 
 
-def default_rasterization_tests(data, raster_width, point_start, point_end):
+def default_rasterization_tests_old(data, raster_width, point_start,
+                                    point_end):
     # Check if first point of the data are identical to the segment start
     assert np.linalg.norm(data[0, 0:2] - point_start) < 1E-9
 
@@ -249,7 +371,7 @@ def default_rasterization_tests(data, raster_width, point_start, point_end):
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
 
-def test_line_segment_rasterizaion():
+def test_line_segment_rasterizaion_old():
     point_start = np.array([3, -5])
     point_end = np.array([-4, 1])
     raster_width = 0.2
@@ -259,7 +381,7 @@ def test_line_segment_rasterizaion():
     data = line_segment.rasterize(raster_width, point_start, point_end)
 
     # Perform standard segment rasterization tests
-    default_rasterization_tests(data, raster_width, point_start, point_end)
+    default_rasterization_tests_old(data, raster_width, point_start, point_end)
 
     num_data_points = data[:, 0].size
     for i in range(num_data_points):
@@ -275,8 +397,8 @@ def test_line_segment_rasterizaion():
         assert dot_product < np.dot(vec_start_end, vec_start_end)
 
 
-def arc_segment_test(point_center, point_start, point_end, raster_width,
-                     arc_winding_ccw, check_winding):
+def arc_segment_test_old(point_center, point_start, point_end, raster_width,
+                         arc_winding_ccw, check_winding):
     point_center = np.array(point_center)
     point_start = np.array(point_start)
     point_end = np.array(point_end)
@@ -290,7 +412,7 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
     data = arc_segment.rasterize(raster_width, point_start, point_end)
 
     # Perform standard segment rasterization tests
-    default_rasterization_tests(data, raster_width, point_start, point_end)
+    default_rasterization_tests_old(data, raster_width, point_start, point_end)
 
     num_data_points = data[:, 0].size
     for i in range(num_data_points):
@@ -304,7 +426,7 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
         assert np.abs(distance_center_point - radius_arc) < 1E-6
 
 
-def test_arc_segment_rasterizaion():
+def test_arc_segment_rasterizaion_old():
     # center right of segment line
     # ----------------------------
 
@@ -319,10 +441,12 @@ def test_arc_segment_rasterizaion():
     def not_in_second_quadrant(p, c):
         return not (p[0] < c[0] and p[1] > c[1])
 
-    arc_segment_test(point_center, point_start, point_end, raster_width, False,
-                     in_second_quadrant)
-    arc_segment_test(point_center, point_start, point_end, raster_width, True,
-                     not_in_second_quadrant)
+    arc_segment_test_old(point_center, point_start, point_end, raster_width,
+                         False,
+                         in_second_quadrant)
+    arc_segment_test_old(point_center, point_start, point_end, raster_width,
+                         True,
+                         not_in_second_quadrant)
 
     # center left of segment line
     # ----------------------------
@@ -332,10 +456,12 @@ def test_arc_segment_rasterizaion():
     point_end = [-9, -7]
     raster_width = 0.1
 
-    arc_segment_test(point_center, point_start, point_end, raster_width, False,
-                     not_in_second_quadrant)
-    arc_segment_test(point_center, point_start, point_end, raster_width, True,
-                     in_second_quadrant)
+    arc_segment_test_old(point_center, point_start, point_end, raster_width,
+                         False,
+                         not_in_second_quadrant)
+    arc_segment_test_old(point_center, point_start, point_end, raster_width,
+                         True,
+                         in_second_quadrant)
 
     # center on segment line
     # ----------------------
@@ -351,10 +477,12 @@ def test_arc_segment_rasterizaion():
     def not_above_center(p, c):
         return p[1] <= c[1]
 
-    arc_segment_test(point_center, point_start, point_end, raster_width, False,
-                     not_below_center)
-    arc_segment_test(point_center, point_start, point_end, raster_width, True,
-                     not_above_center)
+    arc_segment_test_old(point_center, point_start, point_end, raster_width,
+                         False,
+                         not_below_center)
+    arc_segment_test_old(point_center, point_start, point_end, raster_width,
+                         True,
+                         not_above_center)
 
     # special testcase
     # ----------------
