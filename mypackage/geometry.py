@@ -281,7 +281,8 @@ class ArcSegment:
         radius_start_center = np.linalg.norm(point_start - point_center)
         radius_end_center = np.linalg.norm(point_end - point_center)
 
-        if not math.isclose(radius_end_center - radius_start_center, 0):
+        if not math.isclose(radius_end_center - radius_start_center, 0,
+                            abs_tol=1E-9):
             print(radius_start_center)
             print(radius_end_center)
             print(point_start)
