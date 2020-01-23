@@ -39,31 +39,34 @@ def test_point_left_of_line():
     assert geo.point_left_of_line(line_start, line_start, line_end) == 0
 
 
-def test_reflection_multiplier():
-    assert geo.reflection_multiplier([[-1, 0], [0, 1]]) == -1
-    assert geo.reflection_multiplier([[1, 0], [0, -1]]) == -1
-    assert geo.reflection_multiplier([[0, 1], [1, 0]]) == -1
-    assert geo.reflection_multiplier([[0, -1], [-1, 0]]) == -1
-    assert geo.reflection_multiplier([[-4, 0], [0, 2]]) == -1
-    assert geo.reflection_multiplier([[6, 0], [0, -4]]) == -1
-    assert geo.reflection_multiplier([[0, 3], [8, 0]]) == -1
-    assert geo.reflection_multiplier([[0, -3], [-2, 0]]) == -1
+def test_reflection_sign():
+    assert geo.reflection_sign([[-1, 0], [0, 1]]) == -1
+    assert geo.reflection_sign([[1, 0], [0, -1]]) == -1
+    assert geo.reflection_sign([[0, 1], [1, 0]]) == -1
+    assert geo.reflection_sign([[0, -1], [-1, 0]]) == -1
+    assert geo.reflection_sign([[-4, 0], [0, 2]]) == -1
+    assert geo.reflection_sign([[6, 0], [0, -4]]) == -1
+    assert geo.reflection_sign([[0, 3], [8, 0]]) == -1
+    assert geo.reflection_sign([[0, -3], [-2, 0]]) == -1
 
-    assert geo.reflection_multiplier([[1, 0], [0, 1]]) == 1
-    assert geo.reflection_multiplier([[-1, 0], [0, -1]]) == 1
-    assert geo.reflection_multiplier([[0, -1], [1, 0]]) == 1
-    assert geo.reflection_multiplier([[0, 1], [-1, 0]]) == 1
-    assert geo.reflection_multiplier([[5, 0], [0, 6]]) == 1
-    assert geo.reflection_multiplier([[-3, 0], [0, -7]]) == 1
-    assert geo.reflection_multiplier([[0, -8], [9, 0]]) == 1
-    assert geo.reflection_multiplier([[0, 3], [-2, 0]]) == 1
+    assert geo.reflection_sign([[1, 0], [0, 1]]) == 1
+    assert geo.reflection_sign([[-1, 0], [0, -1]]) == 1
+    assert geo.reflection_sign([[0, -1], [1, 0]]) == 1
+    assert geo.reflection_sign([[0, 1], [-1, 0]]) == 1
+    assert geo.reflection_sign([[5, 0], [0, 6]]) == 1
+    assert geo.reflection_sign([[-3, 0], [0, -7]]) == 1
+    assert geo.reflection_sign([[0, -8], [9, 0]]) == 1
+    assert geo.reflection_sign([[0, 3], [-2, 0]]) == 1
 
     with pytest.raises(Exception):
-        geo.reflection_multiplier([[0, 0], [0, 0]])
+        geo.reflection_sign([[0, 0], [0, 0]])
     with pytest.raises(Exception):
-        geo.reflection_multiplier([[1, 0], [0, 0]])
+        geo.reflection_sign([[1, 0], [0, 0]])
     with pytest.raises(Exception):
-        geo.reflection_multiplier([[2, 2], [1, 1]])
+        geo.reflection_sign([[2, 2], [1, 1]])
+
+
+test_reflection_sign()
 
 
 # helper for segment tests ----------------------------------------------------
@@ -532,159 +535,6 @@ def test_shape2d_with_arc_segment():
     # Invalid center point
     with pytest.raises(ValueError):
         shape.add_segment([3, 1], segment=geo.Shape2D.ArcSegment([2.1, 1]))
-
-
-def default_rasterization_tests_old(data, raster_width, point_start,
-                                    point_end):
-    # Check if first point of the data are identical to the segment start
-    assert np.linalg.norm(data[0, 0:2] - point_start) < 1E-9
-
-    point_dimension = data[0, :].size
-    num_data_points = data[:, 0].size
-
-    assert point_dimension == 2
-
-    for i in range(num_data_points):
-        point = data[i]
-
-        # Check if the raster width is close to the specified value
-        if i < num_data_points - 1:
-            next_point = data[i + 1, 0:2]
-        else:
-            next_point = point_end
-
-        raster_width_eff = np.linalg.norm(next_point - point[0:2])
-        assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
-
-
-def test_line_segment_rasterizaion_old():
-    point_start = np.array([3, -5])
-    point_end = np.array([-4, 1])
-    raster_width = 0.2
-    vec_start_end = point_end - point_start
-
-    line_segment = geo.Shape2D.LineSegment()
-    data = line_segment.rasterize(raster_width, point_start, point_end)
-
-    # Perform standard segment rasterization tests
-    default_rasterization_tests_old(data, raster_width, point_start, point_end)
-
-    num_data_points = data[:, 0].size
-    for i in range(num_data_points):
-        point = data[i]
-
-        # Check if point is on line
-        vec_start_point = point[0:2] - point_start
-        assert np.abs(np.linalg.det([vec_start_end, vec_start_point])) < 1E-6
-
-        # Check if point lies between start and end
-        dot_product = np.dot(vec_start_point, vec_start_end)
-        assert dot_product >= 0
-        assert dot_product < np.dot(vec_start_end, vec_start_end)
-
-
-def arc_segment_test_old(point_center, point_start, point_end, raster_width,
-                         arc_winding_ccw, check_winding):
-    point_center = np.array(point_center)
-    point_start = np.array(point_start)
-    point_end = np.array(point_end)
-
-    radius_arc = np.linalg.norm(point_start - point_center)
-
-    arc_segment = geo.Shape2D.ArcSegment(point_center,
-                                         arc_winding_ccw=arc_winding_ccw)
-    arc_segment.check_valid(point_start, point_end)
-
-    data = arc_segment.rasterize(raster_width, point_start, point_end)
-
-    # Perform standard segment rasterization tests
-    default_rasterization_tests_old(data, raster_width, point_start, point_end)
-
-    num_data_points = data[:, 0].size
-    for i in range(num_data_points):
-        point = data[i]
-
-        # Check if points are not rasterized clockwise
-        assert (check_winding(point[0:2], point_center))
-
-        # Check that points have the correct distance to the arcs center
-        distance_center_point = np.linalg.norm(point[0:2] - point_center)
-        assert np.abs(distance_center_point - radius_arc) < 1E-6
-
-
-def test_arc_segment_rasterizaion_old():
-    # center right of segment line
-    # ----------------------------
-
-    point_center = [3, 2]
-    point_start = [1, 2]
-    point_end = [3, 4]
-    raster_width = 0.2
-
-    def in_second_quadrant(p, c):
-        return p[0] <= c[0] and p[1] >= c[1]
-
-    def not_in_second_quadrant(p, c):
-        return not (p[0] < c[0] and p[1] > c[1])
-
-    arc_segment_test_old(point_center, point_start, point_end, raster_width,
-                         False,
-                         in_second_quadrant)
-    arc_segment_test_old(point_center, point_start, point_end, raster_width,
-                         True,
-                         not_in_second_quadrant)
-
-    # center left of segment line
-    # ----------------------------
-
-    point_center = [-4, -7]
-    point_start = [-4, -2]
-    point_end = [-9, -7]
-    raster_width = 0.1
-
-    arc_segment_test_old(point_center, point_start, point_end, raster_width,
-                         False,
-                         not_in_second_quadrant)
-    arc_segment_test_old(point_center, point_start, point_end, raster_width,
-                         True,
-                         in_second_quadrant)
-
-    # center on segment line
-    # ----------------------
-
-    point_center = [3, 2]
-    point_start = [2, 2]
-    point_end = [4, 2]
-    raster_width = 0.1
-
-    def not_below_center(p, c):
-        return p[1] >= c[1]
-
-    def not_above_center(p, c):
-        return p[1] <= c[1]
-
-    arc_segment_test_old(point_center, point_start, point_end, raster_width,
-                         False,
-                         not_below_center)
-    arc_segment_test_old(point_center, point_start, point_end, raster_width,
-                         True,
-                         not_above_center)
-
-    # special testcase
-    # ----------------
-    # In a previous version the unit vectors to the start and end point were
-    # calculated using the norm of the vector to the start, since both
-    # vector length should be identical (radius). However, floating point
-    # errors caused the dot product to get greater than 1. In result,
-    # the angle between both vectors could not be calculated using the arccos.
-    # This test case will fail in this case.
-    point_center = [0, 0]
-    point_start = [-6.6 - 2.8]
-    point_end = [-6.4 - 4.2]
-    raster_width = 0.1
-
-    arc_segment = geo.Shape2D.ArcSegment(point_center)
-    arc_segment.rasterize(raster_width, point_start, point_end)
 
 
 def test_shape2d_rasterization():
