@@ -710,7 +710,7 @@ def test_shape2d_rasterization():
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
 
-def test_arc_segment_transformations():
+def test_arc_segment_transformations_old():
     # create arc segment
     point_center = [2, 3]
     segment = geo.Shape2D.ArcSegment(point_center)
