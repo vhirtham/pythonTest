@@ -283,11 +283,6 @@ class ArcSegment:
 
         if not math.isclose(radius_end_center - radius_start_center, 0,
                             abs_tol=1E-9):
-            print(radius_start_center)
-            print(radius_end_center)
-            print(point_start)
-            print(point_end)
-            print(point_center)
             raise ValueError("Radius is not constant.")
         if math.isclose(self._arc_length, 0):
             raise Exception("Arc length is 0.")
