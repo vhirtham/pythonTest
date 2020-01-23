@@ -278,10 +278,15 @@ class ArcSegment:
         point_end = self._points[:, 1]
         point_center = self._points[:, 2]
 
-        vec_start_center = np.linalg.norm(point_start - point_center)
-        vec_end_center = np.linalg.norm(point_end - point_center)
+        radius_start_center = np.linalg.norm(point_start - point_center)
+        radius_end_center = np.linalg.norm(point_end - point_center)
 
-        if not math.isclose(vec_end_center - vec_start_center, 0):
+        if not math.isclose(radius_end_center - radius_start_center, 0):
+            print(radius_start_center)
+            print(radius_end_center)
+            print(point_start)
+            print(point_end)
+            print(point_center)
             raise ValueError("Radius is not constant.")
         if math.isclose(self._arc_length, 0):
             raise Exception("Arc length is 0.")
@@ -347,7 +352,6 @@ class ArcSegment:
         :param matrix: Transformation matrix
         :return: ---
         """
-        matrix = np.array(matrix, float)
         self._points = np.matmul(matrix, self._points)
         self._sign_arc_winding *= reflection_sign(matrix)
         self._calculate_arc_parameters()
