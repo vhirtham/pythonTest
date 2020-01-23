@@ -42,7 +42,7 @@ def vector_points_to_left_of_vector(vector, vector_reference):
     :param vector_reference: Reference vector
     :return: 1,-1 or 0 (see description)
     """
-    return np.sign(np.linalg.det([vector_reference, vector]))
+    return int(np.sign(np.linalg.det([vector_reference, vector])))
 
 
 def point_left_of_line(point, line_start, line_end):
@@ -85,6 +85,23 @@ def reflection_multiplier(transformation_matrix):
     return np.sign(origin_left_of_line)
 
 
+def reflection_sign(matrix):
+    """
+    Get a sign indicating if the transformation is a reflection.
+
+    Returns -1 if the transformation contains a reflection and 1 if not.
+
+    :param matrix: Transformation matrix
+    :return: 1 or -1 (see description)
+    """
+    sign = int(np.sign(np.linalg.det(matrix)))
+
+    if sign == 0:
+        raise Exception("Invalid transformation")
+
+    return sign
+
+
 # LineSegment -----------------------------------------------------------------
 
 class LineSegment:
@@ -121,15 +138,6 @@ class LineSegment:
         return self._length
 
     @property
-    def point_start(self):
-        """
-        Get the starting point of the segment.
-
-        :return: Starting point
-        """
-        return self._points[:, 0]
-
-    @property
     def point_end(self):
         """
         Get the end point of the segment.
@@ -137,6 +145,15 @@ class LineSegment:
         :return: End point
         """
         return self._points[:, 1]
+
+    @property
+    def point_start(self):
+        """
+        Get the starting point of the segment.
+
+        :return: Starting point
+        """
+        return self._points[:, 0]
 
     def apply_transformation(self, matrix):
         """
@@ -213,11 +230,7 @@ class ArcSegment:
 
         self._points = np.transpose(
             np.array([point_start, point_end, point_center], dtype=float))
-        self._radius = np.linalg.norm(self._points[:, 0] - self._points[:, 2])
-        self._calculate_arc_angle()
-        self._arc_length = self._arc_angle * self._radius
-
-        self._check_valid()
+        self._calculate_arc_parameters()
 
     def _calculate_arc_angle(self):
         """
@@ -243,6 +256,18 @@ class ArcSegment:
             self._arc_angle = angle_vecs
         else:
             self._arc_angle = 2 * np.pi - angle_vecs
+
+    def _calculate_arc_parameters(self):
+        """
+        Calculate radius, arc length and arc angle from the segments points.
+
+        :return: ---
+        """
+        self._radius = np.linalg.norm(self._points[:, 0] - self._points[:, 2])
+        self._calculate_arc_angle()
+        self._arc_length = self._arc_angle * self._radius
+
+        self._check_valid()
 
     def _check_valid(self):
         """
@@ -280,6 +305,33 @@ class ArcSegment:
         return self._arc_length
 
     @property
+    def point_center(self):
+        """
+        Get the center point of the segment.
+
+        :return: Center point
+        """
+        return self._points[:, 2]
+
+    @property
+    def point_end(self):
+        """
+        Get the end point of the segment.
+
+        :return: End point
+        """
+        return self._points[:, 1]
+
+    @property
+    def point_start(self):
+        """
+        Get the starting point of the segment.
+
+        :return: Starting point
+        """
+        return self._points[:, 0]
+
+    @property
     def radius(self):
         """
         Get the radius.
@@ -287,6 +339,17 @@ class ArcSegment:
         :return: Radius
         """
         return self._radius
+
+    def apply_transformation(self, matrix):
+        """
+        Apply a transformation to the segment.
+
+        :param matrix: Transformation matrix
+        :return: ---
+        """
+        self._points = np.matmul(matrix, self._points)
+        self._sign_arc_winding *= reflection_sign(matrix)
+        self._calculate_arc_parameters()
 
     def is_arc_winding_ccw(self):
         """
@@ -333,6 +396,15 @@ class ArcSegment:
         data = np.matmul(rotation_matrices, vec_center_start) + point_center
 
         return data.transpose()
+
+    def translate(self, vector):
+        """
+        Apply a translation to the segment.
+
+        :param vector: Translation vector
+        :return: ---
+        """
+        self._points += np.ndarray((2, 1), float, np.array(vector, float))
 
 
 class Shape2D:
