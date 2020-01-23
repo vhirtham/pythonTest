@@ -347,6 +347,7 @@ class ArcSegment:
         :param matrix: Transformation matrix
         :return: ---
         """
+        matrix = np.array(matrix, float)
         self._points = np.matmul(matrix, self._points)
         self._sign_arc_winding *= reflection_sign(matrix)
         self._calculate_arc_parameters()
