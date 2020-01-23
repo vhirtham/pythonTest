@@ -85,7 +85,7 @@ def reflection_multiplier(transformation_matrix):
     return np.sign(origin_left_of_line)
 
 
-# Segments --------------------------------------------------------------------
+# LineSegment -----------------------------------------------------------------
 
 class LineSegment:
     """Line segment."""
@@ -120,6 +120,34 @@ class LineSegment:
         """
         return self._length
 
+    @property
+    def point_start(self):
+        """
+        Get the starting point of the segment.
+
+        :return: Starting point
+        """
+        return self._points[:, 0]
+
+    @property
+    def point_end(self):
+        """
+        Get the end point of the segment.
+
+        :return: End point
+        """
+        return self._points[:, 1]
+
+    def apply_transformation(self, matrix):
+        """
+        Apply a transformation matrix to the segment.
+
+        :param matrix: Transformation matrix
+        :return: ---
+        """
+        self._points = np.matmul(matrix, self._points)
+        self._calculate_length()
+
     def rasterize(self, raster_width, num_points_excluded_end=0):
         """
         Create an array of points that describe the segments contour.
@@ -152,6 +180,17 @@ class LineSegment:
 
         return np.matmul(self._points, weight_matrix)
 
+    def translate(self, vector):
+        """
+        Apply a translation to the segment.
+
+        :param vector: Translation vector
+        :return: ---
+        """
+        self._points += np.ndarray((2, 1), float, np.array(vector, float))
+
+
+# ArcSegment ------------------------------------------------------------------
 
 class ArcSegment:
     """Arc segment."""

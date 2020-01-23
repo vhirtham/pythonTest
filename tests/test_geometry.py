@@ -152,8 +152,61 @@ def test_line_segment_rasterization():
                             1)
 
 
-# test ArcSegment ------------------------------------------------------------
+def test_line_segment_transformations():
+    # translation -----------------------------------------
+    segment = geo.LineSegment([3, 3], [4, 5])
+    segment.translate([-1, 4])
 
+    helper.check_vectors_identical(segment.point_start, np.array([2, 7]))
+    helper.check_vectors_identical(segment.point_end, np.array([3, 9]))
+    assert math.isclose(segment.length, np.sqrt(5))
+
+    # 45 degree rotation ----------------------------------
+    s = np.sin(np.pi / 4.)
+    c = np.cos(np.pi / 4.)
+    rotation_matrix = [[c, -s], [s, c]]
+
+    segment = geo.LineSegment([2, 2], [3, 6])
+    segment.apply_transformation(rotation_matrix)
+
+    exp_start = [0, np.sqrt(8)]
+    exp_end = np.matmul(rotation_matrix, [3, 6])
+
+    helper.check_vectors_identical(segment.point_start, exp_start)
+    helper.check_vectors_identical(segment.point_end, exp_end)
+    assert math.isclose(segment.length, np.sqrt(17))
+
+    # reflection at 45 degree line ------------------------
+    v = np.array([-1, 1], dtype=float)
+    reflection_matrix = np.identity(2) - 2 / np.dot(v, v) * np.outer(v, v)
+
+    segment = geo.LineSegment([-1, 3], [6, 1])
+    segment.apply_transformation(reflection_matrix)
+
+    helper.check_vectors_identical(segment.point_start, [3, -1])
+    helper.check_vectors_identical(segment.point_end, [1, 6])
+    assert math.isclose(segment.length, np.sqrt(53))
+
+    # scaling ---------------------------------------------
+    scale_matrix = [[4, 0], [0, 0.5]]
+
+    segment = geo.LineSegment([-2, 2], [1, 4])
+    segment.apply_transformation(scale_matrix)
+
+    helper.check_vectors_identical(segment.point_start, [-8, 1])
+    helper.check_vectors_identical(segment.point_end, [4, 2])
+    # length changes due to scaling!
+    assert math.isclose(segment.length, np.sqrt(145))
+
+    # exceptions ------------------------------------------
+
+    # transformation results in length = 0
+    zero_matrix = np.zeros((2, 2))
+    with pytest.raises(Exception):
+        segment.apply_transformation(zero_matrix)
+
+
+# test ArcSegment ------------------------------------------------------------
 
 def arc_segment_test(point_center, point_start, point_end, raster_width,
                      arc_winding_ccw, check_winding):

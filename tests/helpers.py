@@ -4,6 +4,8 @@ import math
 
 
 def check_vectors_identical(a, b, tolerance=1E-9):
+    a = np.array(a)
+    b = np.array(b)
     assert a.size == b.size
     for i in range(a.size):
         assert math.isclose(a[i], b[i], abs_tol=tolerance)
