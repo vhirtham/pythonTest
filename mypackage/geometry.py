@@ -238,9 +238,9 @@ class ArcSegment:
 
         :return: ---
         """
-        point_start = self._points[:, 0]
-        point_end = self._points[:, 1]
-        point_center = self._points[:, 2]
+        point_start = self.point_start
+        point_end = self.point_end
+        point_center = self.point_center
 
         # Calculate angle between vectors (always the smaller one)
         unit_center_start = tf.normalize(point_start - point_center)
@@ -274,15 +274,15 @@ class ArcSegment:
         Check if the segments data is valid.
         :return: ---
         """
-        point_start = self._points[:, 0]
-        point_end = self._points[:, 1]
-        point_center = self._points[:, 2]
+        point_start = self.point_start
+        point_end = self.point_end
+        point_center = self.point_center
 
         radius_start_center = np.linalg.norm(point_start - point_center)
         radius_end_center = np.linalg.norm(point_end - point_center)
+        radius_diff = radius_end_center - radius_start_center
 
-        if not math.isclose(radius_end_center - radius_start_center, 0,
-                            abs_tol=1E-9):
+        if not math.isclose(radius_diff, 0, abs_tol=1E-9):
             raise ValueError("Radius is not constant.")
         if math.isclose(self._arc_length, 0):
             raise Exception("Arc length is 0.")
@@ -375,8 +375,8 @@ class ArcSegment:
         multiple segments.
         :return: Array of contour points
         """
-        point_start = self._points[:, 0]
-        point_center = self._points[:, 2]
+        point_start = self.point_start
+        point_center = self.point_center
         vec_center_start = (point_start - point_center)
 
         raster_width = np.clip(raster_width, 0, self.arc_length)
