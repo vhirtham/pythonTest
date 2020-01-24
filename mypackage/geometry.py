@@ -6,6 +6,16 @@ import mypackage.transformations as tf
 from scipy.spatial.transform import Rotation as R
 
 
+# Helper functions ------------------------------------------------------------
+
+def to_list(var):
+    if isinstance(var, list):
+        return var
+    if var is None:
+        return []
+    return [var]
+
+
 def check_point_data_valid(point):
     """
     Check if the data of a point is valid.
@@ -16,6 +26,17 @@ def check_point_data_valid(point):
     if not (np.ndim(point) == 1 and point.size == 2):
         raise Exception(
             "Point data is invalid. Must be an array with 2 values.")
+
+
+def is_col_in_array(col, array):
+    """
+    Check if a column (1d array) can be found inside of a 2d array.
+
+    :param row: Column that should be checked
+    :param array: 2d array
+    :return: True or False
+    """
+    return is_row_in_array(col, np.transpose(array))
 
 
 # https://codereview.stackexchange.com/questions/193835
@@ -136,7 +157,7 @@ class LineSegment:
         :return: Interpolated segment
         """
         if not isinstance(a, cls) or not isinstance(b, cls):
-            raise Exception("Parameters a and b must both be line segments.")
+            raise TypeError("Parameters a and b must both be line segments.")
 
         weight = np.clip(weight, 0, 1)
         points = (1 - weight) * a.points + weight * b.points
@@ -333,6 +354,24 @@ class ArcSegment:
             np.array([point_start, point_end, point_center], dtype=float))
         return cls(points, arc_winding_ccw)
 
+    @classmethod
+    def linear_interpolation(cls, a, b, weight):
+        """
+        Interpolate two arc segments linearly.
+
+        :param a: First segment
+        :param b: Second segment
+        :param weight: Weighting factor in the range [0 .. 1] where 0 is
+        segment a and 1 is segment b
+        :return: Interpolated segment
+        """
+        # implementation ->segment start and end have to be interpolated
+        # linearly. Otherwise there might occur gaps in interpolated shapes
+        # at the connecting segment points --- the center point has to be
+        # determined automatically. 2 ways -> linear angle interpolation or
+        # linear radius interpolation
+        raise Exception("Not implemented.")
+
     @property
     def arc_angle(self):
         """
@@ -454,6 +493,8 @@ class ArcSegment:
         self._points += np.ndarray((2, 1), float, np.array(vector, float))
 
 
+# Shape2d class ---------------------------------------------------------------
+
 class Shape2D:
     """Defines a shape in 2 dimensions."""
 
@@ -462,26 +503,25 @@ class Shape2D:
     min_segment_length = 1E-6
     tolerance_comparison = 1E-6
 
-    def __init__(self, segments):
+    def __init__(self, segments=None):
         """
         Constructor.
 
         :param segments: Single segment or list of segments
         """
 
-        self._segments = [segments]
+        self._segments = to_list(segments)
 
     # Public methods ----------------------------------------------------------
 
-    def add_segment(self, segment):
+    def add_segments(self, segments):
         """
-        Add a new segment which is connected to previous one.
+        Add segments to the shape
 
-        :param point: end point of the new segment
-        :param segment: segment
+        :param segments: Single segment or list of segments
         :return: ---
         """
-        self._segments.append(segment)
+        self._segments += to_list(segments)
 
     def apply_transformation(self, transformation_matrix):
         """
@@ -502,12 +542,11 @@ class Shape2D:
         origin
         :return: ---
         """
-        dot_product = np.dot(reflection_normal, reflection_normal)
-        outer_product = np.outer(reflection_normal, reflection_normal)
-        householder_matrix = np.identity(2) - 2 * outer_product / dot_product
+        v = np.array(reflection_normal, float)
+        dot_product = np.dot(v, v)
+        householder_matrix = np.identity(2) - 2 / dot_product * np.outer(v, v)
 
-        offset = np.array(reflection_normal) / np.sqrt(
-            dot_product) * distance_to_origin
+        offset = v / np.sqrt(dot_product) * distance_to_origin
 
         self.translate(-offset)
         self.apply_transformation(householder_matrix)

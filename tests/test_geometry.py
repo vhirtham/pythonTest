@@ -66,9 +66,6 @@ def test_reflection_sign():
         geo.reflection_sign([[2, 2], [1, 1]])
 
 
-test_reflection_sign()
-
-
 # helper for segment tests ----------------------------------------------------
 
 def default_segment_rasterization_tests(segment, raster_width, point_start,
@@ -236,6 +233,17 @@ def test_line_segment_interpolation():
         assert math.isclose(segment_c.points[1, 0], 3 - 2 * i)
         assert math.isclose(segment_c.points[0, 1], 7 - 2 * i)
         assert math.isclose(segment_c.points[1, 1], -3 + 4 * i)
+
+    # exceptions ------------------------------------------
+
+    # wrong types
+    arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [1, 0])
+    with pytest.raises(TypeError):
+        geo.LineSegment.linear_interpolation(segment_a, arc_segment, weight)
+    with pytest.raises(TypeError):
+        geo.LineSegment.linear_interpolation(arc_segment, segment_a, weight)
+    with pytest.raises(TypeError):
+        geo.LineSegment.linear_interpolation(arc_segment, arc_segment, weight)
 
 
 # test ArcSegment ------------------------------------------------------------
@@ -535,69 +543,53 @@ def test_arc_segment_transformations():
         segment.apply_transformation(zero_matrix)
 
 
+def test_arc_segment_interpolation():
+    segment_a = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [1, 0])
+    segment_b = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [1, 0])
+
+    # not implemented yet
+    with pytest.raises(Exception):
+        geo.ArcSegment.linear_interpolation(segment_a, segment_b, 1)
+
+
+test_arc_segment_interpolation()
+
+
 # test Shape2d ----------------------------------------------------------------
 
 def test_shape2d_construction():
-    # Test Exception: Segment length too small
-    with pytest.raises(Exception):
-        geo.Shape2D([0, 0], [0, 0])
+    line_segment = geo.LineSegment.construct_from_points([0, 0], [1, 1])
+    arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [0, 1])
 
-    # Test Exception: Invalid point format
-    with pytest.raises(Exception):
-        geo.Shape2D([0, 0], [1])
-    with pytest.raises(Exception):
-        geo.Shape2D([0, 0, 4], [1, 1])
+    # Empty construction
+    shape = geo.Shape2D()
+    assert shape.num_segments() == 0
 
-    # Test Exception: Invalid shape type
-    with pytest.raises(Exception):
-        geo.Shape2D([0, 0], [0, 1], "wrong type")
+    # Single element construction shape
+    shape = geo.Shape2D(line_segment)
+    assert shape.num_segments() == 1
 
-    # Create shape
-    geo.Shape2D([0, 0], [0, 1])
-
-
-def test_shape2d_boolean_functions():
-    shape = geo.Shape2D([0, 0], [0, 1])
-
-    # Point included or not
-    assert (shape.is_point_included([0, 1]))
-    assert (not shape.is_point_included([5, 1]))
+    # Multi segment construction
+    shape = geo.Shape2D([arc_segment, line_segment])
+    assert shape.num_segments() == 2
+    assert isinstance(shape.segments[0], geo.ArcSegment)
+    assert isinstance(shape.segments[1], geo.LineSegment)
 
 
 def test_shape2d_segment_addition():
     # Create shape and add segments
-    shape = geo.Shape2D([0, 0], [0, 1])
-    shape.add_segment([2, 2])
-    shape.add_segment([1, 0])
+    line_segment = geo.LineSegment.construct_from_points([0, 0], [1, 1])
+    arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [0, 1])
 
-    # Test Exception: Invalid point format
-    with pytest.raises(Exception):
-        shape.add_segment(0)
-    # Test Exception: Invalid shape type
-    with pytest.raises(Exception):
-        shape.add_segment([0, 0], "wrong type")
+    shape = geo.Shape2D()
+    shape.add_segments(line_segment)
+    assert shape.num_segments() == 1
 
-    # Close segment
-    shape.add_segment([0, 0])
-
-    # Test Exception: Shape is already closed
-    with pytest.raises(ValueError):
-        shape.add_segment([1, 0])
-
-    # Number of segments has to be one less than the number of points
-    assert shape.num_segments() == shape.num_points() - 1
-
-
-def test_shape2d_with_arc_segment():
-    # Invalid center point
-    with pytest.raises(ValueError):
-        geo.Shape2D([0, 0], [1, 1], geo.Shape2D.ArcSegment([0, 1.1]))
-
-    shape = geo.Shape2D([0, 0], [1, 1], segment=geo.Shape2D.ArcSegment([0, 1]))
-    shape.add_segment([2, 2], segment=geo.Shape2D.ArcSegment([2, 1]))
-    # Invalid center point
-    with pytest.raises(ValueError):
-        shape.add_segment([3, 1], segment=geo.Shape2D.ArcSegment([2.1, 1]))
+    shape.add_segments([arc_segment, arc_segment])
+    assert shape.num_segments() == 3
+    assert isinstance(shape.segments[0], geo.LineSegment)
+    assert isinstance(shape.segments[1], geo.ArcSegment)
+    assert isinstance(shape.segments[2], geo.ArcSegment)
 
 
 def test_shape2d_rasterization():
@@ -605,42 +597,38 @@ def test_shape2d_rasterization():
                        [0, 1],
                        [1, 1],
                        [1, 0]])
+
     raster_width = 0.2
 
-    shape = geo.Shape2D(points[0], points[1])
-    shape.add_segment(points[2])
-    shape.add_segment(points[3])
+    shape = geo.Shape2D(
+        geo.LineSegment.construct_from_points(points[0], points[1]))
+    shape.add_segments(
+        geo.LineSegment.construct_from_points(points[1], points[2]))
+    shape.add_segments(
+        geo.LineSegment.construct_from_points(points[2], points[3]))
 
     data = shape.rasterize(raster_width)
 
-    # Segment points must be included
+    # Segment start and end points points must be included
     for point in points:
-        assert geo.is_row_in_array(point, data[:, 0:2])
+        assert geo.is_col_in_array(point, data)
 
     # check effective raster width
-    for i in range(1, data[:, 0].size):
-        raster_width_eff = np.linalg.norm(data[i] - data[i - 1])
+    for i in range(1, data.shape[1]):
+        raster_width_eff = np.linalg.norm(data[:, i] - data[:, i - 1])
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
 
 def default_test_shape():
-    points = np.array([[3, 4],
-                       [5, 0],
-                       [11, 3]])
-    point_center = np.array([6, 3])
-
     # create shape
-    arc_segment = geo.Shape2D.ArcSegment(point_center)
-    shape = geo.Shape2D(points[0], points[1], arc_segment)
-    shape.add_segment(points[2])
-
-    return shape
+    arc_segment = geo.ArcSegment.construct_from_points([3, 4], [5, 0], [6, 3])
+    line_segment = geo.LineSegment.construct_from_points([5, 0], [11, 3])
+    return geo.Shape2D([arc_segment, line_segment])
 
 
 def test_shape2d_translation():
     def check_point(point, point_ref, translation):
-        assert point[0] - point_ref[0] - translation[0] < 1E-9
-        assert point[1] - point_ref[1] - translation[1] < 1E-9
+        helper.check_vectors_identical(point - translation, point_ref)
 
     translation = [3, 4]
 
@@ -650,15 +638,26 @@ def test_shape2d_translation():
     # apply translation
     shape.translate(translation)
 
-    for i in range(shape.num_points()):
-        check_point(shape._points[i], shape_ref._points[i], translation)
-
     arc_segment = shape._segments[0]
     arc_segment_ref = shape_ref._segments[0]
 
-    check_point(arc_segment._point_center, arc_segment_ref._point_center,
+    assert arc_segment.is_arc_winding_ccw() == \
+           arc_segment_ref.is_arc_winding_ccw()
+
+    check_point(arc_segment.point_start, arc_segment_ref.point_start,
                 translation)
-    assert arc_segment._sign_arc_winding == arc_segment_ref._sign_arc_winding
+    check_point(arc_segment.point_end, arc_segment_ref.point_end,
+                translation)
+    check_point(arc_segment.point_center, arc_segment_ref.point_center,
+                translation)
+
+    line_segment = shape._segments[1]
+    line_segment_ref = shape_ref._segments[1]
+
+    check_point(line_segment.point_start, line_segment_ref.point_start,
+                translation)
+    check_point(line_segment.point_end, line_segment_ref.point_end,
+                translation)
 
 
 def test_shape2d_transformation():
@@ -675,14 +674,23 @@ def test_shape2d_transformation():
     # apply transformation
     shape.apply_transformation(rotation_matrix)
 
-    for i in range(shape.num_points()):
-        check_point_rotation(shape._points[i], shape_ref._points[i])
+    arc_segment = shape.segments[0]
+    arc_segment_ref = shape_ref.segments[0]
 
-    arc_segment = shape._segments[0]
-    arc_segment_ref = shape_ref._segments[0]
-    check_point_rotation(arc_segment._point_center,
-                         arc_segment_ref._point_center)
-    assert arc_segment._sign_arc_winding == arc_segment_ref._sign_arc_winding
+    assert arc_segment.is_arc_winding_ccw() == \
+           arc_segment_ref.is_arc_winding_ccw()
+
+    check_point_rotation(arc_segment.point_start, arc_segment_ref.point_start)
+    check_point_rotation(arc_segment.point_end, arc_segment_ref.point_end)
+    check_point_rotation(arc_segment.point_center,
+                         arc_segment_ref.point_center)
+
+    line_segment = shape.segments[1]
+    line_segment_ref = shape_ref.segments[1]
+
+    check_point_rotation(line_segment.point_start,
+                         line_segment_ref.point_start)
+    check_point_rotation(line_segment.point_end, line_segment_ref.point_end)
 
     # with reflection
     def check_point_reflection(point, point_ref):
@@ -696,14 +704,24 @@ def test_shape2d_transformation():
     # apply transformation
     shape.apply_transformation(reflection_matrix)
 
-    for i in range(shape.num_points()):
-        check_point_reflection(shape._points[i], shape_ref._points[i])
+    arc_segment = shape.segments[0]
+    arc_segment_ref = shape_ref.segments[0]
 
-    arc_segment = shape._segments[0]
-    arc_segment_ref = shape_ref._segments[0]
-    check_point_reflection(arc_segment._point_center,
-                           arc_segment_ref._point_center)
-    assert arc_segment._sign_arc_winding == -arc_segment_ref._sign_arc_winding
+    assert arc_segment.is_arc_winding_ccw() != \
+           arc_segment_ref.is_arc_winding_ccw()
+
+    check_point_reflection(arc_segment.point_start,
+                           arc_segment_ref.point_start)
+    check_point_reflection(arc_segment.point_end, arc_segment_ref.point_end)
+    check_point_reflection(arc_segment.point_center,
+                           arc_segment_ref.point_center)
+
+    line_segment = shape.segments[1]
+    line_segment_ref = shape_ref.segments[1]
+
+    check_point_reflection(line_segment.point_start,
+                           line_segment_ref.point_start)
+    check_point_reflection(line_segment.point_end, line_segment_ref.point_end)
 
 
 def check_reflected_point(point, reflected_point, axis_offset,
@@ -712,7 +730,8 @@ def check_reflected_point(point, reflected_point, axis_offset,
     vec_original_reflected = reflected_point - point
     mid_point = point + 0.5 * vec_original_reflected
     shifted_mid_point = mid_point - axis_offset
-    determinant = np.linalg.det([shifted_mid_point, direction_reflection_axis])
+    determinant = np.linalg.det(
+        [shifted_mid_point, direction_reflection_axis])
     assert np.abs(determinant) < 1E-8
 
 
@@ -728,14 +747,33 @@ def shape2d_reflect_testcase(normal, distance_to_origin):
     shape_reflected = copy.deepcopy(shape)
     shape_reflected.reflect(normal, distance_to_origin)
 
+    arc_segment = shape.segments[0]
+    arc_segment_ref = shape_reflected.segments[0]
+    line_segment = shape.segments[1]
+    line_segment_ref = shape_reflected.segments[1]
+
     # check reflected points
-    check_reflected_point(shape._segments[0]._point_center,
-                          shape_reflected._segments[0]._point_center, offset,
+    check_reflected_point(arc_segment.point_start,
+                          arc_segment_ref.point_start,
+                          offset,
+                          direction_reflection_axis)
+    check_reflected_point(arc_segment.point_end,
+                          arc_segment_ref.point_end,
+                          offset,
+                          direction_reflection_axis)
+    check_reflected_point(arc_segment.point_center,
+                          arc_segment_ref.point_center,
+                          offset,
                           direction_reflection_axis)
 
-    for i in range(shape.num_points()):
-        check_reflected_point(shape._points[i], shape_reflected._points[i],
-                              offset, direction_reflection_axis)
+    check_reflected_point(line_segment.point_start,
+                          line_segment_ref.point_start,
+                          offset,
+                          direction_reflection_axis)
+    check_reflected_point(line_segment.point_end,
+                          line_segment_ref.point_end,
+                          offset,
+                          direction_reflection_axis)
 
 
 def test_shape2d_reflect():

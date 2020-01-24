@@ -11,9 +11,11 @@ import tests.helpers as helpers
 # Test profile class ----------------------------------------------------------
 
 def test_profile_construction_and_shape_addition():
-    shape = geo.Shape2D([0, 0], [1, 0])
-    shape.add_segment([2, -1])
-    shape.add_segment([0, -1])
+    segment0 = geo.LineSegment.construct_from_points([0, 0], [1, 0])
+    segment1 = geo.LineSegment.construct_from_points([1, 0], [2, -1])
+    segment2 = geo.LineSegment.construct_from_points([2, -1], [0, -1])
+
+    shape = geo.Shape2D([segment0, segment1, segment2])
 
     # Check invalid types
     with pytest.raises(TypeError):
@@ -60,20 +62,20 @@ def test_profile_construction_and_shape_addition():
 
         for i in range(shape.num_segments()):
             assert isinstance(segments_profile[i], type(segments[i]))
-
-        points = shape.points
-        points_profile = shape_profile.points
-
-        assert points.shape == points_profile.shape
-        for i in range(shape.num_points()):
-            helpers.check_vectors_identical(points[i], points_profile[i])
+            points = segments[i].points
+            points_profile = segments_profile[i].points
+            for j in range(2):
+                helpers.check_vectors_identical(points[:, j],
+                                                points_profile[:, j])
 
 
 def test_profile_rasterization():
     raster_width = 0.1
-    shape0 = geo.Shape2D([-1, 0], [-raster_width, 0])
-    shape1 = geo.Shape2D([0, 0], [1, 0])
-    shape2 = geo.Shape2D([1 + raster_width, 0], [2, 0])
+    shape0 = geo.Shape2D(
+        geo.LineSegment.construct_from_points([-1, 0], [-raster_width, 0]))
+    shape1 = geo.Shape2D(geo.LineSegment.construct_from_points([0, 0], [1, 0]))
+    shape2 = geo.Shape2D(
+        geo.LineSegment.construct_from_points([1 + raster_width, 0], [2, 0]))
 
     profile = pcg.Profile([shape0, shape1])
     profile.add_shapes(shape2)
@@ -83,13 +85,13 @@ def test_profile_rasterization():
 
     # check raster data size
     expected_number_raster_points = int(round(3 / raster_width)) + 1
-    assert len(data[:, 0]) == expected_number_raster_points
+    assert data.shape[1] == expected_number_raster_points
 
     # Check that all shapes are rasterized correct
     for i in range(int(round(3 / raster_width)) + 1):
         expected_raster_point_x = i * raster_width - 1
-        assert data[i, 0] - expected_raster_point_x < 1E-9
-        assert data[i, 1] == 0
+        assert data[0, i] - expected_raster_point_x < 1E-9
+        assert data[1, i] == 0
 
 
 # Test trace segment classes --------------------------------------------------
