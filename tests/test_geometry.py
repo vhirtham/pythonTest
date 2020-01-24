@@ -119,12 +119,25 @@ def default_segment_rasterization_tests(segment, raster_width, point_start,
 
 # test LineSegment ------------------------------------------------------------
 
-def test_line_segment():
-    segment = geo.LineSegment([3, 3], [4, 5])
+def test_line_segment_construction():
+    # class constructor -----------------------------------
+    segment = geo.LineSegment([[3, 5], [3, 4]])
     assert math.isclose(segment.length, np.sqrt(5))
 
+    # exceptions ------------------------------------------
+    # length = 0
     with pytest.raises(ValueError):
-        geo.LineSegment([0, 1], [0, 1])
+        geo.LineSegment([[0, 0], [1, 1]])
+    # not 2x2
+    with pytest.raises(ValueError):
+        geo.LineSegment([[3, 5], [3, 4], [3, 2]])
+    # not a 2d array
+    with pytest.raises(ValueError):
+        geo.LineSegment([[[3, 5], [3, 4]]])
+
+    # factories -------------------------------------------
+    segment = geo.LineSegment.construct_from_points([3, 3], [4, 5])
+    assert math.isclose(segment.length, np.sqrt(5))
 
 
 def test_line_segment_rasterization():
@@ -132,10 +145,11 @@ def test_line_segment_rasterization():
 
     point_start = np.array([3, 3])
     point_end = np.array([4, 5])
+    points = np.array([point_start, point_end]).transpose()
     vec_start_end = point_end - point_start
     unit_vec_start_end = vec_start_end / np.linalg.norm(vec_start_end)
 
-    segment = geo.LineSegment(point_start, point_end)
+    segment = geo.LineSegment(points)
 
     # perform default tests
     default_segment_rasterization_tests(segment, raster_width, point_start,
@@ -157,7 +171,7 @@ def test_line_segment_rasterization():
 
 def test_line_segment_transformations():
     # translation -----------------------------------------
-    segment = geo.LineSegment([3, 3], [4, 5])
+    segment = geo.LineSegment.construct_from_points([3, 3], [4, 5])
     segment.translate([-1, 4])
 
     helper.check_vectors_identical(segment.point_start, np.array([2, 7]))
@@ -169,7 +183,7 @@ def test_line_segment_transformations():
     c = np.cos(np.pi / 4.)
     rotation_matrix = [[c, -s], [s, c]]
 
-    segment = geo.LineSegment([2, 2], [3, 6])
+    segment = geo.LineSegment.construct_from_points([2, 2], [3, 6])
     segment.apply_transformation(rotation_matrix)
 
     exp_start = [0, np.sqrt(8)]
@@ -183,7 +197,7 @@ def test_line_segment_transformations():
     v = np.array([-1, 1], dtype=float)
     reflection_matrix = np.identity(2) - 2 / np.dot(v, v) * np.outer(v, v)
 
-    segment = geo.LineSegment([-1, 3], [6, 1])
+    segment = geo.LineSegment.construct_from_points([-1, 3], [6, 1])
     segment.apply_transformation(reflection_matrix)
 
     helper.check_vectors_identical(segment.point_start, [3, -1])
@@ -193,7 +207,7 @@ def test_line_segment_transformations():
     # scaling ---------------------------------------------
     scale_matrix = [[4, 0], [0, 0.5]]
 
-    segment = geo.LineSegment([-2, 2], [1, 4])
+    segment = geo.LineSegment.construct_from_points([-2, 2], [1, 4])
     segment.apply_transformation(scale_matrix)
 
     helper.check_vectors_identical(segment.point_start, [-8, 1])
@@ -209,6 +223,21 @@ def test_line_segment_transformations():
         segment.apply_transformation(zero_matrix)
 
 
+def test_line_segment_interpolation():
+    segment_a = geo.LineSegment.construct_from_points([1, 3], [7, -3])
+    segment_b = geo.LineSegment.construct_from_points([5, -5], [-1, 13])
+
+    for i in range(5):
+        weight = i / 4
+        segment_c = geo.LineSegment.linear_interpolation(segment_a,
+                                                         segment_b,
+                                                         weight)
+        assert math.isclose(segment_c.points[0, 0], 1 + i)
+        assert math.isclose(segment_c.points[1, 0], 3 - 2 * i)
+        assert math.isclose(segment_c.points[0, 1], 7 - 2 * i)
+        assert math.isclose(segment_c.points[1, 1], -3 + 4 * i)
+
+
 # test ArcSegment ------------------------------------------------------------
 
 def arc_segment_test(point_center, point_start, point_end, raster_width,
@@ -219,8 +248,10 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
 
     radius_arc = np.linalg.norm(point_start - point_center)
 
-    arc_segment = geo.ArcSegment(point_start, point_end, point_center,
-                                 arc_winding_ccw=arc_winding_ccw)
+    arc_segment = geo.ArcSegment.construct_from_points(point_start,
+                                                       point_end,
+                                                       point_center,
+                                                       arc_winding_ccw)
 
     # Perform standard segment rasterization tests
     default_segment_rasterization_tests(arc_segment, raster_width, point_start,
@@ -241,8 +272,9 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
 
 
 def test_arc_segment_construction():
-    segment_cw = geo.ArcSegment([3, 3], [6, 6], [6, 3], False)
-    segment_ccw = geo.ArcSegment([3, 3], [6, 6], [6, 3], True)
+    points = [[3, 6, 6], [3, 6, 3]]
+    segment_cw = geo.ArcSegment(points, False)
+    segment_ccw = geo.ArcSegment(points, True)
 
     assert not segment_cw.is_arc_winding_ccw()
     assert segment_ccw.is_arc_winding_ccw()
@@ -257,17 +289,52 @@ def test_arc_segment_construction():
     assert math.isclose(segment_ccw.arc_length, 9 / 2 * np.pi)
 
     # check exceptions ------------------------------------
+
     # radius differs
+    points = [[3, 6, 6], [3, 10, 3]]
     with pytest.raises(Exception):
-        geo.ArcSegment([3, 3], [6, 10], [6, 3], False)
+        geo.ArcSegment(points, False)
+
     # radius is zero
+    points = [[3, 3, 3], [3, 3, 3]]
     with pytest.raises(Exception):
-        geo.ArcSegment([3, 3], [3, 3], [3, 3], False)
+        geo.ArcSegment(points, False)
+
     # arc length zero
+    points = [[3, 3, 6], [3, 3, 3]]
     with pytest.raises(Exception):
-        geo.ArcSegment([3, 3], [3, 3], [6, 3], False)
+        geo.ArcSegment(points, False)
     with pytest.raises(Exception):
-        geo.ArcSegment([3, 3], [3, 3], [6, 3], True)
+        geo.ArcSegment(points, True)
+
+    # not 2x3
+    points = [[3, 3], [3, 3]]
+    with pytest.raises(ValueError):
+        geo.ArcSegment(points)
+
+    # not a 2d array
+    points = [[[3, 3, 6], [3, 3, 3]]]
+    with pytest.raises(ValueError):
+        geo.ArcSegment([[[3, 5], [3, 4]]])
+
+    # factories -------------------------------------------
+
+    segment_cw = geo.ArcSegment.construct_from_points([3, 3], [6, 6], [6, 3],
+                                                      False)
+    segment_ccw = geo.ArcSegment.construct_from_points([3, 3], [6, 6], [6, 3],
+                                                       True)
+
+    assert not segment_cw.is_arc_winding_ccw()
+    assert segment_ccw.is_arc_winding_ccw()
+
+    assert math.isclose(segment_cw.radius, 3)
+    assert math.isclose(segment_ccw.radius, 3)
+
+    assert math.isclose(segment_cw.arc_angle, 1 / 2 * np.pi)
+    assert math.isclose(segment_ccw.arc_angle, 3 / 2 * np.pi)
+
+    assert math.isclose(segment_cw.arc_length, 3 / 2 * np.pi)
+    assert math.isclose(segment_ccw.arc_length, 9 / 2 * np.pi)
 
 
 def test_arc_segment_rasterization():
@@ -322,22 +389,6 @@ def test_arc_segment_rasterization():
     arc_segment_test(point_center, point_start, point_end, raster_width, True,
                      not_above_center)
 
-    # special testcase
-    # ----------------
-    # In a previous version the unit vectors to the start and end point were
-    # calculated using the norm of the vector to the start, since both
-    # vector length should be identical (radius). However, floating point
-    # errors caused the dot product to get greater than 1. In result,
-    # the angle between both vectors could not be calculated using the arccos.
-    # This test case will fail in this case.
-    point_center = [0, 0]
-    point_start = [-6.6 - 2.8]
-    point_end = [-6.4 - 4.2]
-    raster_width = 0.1
-
-    arc_segment = geo.Shape2D.ArcSegment(point_center)
-    arc_segment.rasterize(raster_width, point_start, point_end)
-
 
 def check_arc_segment_values(segment, point_start, point_end, point_center,
                              winding_ccw, radius, arc_angle, arc_length):
@@ -354,8 +405,10 @@ def check_arc_segment_values(segment, point_start, point_end, point_center,
 
 def test_arc_segment_transformations():
     # translation -----------------------------------------
-    segment_cw = geo.ArcSegment([3, 3], [5, 5], [5, 3], False)
-    segment_ccw = geo.ArcSegment([3, 3], [5, 5], [5, 3], True)
+    segment_cw = geo.ArcSegment.construct_from_points([3, 3], [5, 5], [5, 3],
+                                                      False)
+    segment_ccw = geo.ArcSegment.construct_from_points([3, 3], [5, 5], [5, 3],
+                                                       True)
     segment_cw.translate([-1, 4])
     segment_ccw.translate([-1, 4])
 
@@ -378,8 +431,10 @@ def test_arc_segment_transformations():
     c = np.cos(np.pi / 4.)
     rotation_matrix = [[c, -s], [s, c]]
 
-    segment_cw = geo.ArcSegment([3, 3], [5, 5], [5, 3], False)
-    segment_ccw = geo.ArcSegment([3, 3], [5, 5], [5, 3], True)
+    segment_cw = geo.ArcSegment.construct_from_points([3, 3], [5, 5], [5, 3],
+                                                      False)
+    segment_ccw = geo.ArcSegment.construct_from_points([3, 3], [5, 5], [5, 3],
+                                                       True)
     segment_cw.apply_transformation(rotation_matrix)
     segment_ccw.apply_transformation(rotation_matrix)
 
@@ -396,8 +451,10 @@ def test_arc_segment_transformations():
     v = np.array([-1, 1], dtype=float)
     reflection_matrix = np.identity(2) - 2 / np.dot(v, v) * np.outer(v, v)
 
-    segment_cw = geo.ArcSegment([3, 2], [5, 4], [5, 2], False)
-    segment_ccw = geo.ArcSegment([3, 2], [5, 4], [5, 2], True)
+    segment_cw = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+                                                      False)
+    segment_ccw = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+                                                       True)
     segment_cw.apply_transformation(reflection_matrix)
     segment_ccw.apply_transformation(reflection_matrix)
 
@@ -415,8 +472,10 @@ def test_arc_segment_transformations():
     # scaling both coordinates equally --------------------
     scaling_matrix = [[4, 0], [0, 4]]
 
-    segment_cw = geo.ArcSegment([3, 2], [5, 4], [5, 2], False)
-    segment_ccw = geo.ArcSegment([3, 2], [5, 4], [5, 2], True)
+    segment_cw = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+                                                      False)
+    segment_ccw = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+                                                       True)
     segment_cw.apply_transformation(scaling_matrix)
     segment_ccw.apply_transformation(scaling_matrix)
 
@@ -437,8 +496,10 @@ def test_arc_segment_transformations():
     # non-uniform scaling which results in a valid arc ----
     scaling_matrix = [[0.25, 0], [0, 2]]
 
-    segment_cw = geo.ArcSegment([8, 4], [32, 4], [20, 2], False)
-    segment_ccw = geo.ArcSegment([8, 4], [32, 4], [20, 2], True)
+    segment_cw = geo.ArcSegment.construct_from_points([8, 4], [32, 4], [20, 2],
+                                                      False)
+    segment_ccw = geo.ArcSegment.construct_from_points([8, 4], [32, 4],
+                                                       [20, 2], True)
     segment_cw.apply_transformation(scaling_matrix)
     segment_ccw.apply_transformation(scaling_matrix)
 
@@ -461,12 +522,14 @@ def test_arc_segment_transformations():
     # exceptions ------------------------------------------
 
     # transformation distorts arc
-    segment = geo.ArcSegment([3, 2], [5, 4], [5, 2], False)
+    segment = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+                                                   False)
     with pytest.raises(Exception):
         segment.apply_transformation(scaling_matrix)
 
     # transformation results in length = 0
-    segment = geo.ArcSegment([3, 2], [5, 4], [5, 2], False)
+    segment = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+                                                   False)
     zero_matrix = np.zeros((2, 2))
     with pytest.raises(Exception):
         segment.apply_transformation(zero_matrix)
@@ -558,53 +621,6 @@ def test_shape2d_rasterization():
     for i in range(1, data[:, 0].size):
         raster_width_eff = np.linalg.norm(data[i] - data[i - 1])
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
-
-
-def test_arc_segment_transformations_old():
-    # create arc segment
-    point_center = [2, 3]
-    segment = geo.Shape2D.ArcSegment(point_center)
-
-    # check transformation with reflection
-    reflection_matrix = np.array([[0, 1], [1, 0]])
-    translation_pre = np.array([-1, 1])
-    translation_post = np.array([2, 1])
-    segment_copy = copy.deepcopy(segment)
-
-    segment_copy.translate(translation_pre)
-    assert segment_copy._point_center[0] == 1
-    assert segment_copy._point_center[1] == 4
-
-    segment_copy.apply_transformation(reflection_matrix)
-    assert segment_copy._point_center[0] == 4
-    assert segment_copy._point_center[1] == 1
-    # Check that winding order is NOT changed
-    assert segment_copy._sign_arc_winding == segment._sign_arc_winding * -1
-
-    segment_copy.translate(translation_post)
-    # Check if new center point is correct
-    assert segment_copy._point_center[0] == 6
-    assert segment_copy._point_center[1] == 2
-
-    # check transformation without reflection
-    rotation_matrix = np.array([[0, 1], [-1, 0]])
-    translation_pre = np.array([3, -2])
-    translation_post = np.array([-3, -3])
-
-    segment_copy = copy.deepcopy(segment)
-    segment_copy.translate(translation_pre)
-    assert segment_copy._point_center[0] == 5
-    assert segment_copy._point_center[1] == 1
-
-    segment_copy.apply_transformation(rotation_matrix)
-    assert segment_copy._point_center[0] == 1
-    assert segment_copy._point_center[1] == -5
-    # Check that winding order is NOT changed
-    assert segment_copy._sign_arc_winding == segment._sign_arc_winding
-
-    segment_copy.translate(translation_post)
-    assert segment_copy._point_center[0] == -2
-    assert segment_copy._point_center[1] == -8
 
 
 def default_test_shape():

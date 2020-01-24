@@ -63,28 +63,6 @@ def point_left_of_line(point, line_start, line_end):
                                            vec_line_start_end)
 
 
-def reflection_multiplier(transformation_matrix):
-    """
-    Get a multiplier indicating if the transformation is a reflection.
-
-    Returns -1 if the transformation contains a reflection and 1 if not.
-
-    :param transformation_matrix: Transformation matrix
-    :return: 1 or -1 (see description)
-    """
-    points = np.identity(2)
-    transformed_points = np.matmul(points,
-                                   np.transpose(transformation_matrix))
-    origin_left_of_line = point_left_of_line(np.array([0, 0]),
-                                             transformed_points[0],
-                                             transformed_points[1])
-
-    if origin_left_of_line == 0:
-        raise Exception("Invalid transformation")
-
-    return np.sign(origin_left_of_line)
-
-
 def reflection_sign(matrix):
     """
     Get a sign indicating if the transformation is a reflection.
@@ -107,15 +85,20 @@ def reflection_sign(matrix):
 class LineSegment:
     """Line segment."""
 
-    def __init__(self, point_start, point_end):
+    def __init__(self, points):
         """
         Constructor.
 
-        :param point_start: Starting point of the segment
-        :param point_end: End point of the segment
+        :param points: 2x2 matrix of points. The first column is the
+        starting point and the second column the end point.
         """
-        self._points = np.transpose(
-            np.array([point_start, point_end], dtype=float))
+        points = np.array(points, float)
+        if not len(points.shape) == 2:
+            raise ValueError("'points' must be a 2d array/matrix.")
+        if not (points.shape[0] == 2 and points.shape[1] == 2):
+            raise ValueError("'points' is not a 2x2 matrix.")
+
+        self._points = points
         self._calculate_length()
 
     def _calculate_length(self):
@@ -127,6 +110,37 @@ class LineSegment:
         self._length = np.linalg.norm(self._points[:, 1] - self._points[:, 0])
         if math.isclose(self._length, 0):
             raise ValueError("Segment length is 0.")
+
+    @classmethod
+    def construct_from_points(cls, point_start, point_end):
+        """
+        Construct a line segment from two points.
+
+        :param point_start: Starting point of the segment
+        :param point_end: End point of the segment
+        :return: Line segment
+        """
+
+        points = np.transpose(np.array([point_start, point_end], dtype=float))
+        return cls(points)
+
+    @classmethod
+    def linear_interpolation(cls, a, b, weight):
+        """
+        Interpolate two line segments linearly.
+
+        :param a: First segment
+        :param b: Second segment
+        :param weight: Weighting factor in the range [0 .. 1] where 0 is
+        segment a and 1 is segment b
+        :return: Interpolated segment
+        """
+        if not isinstance(a, cls) or not isinstance(b, cls):
+            raise Exception("Parameters a and b must both be line segments.")
+
+        weight = np.clip(weight, 0, 1)
+        points = (1 - weight) * a.points + weight * b.points
+        return cls(points)
 
     @property
     def length(self):
@@ -154,6 +168,18 @@ class LineSegment:
         :return: Starting point
         """
         return self._points[:, 0]
+
+    @property
+    def points(self):
+        """
+        Get the segments points in form of a 2x2 matrix.
+
+        The first column represents the starting point and the second one
+        the end point.
+
+        :return: 2x2 matrix containing the segments points
+        """
+        return self._points
 
     def apply_transformation(self, matrix):
         """
@@ -212,24 +238,27 @@ class LineSegment:
 class ArcSegment:
     """Arc segment."""
 
-    def __init__(self, point_start, point_end, point_center,
-                 arc_winding_ccw=True):
+    def __init__(self, points, arc_winding_ccw=True):
         """
         Constructor.
 
-        :param point_start: Starting point of the segment
-        :param point_end: End point of the segment
-        :param point_center: Center point of the arc
+        :param points: 2x3 matrix of points. The first column is the
+        starting point, the second column the end point and the last the
+        center point.
         :param: arc_winding_ccw: Specifies if the arcs winding order is
         counter-clockwise
         """
+        points = np.array(points, float)
+        if not len(points.shape) == 2:
+            raise ValueError("'points' must be a 2d array/matrix.")
+        if not (points.shape[0] == 2 and points.shape[1] == 3):
+            raise ValueError("'points' is not a 2x3 matrix.")
+
         if arc_winding_ccw:
             self._sign_arc_winding = 1
         else:
             self._sign_arc_winding = -1
-
-        self._points = np.transpose(
-            np.array([point_start, point_end, point_center], dtype=float))
+        self._points = points
         self._calculate_arc_parameters()
 
     def _calculate_arc_angle(self):
@@ -286,6 +315,23 @@ class ArcSegment:
             raise ValueError("Radius is not constant.")
         if math.isclose(self._arc_length, 0):
             raise Exception("Arc length is 0.")
+
+    @classmethod
+    def construct_from_points(cls, point_start, point_end, point_center,
+                              arc_winding_ccw=True):
+        """
+        Construct an arc segment from three points.
+
+        :param point_start: Starting point of the segment
+        :param point_end: End point of the segment
+        :param point_center: Center point of the arc
+        :param: arc_winding_ccw: Specifies if the arcs winding order is
+        counter-clockwise
+        :return: Arc segment
+        """
+        points = np.transpose(
+            np.array([point_start, point_end, point_center], dtype=float))
+        return cls(points, arc_winding_ccw)
 
     @property
     def arc_angle(self):
