@@ -234,6 +234,18 @@ def test_line_segment_interpolation():
         assert math.isclose(segment_c.points[0, 1], 7 - 2 * i)
         assert math.isclose(segment_c.points[1, 1], -3 + 4 * i)
 
+    # check weight clipped to valid range -----------------
+
+    segment_c = geo.LineSegment.linear_interpolation(segment_a, segment_b, -3)
+    helper.check_vectors_identical(segment_c.point_start,
+                                   segment_a.point_start)
+    helper.check_vectors_identical(segment_c.point_end, segment_a.point_end)
+
+    segment_c = geo.LineSegment.linear_interpolation(segment_a, segment_b, 6)
+    helper.check_vectors_identical(segment_c.point_start,
+                                   segment_b.point_start)
+    helper.check_vectors_identical(segment_c.point_end, segment_b.point_end)
+
     # exceptions ------------------------------------------
 
     # wrong types
