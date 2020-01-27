@@ -417,6 +417,7 @@ def test_linear_profile_interpolation_sbs():
                               geo.LineSegment.construct_from_points(b_1, b_2)])
 
     profile_b2 = pcg.Profile([shape_b01, shape_b012])
-    pcg.LinearProfileInterpolationSBS.interpolate(profile_a,
-                                                  profile_b2,
-                                                  0.2)
+    with pytest.raises(Exception):
+        pcg.LinearProfileInterpolationSBS.interpolate(profile_a,
+                                                      profile_b2,
+                                                      0.2)
