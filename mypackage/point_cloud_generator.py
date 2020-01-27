@@ -317,6 +317,8 @@ class Trace:
         return segment_start_cs + local_segment_cs
 
 
+# Linear profile interpolation class ------------------------------------------
+
 class LinearProfileInterpolationSBS:
     """Linear segment by segment interpolation class for profiles."""
 
@@ -343,6 +345,53 @@ class LinearProfileInterpolationSBS:
 
         return Profile(shapes_c)
 
+
+# Varying profile class -------------------------------------------------------
+
+class VaryingProfile:
+    def __init__(self, profiles, locations, interpolation_schemes):
+        locations = to_list(locations)
+        interpolation_schemes = to_list(interpolation_schemes)
+
+        if not locations[0] == 0:
+            locations = [0] + locations
+
+        if not len(profiles) == len(locations):
+            raise Exception(
+                "Invalid list of locations. See function description.")
+
+        if not len(interpolation_schemes) == len(profiles) - 1:
+            raise Exception(
+                "Number of interpolations must be 1 less than number of "
+                "profiles.")
+
+        for i in range(len(profiles) - 1):
+            if locations[i] >= locations[i + 1]:
+                raise Exception(
+                    "Locations need to be sorted in ascending order.")
+
+        self._profiles = profiles
+        self._locations = locations
+        self._interpolation_schemes = interpolation_schemes
+
+    @property
+    def locations(self):
+        return self._locations
+
+    @property
+    def num_interpolation_schemes(self):
+        return len(self._interpolation_schemes)
+
+    @property
+    def num_locations(self):
+        return len(self._locations)
+
+    @property
+    def num_profiles(self):
+        return len(self._profiles)
+
+
+# Section class ---------------------------------------------------------------
 
 class Section:
     """Defines a section"""
