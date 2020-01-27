@@ -16,18 +16,6 @@ def to_list(var):
     return [var]
 
 
-def check_point_data_valid(point):
-    """
-    Check if the data of a point is valid.
-
-    :param point: Point that should be checked
-    :return: ---
-    """
-    if not (np.ndim(point) == 1 and point.size == 2):
-        raise Exception(
-            "Point data is invalid. Must be an array with 2 values.")
-
-
 def is_col_in_array(col, array):
     """
     Check if a column (1d array) can be found inside of a 2d array.
