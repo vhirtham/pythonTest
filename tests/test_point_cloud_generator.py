@@ -499,3 +499,8 @@ def test_varying_profile_construction():
     with pytest.raises(Exception):
         pcg.VaryingProfile([profile_a, profile_b, profile_a], [0, 1, 2],
                            [interpol, interpol, interpol])
+
+    # locations not ordered
+    with pytest.raises(Exception):
+        pcg.VaryingProfile([profile_a, profile_b, profile_a], [0, 2, 1],
+                           [interpol, interpol])
