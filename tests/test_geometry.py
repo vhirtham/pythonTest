@@ -846,6 +846,7 @@ def test_shape2d_linear_interpolation():
                                    shape_b.segments[1].point_end)
 
     # exceptions ------------------------------------------
-    shape_a.add_segments(segment_a1)
+
+    geo.Shape2D.linear_interpolation(shape_a, shape_b, 0.25)
     with pytest.raises(Exception):
-        geo.Shape2D.interpolate(shape_a, shape_b, 0.25)
+        geo.Shape2D.linear_interpolation(shape_a, shape_b, 0.25)
