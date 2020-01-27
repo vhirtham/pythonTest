@@ -563,15 +563,15 @@ def test_shape2d_construction():
 
     # Empty construction
     shape = geo.Shape2D()
-    assert shape.num_segments() == 0
+    assert shape.num_segments == 0
 
     # Single element construction shape
     shape = geo.Shape2D(line_segment)
-    assert shape.num_segments() == 1
+    assert shape.num_segments == 1
 
     # Multi segment construction
     shape = geo.Shape2D([arc_segment, line_segment])
-    assert shape.num_segments() == 2
+    assert shape.num_segments == 2
     assert isinstance(shape.segments[0], geo.ArcSegment)
     assert isinstance(shape.segments[1], geo.LineSegment)
 
@@ -583,10 +583,10 @@ def test_shape2d_segment_addition():
 
     shape = geo.Shape2D()
     shape.add_segments(line_segment)
-    assert shape.num_segments() == 1
+    assert shape.num_segments == 1
 
     shape.add_segments([arc_segment, arc_segment])
-    assert shape.num_segments() == 3
+    assert shape.num_segments == 3
     assert isinstance(shape.segments[0], geo.LineSegment)
     assert isinstance(shape.segments[1], geo.ArcSegment)
     assert isinstance(shape.segments[2], geo.ArcSegment)

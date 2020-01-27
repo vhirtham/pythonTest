@@ -27,9 +27,9 @@ def test_profile_construction_and_shape_addition():
 
     # Check valid types
     profile = pcg.Profile(shape)
-    assert profile.num_shapes() == 1
+    assert profile.num_shapes == 1
     profile = pcg.Profile([shape, shape])
-    assert profile.num_shapes() == 2
+    assert profile.num_shapes == 2
 
     # Check invalid addition
     with pytest.raises(TypeError):
@@ -41,26 +41,26 @@ def test_profile_construction_and_shape_addition():
 
     # Check that invalid calls only raise an exception and do not invalidate
     # the internal data
-    assert profile.num_shapes() == 2
+    assert profile.num_shapes == 2
 
     # Check valid addition
     profile.add_shapes(shape)
-    assert profile.num_shapes() == 3
+    assert profile.num_shapes == 3
     profile.add_shapes([shape, shape])
-    assert profile.num_shapes() == 5
+    assert profile.num_shapes == 5
 
     # Check shapes
     shapes_profile = profile.shapes
     for shape_profile in shapes_profile:
-        assert shape.num_segments() == shape_profile.num_segments()
+        assert shape.num_segments == shape_profile.num_segments
 
         segments = shape.segments
         segments_profile = shape_profile.segments
 
-        assert len(segments) == shape.num_segments()
+        assert len(segments) == shape.num_segments
         assert len(segments) == len(segments_profile)
 
-        for i in range(shape.num_segments()):
+        for i in range(shape.num_segments):
             assert isinstance(segments_profile[i], type(segments[i]))
             points = segments[i].points
             points_profile = segments_profile[i].points
