@@ -808,3 +808,32 @@ def test_shape2d_linear_interpolation():
                                        [1 + 3 * weight, 1 - 2 * weight])
         helper.check_vectors_identical(shape_c.segments[1].point_end,
                                        [2 + weight, 5 * weight])
+
+    # check weight clipped to valid range -----------------
+
+    shape_c = geo.Shape2D.linear_interpolation(shape_a, shape_b, -3)
+
+    helper.check_vectors_identical(shape_c.segments[0].point_start,
+                                   shape_a.segments[0].point_start)
+    helper.check_vectors_identical(shape_c.segments[0].point_end,
+                                   shape_a.segments[0].point_end)
+    helper.check_vectors_identical(shape_c.segments[1].point_start,
+                                   shape_a.segments[1].point_start)
+    helper.check_vectors_identical(shape_c.segments[1].point_end,
+                                   shape_a.segments[1].point_end)
+
+    shape_c = geo.Shape2D.linear_interpolation(shape_a, shape_b, 100)
+
+    helper.check_vectors_identical(shape_c.segments[0].point_start,
+                                   shape_b.segments[0].point_start)
+    helper.check_vectors_identical(shape_c.segments[0].point_end,
+                                   shape_b.segments[0].point_end)
+    helper.check_vectors_identical(shape_c.segments[1].point_start,
+                                   shape_b.segments[1].point_start)
+    helper.check_vectors_identical(shape_c.segments[1].point_end,
+                                   shape_b.segments[1].point_end)
+
+    # exceptions ------------------------------------------
+    shape_a.add_segments(segment_a1)
+    with pytest.raises(Exception):
+        geo.Shape2D.interpolate(shape_a, shape_b, 0.25)
