@@ -500,6 +500,38 @@ class Shape2D:
 
         self._segments = to_list(segments)
 
+    @classmethod
+    def interpolate(cls, a, b, weight, interpolation_schemes):
+        if not a.num_segments == b.num_segments:
+            raise Exception("Number of segments differ.")
+
+        segments_c = []
+        for i in range(a.num_segments):
+            segments_c += [interpolation_schemes[i](a.segments[i],
+                                                    b.segments[i],
+                                                    weight)]
+        return cls(segments_c)
+
+    @classmethod
+    def linear_interpolation(cls, a, b, weight):
+        """
+        Interpolate 2 shapes linearly.
+
+        Each segment is interpolated individually, using the corresponding
+        linear segment interpolation.
+
+        :param a: First shape
+        :param b: Second shape
+        :param weight: Weighting factor in the range [0 .. 1] where 0 is
+        shape a and 1 is shape b
+        :return: Interpolated shape
+        """
+        interpolation_schemes = []
+        for i in range(a.num_segments):
+            interpolation_schemes += [a.segments[i].linear_interpolation]
+
+        return cls.interpolate(a, b, weight, interpolation_schemes)
+
     @property
     def num_segments(self):
         """

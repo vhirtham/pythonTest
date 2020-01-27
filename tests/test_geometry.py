@@ -784,3 +784,27 @@ def test_shape2d_reflect():
     shape2d_reflect_testcase([-7, 2], 4.12)
     shape2d_reflect_testcase([-7, -2], 4.12)
     shape2d_reflect_testcase([7, -2], 4.12)
+
+
+def test_shape2d_linear_interpolation():
+    segment_a0 = geo.LineSegment.construct_from_points([0, 0], [1, 1])
+    segment_a1 = geo.LineSegment.construct_from_points([1, 1], [2, 0])
+    shape_a = geo.Shape2D([segment_a0, segment_a1])
+
+    segment_b0 = geo.LineSegment.construct_from_points([1, 1], [2, -1])
+    segment_b1 = geo.LineSegment.construct_from_points([4, -1], [3, 5])
+    shape_b = geo.Shape2D([segment_b0, segment_b1])
+
+    for i in range(5):
+        weight = i / 4.
+        shape_c = geo.Shape2D.linear_interpolation(shape_a, shape_b, weight)
+
+        helper.check_vectors_identical(shape_c.segments[0].point_start,
+                                       [weight, weight])
+        helper.check_vectors_identical(shape_c.segments[0].point_end,
+                                       [1 + weight, 1 - 2 * weight])
+
+        helper.check_vectors_identical(shape_c.segments[1].point_start,
+                                       [1 + 3 * weight, 1 - 2 * weight])
+        helper.check_vectors_identical(shape_c.segments[1].point_end,
+                                       [2 + weight, 5 * weight])

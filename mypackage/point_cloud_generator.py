@@ -341,8 +341,6 @@ class LinearProfileInterpolationSBS:
             shape_b = b.shapes[i]
 
             if not shape_a.num_segments == shape_b.num_segments:
-                print(shape_a.num_segments)
-                print(shape_b.num_segments)
                 raise Exception("Number of segments differ.")
 
             segments_c = []
