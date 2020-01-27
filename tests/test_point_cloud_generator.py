@@ -390,9 +390,33 @@ def test_linear_profile_interpolation_sbs():
                                           [8 - 2 * i, 16 - 2 * i],
                                           [16, -4 * i])
 
-    # check weight clipped to valid range
+    # check weight clipped to valid range -----------------
+
     profile_c = pcg.LinearProfileInterpolationSBS.interpolate(profile_a,
                                                               profile_b,
                                                               -3)
 
     check_interpolated_profile_points(profile_c, a_0, a_1, a_2)
+
+    profile_c = pcg.LinearProfileInterpolationSBS.interpolate(profile_a,
+                                                              profile_b,
+                                                              42)
+
+    check_interpolated_profile_points(profile_c, b_0, b_1, b_2)
+
+    # exceptions ------------------------------------------
+
+    # number of shapes differ
+    profile_d = pcg.Profile([shape_b01, shape_b12, shape_a12])
+    with pytest.raises(Exception):
+        pcg.LinearProfileInterpolationSBS.interpolate(profile_d, profile_b,
+                                                      0.5)
+
+    # number of segments differ
+    shape_b012 = geo.Shape2D([geo.LineSegment.construct_from_points(b_0, b_1),
+                              geo.LineSegment.construct_from_points(b_1, b_2)])
+
+    profile_b2 = pcg.Profile([shape_b01, shape_b012])
+    pcg.LinearProfileInterpolationSBS.interpolate(profile_a,
+                                                  profile_b2,
+                                                  0.2)
