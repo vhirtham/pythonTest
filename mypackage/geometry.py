@@ -486,9 +486,6 @@ class ArcSegment:
 class Shape2D:
     """Defines a shape in 2 dimensions."""
 
-    min_segment_length = 1E-6
-    tolerance_comparison = 1E-6
-
     def __init__(self, segments=None):
         """
         Constructor.
@@ -504,7 +501,7 @@ class Shape2D:
             raise Exception("Number of segments differ.")
 
         weight = np.clip(weight, 0, 1)
-        
+
         segments_c = []
         for i in range(a.num_segments):
             segments_c += [interpolation_schemes[i](a.segments[i],
