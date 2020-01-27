@@ -30,6 +30,15 @@ class Profile:
         self._shapes = []
         self.add_shapes(shapes)
 
+    @property
+    def num_shapes(self):
+        """
+        Get the number of shapes of the profile.
+
+        :return: Number of shapes
+        """
+        return len(self._shapes)
+
     def add_shapes(self, shapes):
         """
         Add shapes to the profile.
@@ -45,14 +54,6 @@ class Profile:
                 "Only instances or lists of Shape2d objects are accepted.")
 
         self._shapes += shapes
-
-    def num_shapes(self):
-        """
-        Get the number of shapes of the profile.
-
-        :return: Number of shapes
-        """
-        return len(self._shapes)
 
     def rasterize(self, raster_width):
         """
@@ -334,32 +335,27 @@ class LinearProfileInterpolationSBS:
         if not len(a.shapes) == len(b.shapes):
             raise Exception("Number of profile shapes do not match.")
 
-        shapes = []
-        for i in range(len(a.shapes)):
-            points_a = a.shapes[i].points
-            points_b = b.shapes[i].points
+        shapes_c = []
+        for i in range(a.num_shapes):
+            shape_a = a.shapes[i]
+            shape_b = b.shapes[i]
 
-            if points_a[:, 0].size != points_b[:, 0].size:
-                raise Exception("Number of shape segments do not match.")
+            if not shape_a.num_segments == shape_b.num_segments:
+                print(shape_a.num_segments)
+                print(shape_b.num_segments)
+                raise Exception("Number of segments differ.")
 
-            points = (1 - weight) * points_a + weight * points_b
+            segments_c = []
+            for j in range(shape_a.num_segments):
+                segment_a = shape_a.segments[j]
+                segment_b = shape_b.segments[j]
 
-            segments_a = a.shapes[i].segments
-            segments_b = b.shapes[i].segments
+                segments_c += [segment_a.linear_interpolation(segment_a,
+                                                              segment_b,
+                                                              weight)]
+            shapes_c += [geo.Shape2D(segments_c)]
 
-            for j in range(len(segments_a)):
-                if not isinstance(segments_a[j], geo.Shape2D.LineSegment):
-                    raise Exception(
-                        "Only line segments are currently supported")
-
-                if not isinstance(segments_a[j], type(segments_b[j])):
-                    raise Exception("Shape segment types do not match.")
-
-                if j == 0:
-                    shapes += [geo.Shape2D(points[j], points[j + 1])]
-                else:
-                    shapes[i].add_segment(points[j + 1])
-        return Profile(shapes)
+        return Profile(shapes_c)
 
 
 class Section:
@@ -414,22 +410,24 @@ class Section:
 
     def rasterize(self, raster_width):
 
-        raster_data = np.empty([0, 3])
+        raster_data = np.empty([3, 0])
         trace = self.trace
         global_cs = tf.CartesianCoordinateSystem3d()
         for position in np.arange(0, trace.length + 0.01, 0.5):
             profile = self._interpolated_profile(position)
             profile_raster_data = profile.rasterize(raster_width)
-            profile_raster_data = np.insert(profile_raster_data, 1, 0, axis=1)
+            profile_raster_data = np.insert(profile_raster_data, 1, 0, axis=0)
             trace_cs = trace.local_coordinate_system(position)
 
             rotation = tf.change_of_basis_rotation(trace_cs, global_cs)
             translation = tf.change_of_basis_translation(trace_cs, global_cs)
 
-            profile_raster_data = np.matmul(profile_raster_data,
-                                            np.transpose(rotation))
-            profile_raster_data += translation
+            profile_raster_data = np.matmul(rotation,
+                                            profile_raster_data)
+            print(profile_raster_data.shape)
+            print(translation.shape)
+            profile_raster_data += translation[:, np.newaxis]
 
-            raster_data = np.vstack((raster_data, profile_raster_data))
+            raster_data = np.hstack((raster_data, profile_raster_data))
 
-        return raster_data
+        return raster_data.transpose()

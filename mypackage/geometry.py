@@ -500,7 +500,18 @@ class Shape2D:
 
         self._segments = to_list(segments)
 
-    # Public methods ----------------------------------------------------------
+    @property
+    def num_segments(self):
+        """
+        Get the number of segments of the shape.
+
+        :return: number of segments
+        """
+        return len(self._segments)
+
+    @property
+    def segments(self):
+        return self._segments
 
     def add_segments(self, segments):
         """
@@ -518,7 +529,7 @@ class Shape2D:
         :param transformation_matrix: Transformation matrix
         :return: ---
         """
-        for i in range(self.num_segments()):
+        for i in range(self.num_segments):
             self._segments[i].apply_transformation(transformation_matrix)
 
     def reflect(self, reflection_normal, distance_to_origin=0):
@@ -547,20 +558,8 @@ class Shape2D:
         :param vector: Translation vector
         :return: ---
         """
-        for i in range(self.num_segments()):
+        for i in range(self.num_segments):
             self._segments[i].translate(vector)
-
-    def num_segments(self):
-        """
-        Get the number of segments of the shape.
-
-        :return: number of segments
-        """
-        return len(self._segments)
-
-    @property
-    def segments(self):
-        return self._segments
 
     def rasterize(self, raster_width):
         """
@@ -577,7 +576,7 @@ class Shape2D:
         segments = self._segments
 
         raster_data = np.empty([2, 0])
-        for i in range(self.num_segments()):
+        for i in range(self.num_segments):
             segment_data = segments[i].rasterize(raster_width, 1)
             raster_data = np.hstack((raster_data, segment_data))
 
