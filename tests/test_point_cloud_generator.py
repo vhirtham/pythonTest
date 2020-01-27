@@ -360,14 +360,14 @@ def test_linear_profile_interpolation_sbs():
     a_0 = [0, 0]
     a_1 = [8, 16]
     a_2 = [16, 0]
-    shape_a0 = geo.Shape2D(a_0, a_1)
-    shape_a0 = geo.Shape2D(a_0, a_1)
+    shape_a01 = geo.Shape2D(geo.LineSegment([a_0, a_1]))
+    shape_a12 = geo.Shape2D(geo.LineSegment([a_1, a_2]))
 
     b_0 = [-4, 8]
     b_1 = [0, 8]
     b_2 = [16, -16]
-    shape_b0 = geo.Shape2D(b_0, b_1)
-    shape_b0 = geo.Shape2D(b_0, b_1)
+    shape_b01 = geo.Shape2D(geo.LineSegment([b_0, b_1]))
+    shape_b12 = geo.Shape2D(geo.LineSegment([b_1, b_2]))
 
     # check weight 0 gives a
     # profile_c = interpolator.interpolate(profile_a, profile_b, 0)
