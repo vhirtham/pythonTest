@@ -486,8 +486,6 @@ class ArcSegment:
 class Shape2D:
     """Defines a shape in 2 dimensions."""
 
-    # Member variables --------------------------------------------------------
-
     min_segment_length = 1E-6
     tolerance_comparison = 1E-6
 
@@ -505,6 +503,8 @@ class Shape2D:
         if not a.num_segments == b.num_segments:
             raise Exception("Number of segments differ.")
 
+        weight = np.clip(weight, 0, 1)
+        
         segments_c = []
         for i in range(a.num_segments):
             segments_c += [interpolation_schemes[i](a.segments[i],

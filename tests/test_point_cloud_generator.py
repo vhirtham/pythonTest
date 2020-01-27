@@ -354,24 +354,45 @@ def test_trace_local_coordinate_system():
 
 # Profile interpolation classes -----------------------------------------------
 
-def test_linear_profile_interpolation_sbs():
-    interpolator = pcg.LinearProfileInterpolationSBS
+def check_interpolated_profile_points(profile, c_0, c_1, c_2):
+    helpers.check_vectors_identical(profile.shapes[0].segments[0].point_start,
+                                    c_0)
+    helpers.check_vectors_identical(profile.shapes[0].segments[0].point_end,
+                                    c_1)
+    helpers.check_vectors_identical(profile.shapes[1].segments[0].point_start,
+                                    c_1)
+    helpers.check_vectors_identical(profile.shapes[1].segments[0].point_end,
+                                    c_2)
 
+
+def test_linear_profile_interpolation_sbs():
     a_0 = [0, 0]
     a_1 = [8, 16]
     a_2 = [16, 0]
-    shape_a01 = geo.Shape2D(geo.LineSegment([a_0, a_1]))
-    shape_a12 = geo.Shape2D(geo.LineSegment([a_1, a_2]))
+    shape_a01 = geo.Shape2D(geo.LineSegment.construct_from_points(a_0, a_1))
+    shape_a12 = geo.Shape2D(geo.LineSegment.construct_from_points(a_1, a_2))
+    profile_a = pcg.Profile([shape_a01, shape_a12])
 
     b_0 = [-4, 8]
     b_1 = [0, 8]
     b_2 = [16, -16]
-    shape_b01 = geo.Shape2D(geo.LineSegment([b_0, b_1]))
-    shape_b12 = geo.Shape2D(geo.LineSegment([b_1, b_2]))
+    shape_b01 = geo.Shape2D(geo.LineSegment.construct_from_points(b_0, b_1))
+    shape_b12 = geo.Shape2D(geo.LineSegment.construct_from_points(b_1, b_2))
+    profile_b = pcg.Profile([shape_b01, shape_b12])
 
-    # check weight 0 gives a
-    # profile_c = interpolator.interpolate(profile_a, profile_b, 0)
+    for i in range(5):
+        weight = i / 4.
+        profile_c = pcg.LinearProfileInterpolationSBS.interpolate(profile_a,
+                                                                  profile_b,
+                                                                  weight)
+        check_interpolated_profile_points(profile_c,
+                                          [-i, 2 * i],
+                                          [8 - 2 * i, 16 - 2 * i],
+                                          [16, -4 * i])
 
-    # exp0 = [-1, 2]
-    # exp1 = [2, 14]
-    # exp2 = [16, -4]
+    # check weight clipped to valid range
+    profile_c = pcg.LinearProfileInterpolationSBS.interpolate(profile_a,
+                                                              profile_b,
+                                                              -3)
+
+    check_interpolated_profile_points(profile_c, a_0, a_1, a_2)

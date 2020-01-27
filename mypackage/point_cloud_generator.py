@@ -337,21 +337,9 @@ class LinearProfileInterpolationSBS:
 
         shapes_c = []
         for i in range(a.num_shapes):
-            shape_a = a.shapes[i]
-            shape_b = b.shapes[i]
-
-            if not shape_a.num_segments == shape_b.num_segments:
-                raise Exception("Number of segments differ.")
-
-            segments_c = []
-            for j in range(shape_a.num_segments):
-                segment_a = shape_a.segments[j]
-                segment_b = shape_b.segments[j]
-
-                segments_c += [segment_a.linear_interpolation(segment_a,
-                                                              segment_b,
-                                                              weight)]
-            shapes_c += [geo.Shape2D(segments_c)]
+            shapes_c += [geo.Shape2D.linear_interpolation(a.shapes[i],
+                                                          b.shapes[i],
+                                                          weight)]
 
         return Profile(shapes_c)
 
@@ -422,8 +410,7 @@ class Section:
 
             profile_raster_data = np.matmul(rotation,
                                             profile_raster_data)
-            print(profile_raster_data.shape)
-            print(translation.shape)
+
             profile_raster_data += translation[:, np.newaxis]
 
             raster_data = np.hstack((raster_data, profile_raster_data))
