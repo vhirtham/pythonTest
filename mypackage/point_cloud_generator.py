@@ -179,6 +179,7 @@ class RadialHorizontalTraceSegment:
         """
         return self._radius
 
+    @property
     def is_clockwise(self):
         return self._sign_winding < 0
 
@@ -290,6 +291,7 @@ class Trace:
         """
         return self._segments
 
+    @property
     def num_segments(self):
         """
         Get the number of segments.
@@ -381,6 +383,10 @@ class VariableProfile:
         return idx
 
     @property
+    def interpolation_schemes(self):
+        return self._interpolation_schemes
+
+    @property
     def locations(self):
         return self._locations
 
@@ -400,6 +406,10 @@ class VariableProfile:
     def num_profiles(self):
         return len(self._profiles)
 
+    @property
+    def profiles(self):
+        return self._profiles
+
     def local_profile(self, location):
         location = np.clip(location, 0, self.max_location)
 
@@ -412,7 +422,6 @@ class VariableProfile:
 
 
 #  Geometry class -------------------------------------------------------------
-
 
 class Geometry:
     """Define the experimental geometry"""
@@ -493,6 +502,14 @@ class Geometry:
             raster_data = np.hstack([raster_data, local_data])
 
         return raster_data
+
+    @property
+    def profile(self):
+        return self._profile
+
+    @property
+    def trace(self):
+        return self._trace
 
     def rasterize(self, raster_width):
         if isinstance(self._profile, Profile):

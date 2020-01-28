@@ -10,6 +10,42 @@ import tests.helpers as helpers
 
 # helpers ---------------------------------------------------------------------
 
+def check_profiles_identical(a, b):
+    assert a.num_shapes == b.num_shapes
+    for i in range(a.num_shapes):
+        check_shapes_identical(a.shapes[i], b.shapes[i])
+
+
+def check_shapes_identical(a, b):
+    assert a.num_segments == b.num_segments
+    for i in range(a.num_segments):
+        assert isinstance(a.segments[i], type(b.segments[i]))
+        helpers.check_vectors_identical(a.segments[i].point_start,
+                                        b.segments[i].point_start)
+        helpers.check_vectors_identical(a.segments[i].point_end,
+                                        b.segments[i].point_end)
+        if isinstance(a.segments[i], geo.ArcSegment):
+            helpers.check_vectors_identical(a.segments[i].point_center,
+                                            b.segments[i].point_center)
+
+
+def check_trace_segments_identical(a, b):
+    assert isinstance(a, type(b))
+    if isinstance(a, pcg.LinearHorizontalTraceSegment):
+        assert a.length == b.length
+    else:
+        assert a.is_clockwise == b.is_clockwise
+        assert math.isclose(a.angle, b.angle)
+        assert math.isclose(a.length, b.length)
+        assert math.isclose(a.radius, b.radius)
+
+
+def check_traces_identical(a, b):
+    assert a.num_segments == b.num_segments
+    for i in range(a.num_segments):
+        check_trace_segments_identical(a.segments[i], b.segments[i])
+
+
 def get_default_profiles():
     a_0 = [0, 0]
     a_1 = [8, 16]
@@ -210,8 +246,8 @@ def test_radial_horizontal_trace_segment():
     assert math.isclose(segment_ccw.angle, angle)
     assert math.isclose(segment_cw.radius, radius)
     assert math.isclose(segment_ccw.radius, radius)
-    assert segment_cw.is_clockwise() is True
-    assert segment_ccw.is_clockwise() is False
+    assert segment_cw.is_clockwise
+    assert not segment_ccw.is_clockwise
 
     # check positions
     for weight in np.arange(0.1, 1, 0.1):
@@ -249,7 +285,7 @@ def test_trace_construction():
     # test single segment construction --------------------
     trace = pcg.Trace(linear_segment, ccs)
     assert math.isclose(trace.length, linear_segment.length)
-    assert trace.num_segments() == 1
+    assert trace.num_segments == 1
 
     segments = trace.segments
     assert len(segments) == 1
@@ -263,7 +299,7 @@ def test_trace_construction():
     trace = pcg.Trace([radial_segment, linear_segment])
     assert math.isclose(trace.length,
                         linear_segment.length + radial_segment.length)
-    assert trace.num_segments() == 2
+    assert trace.num_segments == 2
 
     segments = trace.segments
     assert len(segments) == 2
@@ -272,8 +308,7 @@ def test_trace_construction():
 
     assert math.isclose(radial_segment.radius, segments[0].radius)
     assert math.isclose(radial_segment.angle, segments[0].angle)
-    assert math.isclose(radial_segment.is_clockwise(),
-                        segments[0].is_clockwise())
+    assert math.isclose(radial_segment.is_clockwise, segments[0].is_clockwise)
     assert math.isclose(linear_segment.length, segments[1].length)
 
     helpers.check_matrices_identical(np.identity(3),
@@ -547,3 +582,53 @@ def test_variable_profile_local_profile():
 
     profile = variable_profile.local_profile(-2)
     check_interpolated_profile_points(profile, [0, 0], [8, 16], [16, 0])
+
+
+# test geometry class ---------------------------------------------------------
+
+def check_variable_profiles_identical(a, b):
+    assert a.num_profiles == b.num_profiles
+    assert a.num_locations == b.num_locations
+    assert a.num_interpolation_schemes == b.num_interpolation_schemes
+
+    for i in range(a.num_profiles):
+        check_profiles_identical(a.profiles[i], b.profiles[i])
+    for i in range(a.num_locations):
+        assert math.isclose(a.locations[i], b.locations[i])
+    for i in range(a.num_interpolation_schemes):
+        assert isinstance(a.interpolation_schemes[i],
+                          type(b.interpolation_schemes[i]))
+
+
+def test_geometry_construction():
+    profile_a, profile_b = get_default_profiles()
+    variable_profile = pcg.VariableProfile([profile_a, profile_b], [0, 1],
+                                           pcg.LinearProfileInterpolationSBS)
+
+    radial_segment = pcg.RadialHorizontalTraceSegment(1, np.pi)
+    linear_segment = pcg.LinearHorizontalTraceSegment(1)
+    trace = pcg.Trace([radial_segment, linear_segment])
+
+    # single profile construction
+    geometry = pcg.Geometry(profile_a, trace)
+    check_profiles_identical(geometry.profile, profile_a)
+    check_traces_identical(geometry.trace, trace)
+
+    # variable profile construction
+    geometry = pcg.Geometry(variable_profile, trace)
+    check_variable_profiles_identical(geometry.profile, variable_profile)
+    check_traces_identical(geometry.trace, trace)
+
+    # exceptions ------------------------------------------
+
+    # wrong types
+    with pytest.raises(TypeError):
+        pcg.Geometry(variable_profile, profile_b)
+    with pytest.raises(TypeError):
+        pcg.Geometry(trace, trace)
+    with pytest.raises(TypeError):
+        pcg.Geometry(trace, profile_b)
+    with pytest.raises(TypeError):
+        pcg.Geometry(variable_profile, "a")
+    with pytest.raises(TypeError):
+        pcg.Geometry("42", trace)
