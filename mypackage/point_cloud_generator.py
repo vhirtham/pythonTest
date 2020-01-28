@@ -374,9 +374,19 @@ class VaryingProfile:
         self._locations = locations
         self._interpolation_schemes = interpolation_schemes
 
+    def _segment_index(self, location):
+        idx = 0
+        while location > self._locations[idx + 1]:
+            idx += 1
+        return idx
+
     @property
     def locations(self):
         return self._locations
+
+    @property
+    def max_location(self):
+        return self._locations[-1]
 
     @property
     def num_interpolation_schemes(self):
@@ -389,6 +399,106 @@ class VaryingProfile:
     @property
     def num_profiles(self):
         return len(self._profiles)
+
+    def local_profile(self, location):
+        location = np.clip(location, 0, self.max_location)
+
+        idx = self._segment_index(location)
+        segment_length = self._locations[idx + 1] - self._locations[idx]
+        weight = (location - self._locations[idx]) / segment_length
+
+        return self._interpolation_schemes[idx].interpolate(
+            self._profiles[idx], self._profiles[idx + 1], weight)
+
+
+#  Geometry class -------------------------------------------------------------
+
+
+class Geometry:
+    """Define the experimental geometry"""
+
+    def __init__(self, profile, trace):
+        """
+        Constructor.
+
+        :param profile: Constant or variable profile.
+        :param trace: Trace
+        """
+        self._check_inputs(profile, trace)
+        self._profile = profile
+        self._trace = trace
+
+    def _check_inputs(self, profile, trace):
+        """
+        Check the inputs to the constructor.
+
+        :param profile: Constant or variable profile.
+        :param trace: Trace
+        :return: ---
+        """
+        if not (isinstance(profile, Profile) or
+                isinstance(profile, VaryingProfile)):
+            raise TypeError(
+                "'profile' must be a 'Profile' or 'VariableProfile' class")
+
+        if not isinstance(trace, Trace):
+            raise TypeError(
+                "'trace' must be a 'Trace' class")
+
+    def _get_local_profile_data(self, trace_location, raster_width):
+        profile_location = trace_location / self._trace.length * \
+                           self._profile.max_location
+        profile = self._profile.local_profile(profile_location)
+        return self._profile_data_3d(profile, raster_width)
+
+    def _get_trace_locations(self, raster_width):
+        num_raster_segments = int(np.round(self._trace.length / raster_width))
+        raster_width_eff = self._trace.length / num_raster_segments
+        locations = np.arange(0,
+                              self._trace.length - raster_width_eff / 2,
+                              raster_width_eff)
+        return np.hstack([locations, self._trace.length])
+
+    def _get_transformed_profile_data(self, profile_data, location):
+        local_cs = self._trace.local_coordinate_system(location)
+        local_data = np.matmul(local_cs.basis, profile_data)
+        return local_data + local_cs.origin[:, np.newaxis]
+
+    def _profile_data_3d(self, profile, raster_width):
+        profile_data = profile.rasterize(raster_width)
+        return np.insert(profile_data, 1, 0, axis=0)
+
+    def _rasterize_constant_profile(self, raster_width):
+
+        profile_data = self._profile_data_3d(self._profile, raster_width)
+
+        locations = self._get_trace_locations(raster_width)
+        raster_data = np.empty([3, 0])
+        for i in range(len(locations)):
+            local_data = self._get_transformed_profile_data(profile_data,
+                                                            locations[i])
+            raster_data = np.hstack([raster_data, local_data])
+
+        return raster_data
+
+    def _rasterize_variable_profile(self, raster_width):
+        locations = self._get_trace_locations(raster_width)
+        raster_data = np.empty([3, 0])
+        for i in range(len(locations)):
+            profile_data = self._get_local_profile_data(locations[i],
+                                                        raster_width)
+
+            local_data = self._get_transformed_profile_data(profile_data,
+                                                            locations[i])
+            raster_data = np.hstack([raster_data, local_data])
+
+        return raster_data
+
+    def rasterize(self, raster_width):
+        if isinstance(self._profile, Profile):
+            return self._rasterize_constant_profile(raster_width)
+        else:
+            return self._rasterize_variable_profile(raster_width)
 
 
 # Section class ---------------------------------------------------------------
