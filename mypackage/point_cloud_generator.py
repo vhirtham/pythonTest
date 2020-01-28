@@ -461,6 +461,7 @@ class Geometry:
         return self._profile_data_3d(profile, raster_width)
 
     def _get_trace_locations(self, raster_width):
+        raster_width = np.clip(raster_width, 0, self._trace.length)
         num_raster_segments = int(np.round(self._trace.length / raster_width))
         raster_width_eff = self._trace.length / num_raster_segments
         locations = np.arange(0,
@@ -477,11 +478,13 @@ class Geometry:
         profile_data = profile.rasterize(raster_width)
         return np.insert(profile_data, 1, 0, axis=0)
 
-    def _rasterize_constant_profile(self, raster_width):
+    def _rasterize_constant_profile(self, profile_raster_width,
+                                    trace_raster_width):
 
-        profile_data = self._profile_data_3d(self._profile, raster_width)
+        profile_data = self._profile_data_3d(self._profile,
+                                             profile_raster_width)
 
-        locations = self._get_trace_locations(raster_width)
+        locations = self._get_trace_locations(trace_raster_width)
         raster_data = np.empty([3, 0])
         for i in range(len(locations)):
             local_data = self._get_transformed_profile_data(profile_data,
@@ -490,12 +493,13 @@ class Geometry:
 
         return raster_data
 
-    def _rasterize_variable_profile(self, raster_width):
-        locations = self._get_trace_locations(raster_width)
+    def _rasterize_variable_profile(self, profile_raster_width,
+                                    trace_raster_width):
+        locations = self._get_trace_locations(trace_raster_width)
         raster_data = np.empty([3, 0])
         for i in range(len(locations)):
             profile_data = self._get_local_profile_data(locations[i],
-                                                        raster_width)
+                                                        profile_raster_width)
 
             local_data = self._get_transformed_profile_data(profile_data,
                                                             locations[i])
@@ -511,8 +515,10 @@ class Geometry:
     def trace(self):
         return self._trace
 
-    def rasterize(self, raster_width):
+    def rasterize(self, profile_raster_width, trace_raster_width):
         if isinstance(self._profile, Profile):
-            return self._rasterize_constant_profile(raster_width)
+            return self._rasterize_constant_profile(profile_raster_width,
+                                                    trace_raster_width)
         else:
-            return self._rasterize_variable_profile(raster_width)
+            return self._rasterize_variable_profile(profile_raster_width,
+                                                    trace_raster_width)
