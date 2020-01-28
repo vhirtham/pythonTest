@@ -423,19 +423,19 @@ def test_linear_profile_interpolation_sbs():
                                                       0.2)
 
 
-# test varying profile --------------------------------------------------------
+# test variable profile -------------------------------------------------------
 
-def check_varying_profile_state(varying_profile, locations):
+def check_variable_profile_state(variable_profile, locations):
     num_profiles = len(locations)
-    assert varying_profile.num_interpolation_schemes == num_profiles - 1
-    assert varying_profile.num_locations == num_profiles
-    assert varying_profile.num_profiles == num_profiles
+    assert variable_profile.num_interpolation_schemes == num_profiles - 1
+    assert variable_profile.num_locations == num_profiles
+    assert variable_profile.num_profiles == num_profiles
 
     for i in range(num_profiles):
-        assert math.isclose(locations[i], varying_profile.locations[i])
+        assert math.isclose(locations[i], variable_profile.locations[i])
 
 
-def test_varying_profile_construction():
+def test_variable_profile_construction():
     interpol = pcg.LinearProfileInterpolationSBS
 
     a_0 = [0, 0]
@@ -453,30 +453,30 @@ def test_varying_profile_construction():
     profile_b = pcg.Profile([shape_b01, shape_b12])
 
     # construction with single location and interpolation
-    varying_profile = pcg.VariableProfile([profile_a, profile_b],
-                                          1,
-                                          interpol)
-    check_varying_profile_state(varying_profile, [0, 1])
-    varying_profile = pcg.VariableProfile([profile_a, profile_b],
-                                          [1],
-                                          [interpol])
-    check_varying_profile_state(varying_profile, [0, 1])
+    variable_profile = pcg.VariableProfile([profile_a, profile_b],
+                                           1,
+                                           interpol)
+    check_variable_profile_state(variable_profile, [0, 1])
+    variable_profile = pcg.VariableProfile([profile_a, profile_b],
+                                           [1],
+                                           [interpol])
+    check_variable_profile_state(variable_profile, [0, 1])
 
     # construction with location list
-    varying_profile = pcg.VariableProfile([profile_a, profile_b],
-                                          [0, 1],
-                                          interpol)
-    check_varying_profile_state(varying_profile, [0, 1])
+    variable_profile = pcg.VariableProfile([profile_a, profile_b],
+                                           [0, 1],
+                                           interpol)
+    check_variable_profile_state(variable_profile, [0, 1])
 
-    varying_profile = pcg.VariableProfile([profile_a, profile_b, profile_a],
-                                          [1, 2],
-                                          [interpol, interpol])
-    check_varying_profile_state(varying_profile, [0, 1, 2])
+    variable_profile = pcg.VariableProfile([profile_a, profile_b, profile_a],
+                                           [1, 2],
+                                           [interpol, interpol])
+    check_variable_profile_state(variable_profile, [0, 1, 2])
 
-    varying_profile = pcg.VariableProfile([profile_a, profile_b, profile_a],
-                                          [0, 1, 2],
-                                          [interpol, interpol])
-    check_varying_profile_state(varying_profile, [0, 1, 2])
+    variable_profile = pcg.VariableProfile([profile_a, profile_b, profile_a],
+                                           [0, 1, 2],
+                                           [interpol, interpol])
+    check_variable_profile_state(variable_profile, [0, 1, 2])
 
     # exceptions ------------------------------------------
 
