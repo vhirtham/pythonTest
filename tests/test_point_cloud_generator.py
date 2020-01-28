@@ -8,6 +8,25 @@ import copy
 import tests.helpers as helpers
 
 
+# helpers ---------------------------------------------------------------------
+
+def get_default_profiles():
+    a_0 = [0, 0]
+    a_1 = [8, 16]
+    a_2 = [16, 0]
+    shape_a01 = geo.Shape2D(geo.LineSegment.construct_from_points(a_0, a_1))
+    shape_a12 = geo.Shape2D(geo.LineSegment.construct_from_points(a_1, a_2))
+    profile_a = pcg.Profile([shape_a01, shape_a12])
+
+    b_0 = [-4, 8]
+    b_1 = [0, 8]
+    b_2 = [16, -16]
+    shape_b01 = geo.Shape2D(geo.LineSegment.construct_from_points(b_0, b_1))
+    shape_b12 = geo.Shape2D(geo.LineSegment.construct_from_points(b_1, b_2))
+    profile_b = pcg.Profile([shape_b01, shape_b12])
+    return [profile_a, profile_b]
+
+
 # Test profile class ----------------------------------------------------------
 
 def test_profile_construction_and_shape_addition():
@@ -354,6 +373,7 @@ def test_trace_local_coordinate_system():
 
 # Profile interpolation classes -----------------------------------------------
 
+
 def check_interpolated_profile_points(profile, c_0, c_1, c_2):
     helpers.check_vectors_identical(profile.shapes[0].segments[0].point_start,
                                     c_0)
@@ -379,6 +399,8 @@ def test_linear_profile_interpolation_sbs():
     shape_b01 = geo.Shape2D(geo.LineSegment.construct_from_points(b_0, b_1))
     shape_b12 = geo.Shape2D(geo.LineSegment.construct_from_points(b_1, b_2))
     profile_b = pcg.Profile([shape_b01, shape_b12])
+
+    [profile_a, profile_b] = get_default_profiles()
 
     for i in range(5):
         weight = i / 4.
@@ -438,19 +460,7 @@ def check_variable_profile_state(variable_profile, locations):
 def test_variable_profile_construction():
     interpol = pcg.LinearProfileInterpolationSBS
 
-    a_0 = [0, 0]
-    a_1 = [8, 16]
-    a_2 = [16, 0]
-    shape_a01 = geo.Shape2D(geo.LineSegment.construct_from_points(a_0, a_1))
-    shape_a12 = geo.Shape2D(geo.LineSegment.construct_from_points(a_1, a_2))
-    profile_a = pcg.Profile([shape_a01, shape_a12])
-
-    b_0 = [-4, 8]
-    b_1 = [0, 8]
-    b_2 = [16, -16]
-    shape_b01 = geo.Shape2D(geo.LineSegment.construct_from_points(b_0, b_1))
-    shape_b12 = geo.Shape2D(geo.LineSegment.construct_from_points(b_1, b_2))
-    profile_b = pcg.Profile([shape_b01, shape_b12])
+    profile_a, profile_b = get_default_profiles()
 
     # construction with single location and interpolation
     variable_profile = pcg.VariableProfile([profile_a, profile_b],
@@ -504,3 +514,36 @@ def test_variable_profile_construction():
     with pytest.raises(Exception):
         pcg.VariableProfile([profile_a, profile_b, profile_a], [0, 2, 1],
                             [interpol, interpol])
+
+
+def test_variable_profile_local_profile():
+    interpol = pcg.LinearProfileInterpolationSBS
+
+    profile_a, profile_b = get_default_profiles()
+    variable_profile = pcg.VariableProfile([profile_a, profile_b, profile_a],
+                                           [0, 1, 2],
+                                           [interpol, interpol])
+
+    for i in range(5):
+        # first segment
+        location = i / 4.
+        profile = variable_profile.local_profile(location)
+        check_interpolated_profile_points(profile,
+                                          [-i, 2 * i],
+                                          [8 - 2 * i, 16 - 2 * i],
+                                          [16, -4 * i])
+        # second segment
+        location += 1
+        profile = variable_profile.local_profile(location)
+        check_interpolated_profile_points(profile,
+                                          [-4 + i, 8 - 2 * i],
+                                          [2 * i, 8 + 2 * i],
+                                          [16, -16 + 4 * i])
+
+    # check if values are clipped to valid range
+
+    profile = variable_profile.local_profile(177)
+    check_interpolated_profile_points(profile, [0, 0], [8, 16], [16, 0])
+
+    profile = variable_profile.local_profile(-2)
+    check_interpolated_profile_points(profile, [0, 0], [8, 16], [16, 0])
