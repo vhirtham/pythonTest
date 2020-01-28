@@ -453,54 +453,54 @@ def test_varying_profile_construction():
     profile_b = pcg.Profile([shape_b01, shape_b12])
 
     # construction with single location and interpolation
-    varying_profile = pcg.VaryingProfile([profile_a, profile_b],
-                                         1,
-                                         interpol)
+    varying_profile = pcg.VariableProfile([profile_a, profile_b],
+                                          1,
+                                          interpol)
     check_varying_profile_state(varying_profile, [0, 1])
-    varying_profile = pcg.VaryingProfile([profile_a, profile_b],
-                                         [1],
-                                         [interpol])
+    varying_profile = pcg.VariableProfile([profile_a, profile_b],
+                                          [1],
+                                          [interpol])
     check_varying_profile_state(varying_profile, [0, 1])
 
     # construction with location list
-    varying_profile = pcg.VaryingProfile([profile_a, profile_b],
-                                         [0, 1],
-                                         interpol)
+    varying_profile = pcg.VariableProfile([profile_a, profile_b],
+                                          [0, 1],
+                                          interpol)
     check_varying_profile_state(varying_profile, [0, 1])
 
-    varying_profile = pcg.VaryingProfile([profile_a, profile_b, profile_a],
-                                         [1, 2],
-                                         [interpol, interpol])
+    varying_profile = pcg.VariableProfile([profile_a, profile_b, profile_a],
+                                          [1, 2],
+                                          [interpol, interpol])
     check_varying_profile_state(varying_profile, [0, 1, 2])
 
-    varying_profile = pcg.VaryingProfile([profile_a, profile_b, profile_a],
-                                         [0, 1, 2],
-                                         [interpol, interpol])
+    varying_profile = pcg.VariableProfile([profile_a, profile_b, profile_a],
+                                          [0, 1, 2],
+                                          [interpol, interpol])
     check_varying_profile_state(varying_profile, [0, 1, 2])
 
     # exceptions ------------------------------------------
 
     # first location is not 0
     with pytest.raises(Exception):
-        pcg.VaryingProfile([profile_a, profile_b], [1, 2], interpol)
+        pcg.VariableProfile([profile_a, profile_b], [1, 2], interpol)
 
     # number of locations is not correct
     with pytest.raises(Exception):
-        pcg.VaryingProfile([profile_a, profile_b, profile_a], [1],
-                           [interpol, interpol])
+        pcg.VariableProfile([profile_a, profile_b, profile_a], [1],
+                            [interpol, interpol])
     with pytest.raises(Exception):
-        pcg.VaryingProfile([profile_a, profile_b], [0, 1, 2],
-                           interpol)
+        pcg.VariableProfile([profile_a, profile_b], [0, 1, 2],
+                            interpol)
 
     # number of interpolations is not correct
     with pytest.raises(Exception):
-        pcg.VaryingProfile([profile_a, profile_b, profile_a], [0, 1, 2],
-                           [interpol])
+        pcg.VariableProfile([profile_a, profile_b, profile_a], [0, 1, 2],
+                            [interpol])
     with pytest.raises(Exception):
-        pcg.VaryingProfile([profile_a, profile_b, profile_a], [0, 1, 2],
-                           [interpol, interpol, interpol])
+        pcg.VariableProfile([profile_a, profile_b, profile_a], [0, 1, 2],
+                            [interpol, interpol, interpol])
 
     # locations not ordered
     with pytest.raises(Exception):
-        pcg.VaryingProfile([profile_a, profile_b, profile_a], [0, 2, 1],
-                           [interpol, interpol])
+        pcg.VariableProfile([profile_a, profile_b, profile_a], [0, 2, 1],
+                            [interpol, interpol])

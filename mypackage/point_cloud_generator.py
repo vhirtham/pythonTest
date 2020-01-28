@@ -348,7 +348,7 @@ class LinearProfileInterpolationSBS:
 
 # Varying profile class -------------------------------------------------------
 
-class VaryingProfile:
+class VariableProfile:
     def __init__(self, profiles, locations, interpolation_schemes):
         locations = to_list(locations)
         interpolation_schemes = to_list(interpolation_schemes)
@@ -437,7 +437,7 @@ class Geometry:
         :return: ---
         """
         if not (isinstance(profile, Profile) or
-                isinstance(profile, VaryingProfile)):
+                isinstance(profile, VariableProfile)):
             raise TypeError(
                 "'profile' must be a 'Profile' or 'VariableProfile' class")
 
