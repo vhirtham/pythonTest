@@ -11,10 +11,10 @@ requirements = [
     "bottleneck>=1.3",
 ]
 
-#entry_points = {}
-#entry_points['asdf_extensions'] = [
+# entry_points = {}
+# entry_points['asdf_extensions'] = [
 #    'weldx = weldx.io.asdf.extension:WelDXExtension'
-#]
+# ]
 
 setup(
     name="mypackage",
@@ -38,6 +38,6 @@ setup(
         "Natural Language :: English",
     ],
     install_requires=requirements,
-    #include_package_data=True, # include non-py files listed in MANIFEST.in
-    #entry_points=entry_points, # register ASDF Extension entry_points
+    # include_package_data=True, # include non-py files listed in MANIFEST.in
+    # entry_points=entry_points, # register ASDF Extension entry_points
 )
