@@ -634,7 +634,7 @@ def test_geometry_construction():
         pcg.Geometry("42", trace)
 
 
-def test_geometry_rasterization():
+def test_geometry_rasterization_trace():
     a0 = [-1, 0]
     a1 = [-1, 1]
     a2 = [0, 1]
@@ -668,22 +668,46 @@ def test_geometry_rasterization():
     num_raster_profiles = int(np.round(data.shape[1] / 6))
     profile_points = np.array([a0, a1, a2, a2, a3, a4]).transpose()
 
+    eff_raster_width = trace.length / (data.shape[1] / 6 - 1)
+    arc_point_distance_on_trace = 2 * np.sin(eff_raster_width / 2)
+
     for i in range(num_raster_profiles):
         idx_0 = i * 6
         if data[1, idx_0 + 2] <= 1:
             y = data[1, idx_0]
-            if y > 0:
-                eff_raster_width = y / i
-                assert math.isclose(eff_raster_width, 0.1, abs_tol=0.01)
-            else:
-                assert math.isclose(y, 0, abs_tol=1E-9)
+            assert math.isclose(y, eff_raster_width * i, abs_tol=1E-6)
 
             for j in range(6):
                 assert math.isclose(data[0, idx_0 + j], profile_points[0, j])
                 assert math.isclose(data[2, idx_0 + j], profile_points[1, j])
                 assert math.isclose(data[1, idx_0 + j], data[1, idx_0])
         else:
-            continue_here = True
+            assert math.isclose(data[0, idx_0], a0[0])
+            assert math.isclose(data[1, idx_0], 1)
+            assert math.isclose(data[2, idx_0], a0[1])
+            assert math.isclose(data[0, idx_0 + 1], a1[0])
+            assert math.isclose(data[1, idx_0 + 1], 1)
+            assert math.isclose(data[2, idx_0 + 1], a1[1])
 
+            # z-values are constant
+            for j in np.arange(2, 6, 1):
+                assert math.isclose(data[2, idx_0 + j], profile_points[1, j])
 
-test_geometry_rasterization()
+            # all profile points in a common x-y plane
+            exp_radius = np.array([1, 1, 2, 2])
+            vec_02 = data[0:2, idx_0 + 2] - data[0:2, idx_0]
+            assert math.isclose(np.linalg.norm(vec_02), exp_radius[0])
+            for j in np.arange(3, 6, 1):
+                vec_0j = data[0:2, idx_0 + j] - data[0:2, idx_0]
+                assert math.isclose(np.linalg.norm(vec_0j), exp_radius[j - 2])
+                unit_vec_0j = tf.normalize(vec_0j)
+                assert math.isclose(np.dot(unit_vec_0j, vec_02), 1)
+
+            # check point distance between profiles
+            if data[1, idx_0 - 4] > 1:
+                exp_point_distance = arc_point_distance_on_trace * exp_radius
+                for j in np.arange(2, 6, 1):
+                    point_distance = np.linalg.norm(
+                        data[:, idx_0 + j] - data[:, idx_0 + j - 6])
+                    assert math.isclose(exp_point_distance[j - 2],
+                                        point_distance)
