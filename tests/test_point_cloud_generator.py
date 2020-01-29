@@ -646,13 +646,7 @@ def test_geometry_rasterization_trace():
     shape_a234 = geo.Shape2D([geo.LineSegment.construct_from_points(a2, a3),
                               geo.LineSegment.construct_from_points(a3, a4)])
 
-    shape_b012 = copy.deepcopy(shape_a012)
-    shape_b234 = copy.deepcopy(shape_a234)
-    shape_b012.apply_transformation([[2, 0], [0, 2]])
-    shape_b234.apply_transformation([[2, 0], [0, 2]])
-
     profile_a = pcg.Profile([shape_a012, shape_a234])
-    profile_b = pcg.Profile([shape_b012, shape_b234])
 
     radial_segment = pcg.RadialHorizontalTraceSegment(1, np.pi / 2)
     linear_segment = pcg.LinearHorizontalTraceSegment(1)
@@ -660,11 +654,12 @@ def test_geometry_rasterization_trace():
 
     geometry = pcg.Geometry(profile_a, trace)
 
-    data = geometry.rasterize(7, 0.1)
-    # Note, if raster width is larger than the segment, it is automatically
-    # adjusted to the segment widht. Hence each rasterized profile has 6
+    # Note, if the raster width is larger than the segment, it is automatically
+    # adjusted to the segment width. Hence each rasterized profile has 6
     # points, which were defined at the beginning of the test (a2 is
     # included twice)
+    data = geometry.rasterize(7, 0.1)
+
     num_raster_profiles = int(np.round(data.shape[1] / 6))
     profile_points = np.array([a0, a1, a2, a2, a3, a4]).transpose()
 
@@ -711,3 +706,64 @@ def test_geometry_rasterization_trace():
                         data[:, idx_0 + j] - data[:, idx_0 + j - 6])
                     assert math.isclose(exp_point_distance[j - 2],
                                         point_distance)
+
+
+def test_geometry_rasterization_profile_interpolation():
+    interpol = pcg.LinearProfileInterpolationSBS
+
+    a0 = [-1, 0]
+    a1 = [-1, 1]
+    a2 = [0, 1]
+    a3 = [1, 1]
+    a4 = [1, 0]
+
+    shape_a012 = geo.Shape2D([geo.LineSegment.construct_from_points(a0, a1),
+                              geo.LineSegment.construct_from_points(a1, a2)])
+    shape_a234 = geo.Shape2D([geo.LineSegment.construct_from_points(a2, a3),
+                              geo.LineSegment.construct_from_points(a3, a4)])
+
+    shape_b012 = copy.deepcopy(shape_a012)
+    shape_b234 = copy.deepcopy(shape_a234)
+    shape_b012.apply_transformation([[2, 0], [0, 2]])
+    shape_b234.apply_transformation([[2, 0], [0, 2]])
+
+    profile_a = pcg.Profile([shape_a012, shape_a234])
+    profile_b = pcg.Profile([shape_b012, shape_b234])
+
+    variable_profile = pcg.VariableProfile([profile_a, profile_b, profile_a],
+                                           [0, 2, 6], [interpol, interpol])
+
+    linear_segment_l1 = pcg.LinearHorizontalTraceSegment(1)
+    linear_segment_l2 = pcg.LinearHorizontalTraceSegment(2)
+    # Note: The profile in the middle is not located at the start of the
+    # second segment
+    trace = pcg.Trace([linear_segment_l2, linear_segment_l1])
+
+    geometry = pcg.Geometry(variable_profile, trace)
+
+    # Note: If the raster width is larger than the segment, it is automatically
+    # adjusted to the segment width. Hence each rasterized profile has 6
+    # points, which were defined at the beginning of the test (a2 is
+    # included twice)
+    data = geometry.rasterize(7, 0.1)
+    assert data.shape[1] == 186
+
+    profile_points = np.array([a0, a1, a2, a2, a3, a4]).transpose()
+
+    # check first segment
+    for i in range(11):
+        idx_0 = i * 6
+        for j in range(6):
+            exp_point = np.array([profile_points[0, j] * (1 + i * 0.1),
+                                  i * 0.1,
+                                  profile_points[1, j] * (1 + i * 0.1)])
+            helpers.check_vectors_identical(data[:, idx_0 + j], exp_point)
+
+    # check second segment
+    for i in range(20):
+        idx_0 = (30 - i) * 6
+        for j in range(6):
+            exp_point = np.array([profile_points[0, j] * (1 + i * 0.05),
+                                  3 - i * 0.1,
+                                  profile_points[1, j] * (1 + i * 0.05)])
+            helpers.check_vectors_identical(data[:, idx_0 + j], exp_point)
