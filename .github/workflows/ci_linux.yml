@@ -41,13 +41,8 @@ jobs:
       run: |
         source activate build_env
         conda build .
-    - name: Copy artifacts
-      shell: bash
-      run: |
-        mkdir ./build
-        cp --parents $CONDA_PREFIX/conda-bld/noarch/mypackage-* ./build
     - name: Archive conda package
       uses: actions/upload-artifact@v1
       with:
         name: conda-package
-        path: build
+        path: /usr/share/miniconda/envs/build_env/conda-bld/noarch
