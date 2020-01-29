@@ -276,6 +276,10 @@ class ArcSegment:
         else:
             self._sign_arc_winding = -1
         self._points = points
+
+        self._arc_angle = None
+        self._arc_length = None
+        self._radius = None
         self._calculate_arc_parameters()
 
     def _calculate_arc_angle(self):
