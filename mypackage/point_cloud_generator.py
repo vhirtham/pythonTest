@@ -258,8 +258,8 @@ class Trace:
 
         # Fill length lookups
         total_length = 0
-        for i in range(len(segments)):
-            segment_length = segments[i].length
+        for _, segment in enumerate(segments):
+            segment_length = segment.length
             total_length += segment_length
             self._segment_length_lookup += [segment_length]
             self._total_length_lookup += [total_length]
@@ -592,9 +592,9 @@ class Geometry:
 
         locations = self._rasterize_trace(trace_raster_width)
         raster_data = np.empty([3, 0])
-        for i in range(len(locations)):
+        for _, location in enumerate(locations):
             local_data = self._get_transformed_profile_data(profile_data,
-                                                            locations[i])
+                                                            location)
             raster_data = np.hstack([raster_data, local_data])
 
         return raster_data
@@ -610,12 +610,12 @@ class Geometry:
         """
         locations = self._rasterize_trace(trace_raster_width)
         raster_data = np.empty([3, 0])
-        for i in range(len(locations)):
-            profile_data = self._get_local_profile_data(locations[i],
+        for _, location in enumerate(locations):
+            profile_data = self._get_local_profile_data(location,
                                                         profile_raster_width)
 
             local_data = self._get_transformed_profile_data(profile_data,
-                                                            locations[i])
+                                                            location)
             raster_data = np.hstack([raster_data, local_data])
 
         return raster_data
