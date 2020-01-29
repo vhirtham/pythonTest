@@ -253,8 +253,8 @@ class Trace:
         # Fill coordinate system lookup
         for i in range(len(segments) - 1):
             lcs_segment_end = segments[i].local_coordinate_system(1)
-            cs = self._coordinate_system_lookup[i] + lcs_segment_end
-            self._coordinate_system_lookup += [cs]
+            csys = self._coordinate_system_lookup[i] + lcs_segment_end
+            self._coordinate_system_lookup += [csys]
 
         # Fill length lookups
         total_length = 0
@@ -338,24 +338,24 @@ class LinearProfileInterpolationSBS:
     """Linear segment by segment interpolation class for profiles."""
 
     @staticmethod
-    def interpolate(a, b, weight):
+    def interpolate(profile_a, profile_b, weight):
         """
         Interpolate 2 profiles.
 
-        :param a: First profile
-        :param b: Second profile
+        :param profile_a: First profile
+        :param profile_b: Second profile
         :param weight: Weighting factor [0 .. 1]. If 0, the profile is
         identical to 'a' and if 1, it is identical to b.
         :return: Interpolated profile
         """
         weight = np.clip(weight, 0, 1)
-        if not len(a.shapes) == len(b.shapes):
+        if not len(profile_a.shapes) == len(profile_b.shapes):
             raise Exception("Number of profile shapes do not match.")
 
         shapes_c = []
-        for i in range(a.num_shapes):
-            shapes_c += [geo.Shape2D.linear_interpolation(a.shapes[i],
-                                                          b.shapes[i],
+        for i in range(profile_a.num_shapes):
+            shapes_c += [geo.Shape2D.linear_interpolation(profile_a.shapes[i],
+                                                          profile_b.shapes[i],
                                                           weight)]
 
         return Profile(shapes_c)

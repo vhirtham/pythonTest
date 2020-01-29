@@ -303,7 +303,7 @@ class CartesianCoordinateSystem3d:
         return -1
 
     @staticmethod
-    def _calcualte_orthogonal_axis(a0, a1):
+    def _calcualte_orthogonal_axis(a_0, a_1):
         """
         Calculate an axis which is orthogonal to two other axes.
 
@@ -314,7 +314,7 @@ class CartesianCoordinateSystem3d:
         :param a1: Second axis
         :return: Orthogonal axis
         """
-        return np.cross(a0, a1)
+        return np.cross(a_0, a_1)
 
     @property
     def basis(self):

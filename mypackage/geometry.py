@@ -142,21 +142,21 @@ class LineSegment:
         return cls(points)
 
     @classmethod
-    def linear_interpolation(cls, a, b, weight):
+    def linear_interpolation(cls, segment_a, segment_b, weight):
         """
         Interpolate two line segments linearly.
 
-        :param a: First segment
-        :param b: Second segment
+        :param segment_a: First segment
+        :param segment_b: Second segment
         :param weight: Weighting factor in the range [0 .. 1] where 0 is
         segment a and 1 is segment b
         :return: Interpolated segment
         """
-        if not isinstance(a, cls) or not isinstance(b, cls):
+        if not isinstance(segment_a, cls) or not isinstance(segment_b, cls):
             raise TypeError("Parameters a and b must both be line segments.")
 
         weight = np.clip(weight, 0, 1)
-        points = (1 - weight) * a.points + weight * b.points
+        points = (1 - weight) * segment_a.points + weight * segment_b.points
         return cls(points)
 
     @property
@@ -356,12 +356,12 @@ class ArcSegment:
         return cls(points, arc_winding_ccw)
 
     @classmethod
-    def linear_interpolation(cls, a, b, weight):
+    def linear_interpolation(cls, segment_a, segment_b, weight):
         """
         Interpolate two arc segments linearly.
 
-        :param a: First segment
-        :param b: Second segment
+        :param segment_a: First segment
+        :param segment_b: Second segment
         :param weight: Weighting factor in the range [0 .. 1] where 0 is
         segment a and 1 is segment b
         :return: Interpolated segment
@@ -508,49 +508,49 @@ class Shape2D:
         self._segments = to_list(segments)
 
     @classmethod
-    def interpolate(cls, a, b, weight, interpolation_schemes):
+    def interpolate(cls, shape_a, shape_b, weight, interpolation_schemes):
         """
         Interpolate 2 shapes.
 
-        :param a: First shape
-        :param b: Second shape
+        :param shape_a: First shape
+        :param shape_b: Second shape
         :param weight: Weighting factor in the range [0 .. 1] where 0 is
         shape a and 1 is shape b
         :param interpolation_schemes: List of interpolation schemes for each
         segment of the shape.
         :return: Interpolated shape
         """
-        if not a.num_segments == b.num_segments:
+        if not shape_a.num_segments == shape_b.num_segments:
             raise Exception("Number of segments differ.")
 
         weight = np.clip(weight, 0, 1)
 
         segments_c = []
-        for i in range(a.num_segments):
-            segments_c += [interpolation_schemes[i](a.segments[i],
-                                                    b.segments[i],
+        for i in range(shape_a.num_segments):
+            segments_c += [interpolation_schemes[i](shape_a.segments[i],
+                                                    shape_b.segments[i],
                                                     weight)]
         return cls(segments_c)
 
     @classmethod
-    def linear_interpolation(cls, a, b, weight):
+    def linear_interpolation(cls, shape_a, shape_b, weight):
         """
         Interpolate 2 shapes linearly.
 
         Each segment is interpolated individually, using the corresponding
         linear segment interpolation.
 
-        :param a: First shape
-        :param b: Second shape
+        :param shape_a: First shape
+        :param shape_b: Second shape
         :param weight: Weighting factor in the range [0 .. 1] where 0 is
         shape a and 1 is shape b
         :return: Interpolated shape
         """
         interpolation_schemes = []
-        for i in range(a.num_segments):
-            interpolation_schemes += [a.segments[i].linear_interpolation]
+        for i in range(shape_a.num_segments):
+            interpolation_schemes += [shape_a.segments[i].linear_interpolation]
 
-        return cls.interpolate(a, b, weight, interpolation_schemes)
+        return cls.interpolate(shape_a, shape_b, weight, interpolation_schemes)
 
     @property
     def num_segments(self):
@@ -598,11 +598,12 @@ class Shape2D:
         origin
         :return: ---
         """
-        v = np.array(reflection_normal, float)
-        dot_product = np.dot(v, v)
-        householder_matrix = np.identity(2) - 2 / dot_product * np.outer(v, v)
+        normal = np.array(reflection_normal, float)
+        dot_product = np.dot(normal, normal)
+        outer_product = np.outer(normal, normal)
+        householder_matrix = np.identity(2) - 2 / dot_product * outer_product
 
-        offset = v / np.sqrt(dot_product) * distance_to_origin
+        offset = normal / np.sqrt(dot_product) * distance_to_origin
 
         self.translate(-offset)
         self.apply_transformation(householder_matrix)
