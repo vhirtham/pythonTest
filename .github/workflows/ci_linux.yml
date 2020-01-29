@@ -35,7 +35,7 @@ jobs:
       run: conda info -a
     - name: Create conda environment
       run: |
-        conda --append channels conda-forge
+        conda config --append channels conda-forge
         conda env create -f ./conda.recipe/build_env.yml
     - name: Run tests
       run: |
