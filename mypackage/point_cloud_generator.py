@@ -516,8 +516,7 @@ class Geometry:
         :param trace: Trace
         :return: ---
         """
-        if not (isinstance(profile, Profile) or
-                isinstance(profile, VariableProfile)):
+        if not isinstance(profile, (Profile, VariableProfile)):
             raise TypeError(
                 "'profile' must be a 'Profile' or 'VariableProfile' class")
 
