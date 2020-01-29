@@ -254,7 +254,7 @@ def test_change_of_basis_rotation():
 
 
 def test_change_of_basis_translation():
-    for i in range(20):
+    for _ in range(20):
         origin_from = random_non_unit_vector()
         origin_to = random_non_unit_vector()
         base_from = rotated_positive_orthogonal_base(*random_non_unit_vector())
