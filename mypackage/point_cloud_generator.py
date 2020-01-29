@@ -1,7 +1,7 @@
 """Contains methods and classes to generate 3d point clouds."""
 
-import mypackage.geometry as geo
 import numpy as np
+import mypackage.geometry as geo
 import mypackage.transformations as tf
 
 
@@ -272,9 +272,10 @@ class Trace:
         :return: Segment index
         """
         position = np.clip(position, 0, self.length)
-        for i in range(len(self._total_length_lookup) - 1):
+        for i in range(len(self._total_length_lookup) - 2):
             if position <= self._total_length_lookup[i + 1]:
                 return i
+        return self.num_segments - 1
 
     @property
     def coordinate_system(self):
