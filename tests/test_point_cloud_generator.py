@@ -326,7 +326,8 @@ def test_trace_construction():
 
     # check construction with custom segment --------------
     class CustomSegment():
-        def local_coordinate_system(self, *args):
+        @staticmethod
+        def local_coordinate_system(*args):
             return tf.CartesianCoordinateSystem3d
 
     custom_segment = CustomSegment()

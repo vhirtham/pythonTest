@@ -507,7 +507,8 @@ class Geometry:
         self._profile = profile
         self._trace = trace
 
-    def _check_inputs(self, profile, trace):
+    @staticmethod
+    def _check_inputs(profile, trace):
         """
         Check the inputs to the constructor.
 
@@ -564,7 +565,8 @@ class Geometry:
         local_data = np.matmul(local_cs.basis, profile_raster_data)
         return local_data + local_cs.origin[:, np.newaxis]
 
-    def _profile_raster_data_3d(self, profile, raster_width):
+    @staticmethod
+    def _profile_raster_data_3d(profile, raster_width):
         """
         Get the rasterized profile in 3d.
 
