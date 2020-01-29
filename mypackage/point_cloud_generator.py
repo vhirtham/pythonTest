@@ -2,7 +2,6 @@
 
 import mypackage.geometry as geo
 import numpy as np
-import copy
 import mypackage.transformations as tf
 
 
@@ -64,8 +63,6 @@ class Profile:
         """
         raster_data = np.empty([2, 0])
         for shape in self._shapes:
-            shape_data = shape.rasterize(raster_width)
-            raster_data.shape
             raster_data = np.hstack(
                 (raster_data, shape.rasterize(raster_width)))
 
@@ -455,8 +452,8 @@ class Geometry:
                 "'trace' must be a 'Trace' class")
 
     def _get_local_profile_data(self, trace_location, raster_width):
-        profile_location = trace_location / self._trace.length * \
-                           self._profile.max_location
+        relative_location = trace_location / self._trace.length
+        profile_location = relative_location * self._profile.max_location
         profile = self._profile.local_profile(profile_location)
         return self._profile_data_3d(profile, raster_width)
 

@@ -653,8 +653,8 @@ def test_shape2d_translation():
     arc_segment = shape._segments[0]
     arc_segment_ref = shape_ref._segments[0]
 
-    assert arc_segment.is_arc_winding_ccw() == \
-           arc_segment_ref.is_arc_winding_ccw()
+    assert (arc_segment.is_arc_winding_ccw() ==
+            arc_segment_ref.is_arc_winding_ccw())
 
     check_point(arc_segment.point_start, arc_segment_ref.point_start,
                 translation)
@@ -689,8 +689,8 @@ def test_shape2d_transformation():
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_ref.segments[0]
 
-    assert arc_segment.is_arc_winding_ccw() == \
-           arc_segment_ref.is_arc_winding_ccw()
+    assert (arc_segment.is_arc_winding_ccw() ==
+            arc_segment_ref.is_arc_winding_ccw())
 
     check_point_rotation(arc_segment.point_start, arc_segment_ref.point_start)
     check_point_rotation(arc_segment.point_end, arc_segment_ref.point_end)
@@ -719,8 +719,8 @@ def test_shape2d_transformation():
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_ref.segments[0]
 
-    assert arc_segment.is_arc_winding_ccw() != \
-           arc_segment_ref.is_arc_winding_ccw()
+    assert (arc_segment.is_arc_winding_ccw() !=
+            arc_segment_ref.is_arc_winding_ccw())
 
     check_point_reflection(arc_segment.point_start,
                            arc_segment_ref.point_start)
