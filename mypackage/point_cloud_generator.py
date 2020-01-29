@@ -649,6 +649,5 @@ class Geometry:
         if isinstance(self._profile, Profile):
             return self._rasterize_constant_profile(profile_raster_width,
                                                     trace_raster_width)
-        else:
-            return self._rasterize_variable_profile(profile_raster_width,
-                                                    trace_raster_width)
+        return self._rasterize_variable_profile(profile_raster_width,
+                                                trace_raster_width)
