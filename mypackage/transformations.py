@@ -37,20 +37,20 @@ def rotation_matrix_z(angle):
     return Rot.from_euler("z", angle).as_dcm()
 
 
-def normalize(u):
+def normalize(vec):
     """
     Normalize a vector.
 
-    :param u: Vector
+    :param vec: Vector
     :return: Normalized vector
     """
-    norm = np.linalg.norm(u)
+    norm = np.linalg.norm(vec)
     if norm == 0.:
         raise Exception("Vector length is 0.")
-    return u / norm
+    return vec / norm
 
 
-def orientation_point_plane_containing_origin(point, a, b):
+def orientation_point_plane_containing_origin(point, p_a, p_b):
     """
     Determine a points orientation relative to a plane containing the origin.
 
@@ -68,20 +68,20 @@ def orientation_point_plane_containing_origin(point, a, b):
     vectors spanning the plane.
 
     :param point: Point
-    :param a: Second point of the triangle 'origin - A - B'.
-    :param b: Third point of the triangle 'origin - A - B'.
+    :param p_a: Second point of the triangle 'origin - A - B'.
+    :param p_b: Third point of the triangle 'origin - A - B'.
     :return: 1, -1 or 0 (see description)
     """
-    if (math.isclose(np.linalg.norm(a), 0) or
-            math.isclose(np.linalg.norm(b), 0) or
-            math.isclose(np.linalg.norm(b - a), 0)):
+    if (math.isclose(np.linalg.norm(p_a), 0) or
+            math.isclose(np.linalg.norm(p_b), 0) or
+            math.isclose(np.linalg.norm(p_b - p_a), 0)):
         raise Exception(
             "One or more points describing the plane are identical.")
 
-    return np.sign(np.linalg.det([a, b, point]))
+    return np.sign(np.linalg.det([p_a, p_b, point]))
 
 
-def orientation_point_plane(point, a, b, c):
+def orientation_point_plane(point, p_a, p_b, p_c):
     """
     Determine a points orientation relative to an arbitrary plane.
 
@@ -96,31 +96,32 @@ def orientation_point_plane(point, a, b, c):
     a plane since it has no tolerance to compensate for numerical errors.
 
     :param point: Point
-    :param a: First point of the triangle 'A - B - C'.
-    :param b: Second point of the triangle 'A - B - C'.
-    :param c: Third point of the triangle 'A - B - C'.
+    :param p_a: First point of the triangle 'A - B - C'.
+    :param p_b: Second point of the triangle 'A - B - C'.
+    :param p_c: Third point of the triangle 'A - B - C'.
     :return: 1, -1 or 0 (see description)
     """
-    vec_a_b = b - a
-    vec_a_c = c - a
-    vec_a_point = point - a
+    vec_a_b = p_b - p_a
+    vec_a_c = p_c - p_a
+    vec_a_point = point - p_a
     return orientation_point_plane_containing_origin(vec_a_point, vec_a_b,
                                                      vec_a_c)
 
 
-def is_orthogonal(u, v, tolerance=1E-9):
+def is_orthogonal(vec_u, vec_v, tolerance=1E-9):
     """
     Check if vectors are orthogonal.
 
-    :param u: First vector
-    :param v: Second vector
+    :param vec_u: First vector
+    :param vec_v: Second vector
     :param tolerance: Numerical tolerance
     :return: True or False
     """
-    if math.isclose(np.dot(u, u), 0) or math.isclose(np.dot(v, v), 0):
+    if math.isclose(np.dot(vec_u, vec_u), 0) or math.isclose(
+            np.dot(vec_v, vec_v), 0):
         raise Exception("One or both vectors have zero length.")
 
-    return math.isclose(np.dot(u, v), 0, abs_tol=tolerance)
+    return math.isclose(np.dot(vec_u, vec_v), 0, abs_tol=tolerance)
 
 
 def change_of_basis_rotation(ccs_from, ccs_to):
@@ -210,71 +211,81 @@ class CartesianCoordinateSystem3d:
         return cls(basis, origin=origin)
 
     @classmethod
-    def construct_from_xyz(cls, x, y, z, origin=np.array([0, 0, 0])):
+    def construct_from_xyz(cls, vec_x, vec_y, vec_z,
+                           origin=np.array([0, 0, 0])):
         """
         Construct a cartesian coordinate system.
 
-        :param x: Vector defining the x-axis
-        :param y: Vector defining the y-axis
-        :param z: Vector defining the z-axis
+        :param vec_x: Vector defining the x-axis
+        :param vec_y: Vector defining the y-axis
+        :param vec_z: Vector defining the z-axis
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        basis = np.transpose([x, y, z])
+        basis = np.transpose([vec_x, vec_y, vec_z])
         return cls(basis, origin=origin)
 
     @classmethod
-    def construct_from_xy_and_orientation(cls, x, y, positive_orientation=True,
+    def construct_from_xy_and_orientation(cls, vec_x, vec_y,
+                                          positive_orientation=True,
                                           origin=np.array([0, 0, 0])):
         """
         Construct a cartesian coordinate system.
 
-        :param x: Vector defining the x-axis
-        :param y: Vector defining the y-axis
+        :param vec_x: Vector defining the x-axis
+        :param vec_y: Vector defining the y-axis
         :param positive_orientation: Set to True if the orientation should
         be positive and to False if not
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        z = cls._calcualte_orthogonal_axis(x, y) * cls._sign_orientation(
+        vec_z = cls._calcualte_orthogonal_axis(vec_x,
+                                               vec_y) * cls._sign_orientation(
             positive_orientation)
-        basis = np.transpose([x, y, z])
+
+        basis = np.transpose([vec_x, vec_y, vec_z])
         return cls(basis, origin=origin)
 
     @classmethod
-    def construct_from_yz_and_orientation(cls, y, z, positive_orientation=True,
+    def construct_from_yz_and_orientation(cls, vec_y, vec_z,
+                                          positive_orientation=True,
                                           origin=np.array([0, 0, 0])):
         """
         Construct a cartesian coordinate system.
 
-        :param y: Vector defining the y-axis
-        :param z: Vector defining the z-axis
+        :param vec_y: Vector defining the y-axis
+        :param vec_z: Vector defining the z-axis
         :param positive_orientation: Set to True if the orientation should
         be positive and to False if not
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        x = cls._calcualte_orthogonal_axis(y, z) * cls._sign_orientation(
+        vec_x = cls._calcualte_orthogonal_axis(vec_y,
+                                               vec_z) * cls._sign_orientation(
             positive_orientation)
-        basis = np.transpose(np.array([x, y, z]))
+
+        basis = np.transpose(np.array([vec_x, vec_y, vec_z]))
         return cls(basis, origin=origin)
 
     @classmethod
-    def construct_from_xz_and_orientation(cls, x, z, positive_orientation=True,
+    def construct_from_xz_and_orientation(cls, vec_x, vec_z,
+                                          positive_orientation=True,
                                           origin=np.array([0, 0, 0])):
         """
         Construct a cartesian coordinate system.
 
-        :param x: Vector defining the x-axis
-        :param z: Vector defining the z-axis
+        :param vec_x: Vector defining the x-axis
+        :param vec_z: Vector defining the z-axis
         :param positive_orientation: Set to True if the orientation should
         be positive and to False if not
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        y = cls._calcualte_orthogonal_axis(z, x) * cls._sign_orientation(
+        vec_y = cls._calcualte_orthogonal_axis(vec_z,
+                                               vec_x) * cls._sign_orientation(
             positive_orientation)
-        basis = np.transpose([x, y, z])
+
+        basis = np.transpose([vec_x, vec_y, vec_z])
         return cls(basis, origin=origin)
 
     @staticmethod
