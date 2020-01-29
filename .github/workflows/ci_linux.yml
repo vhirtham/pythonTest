@@ -44,7 +44,7 @@ jobs:
         conda build .
         cp --parents $CONDA_PREFIX/conda-bld//noarch/mypackage-* ./build
     - name: Archive conda package
-        uses: actions/upload-artifact@v1
-        with:
-          name: conda-package
-          path: build/*
+      uses: actions/upload-artifact@v1
+      with:
+        name: conda-package
+        path: build/*
