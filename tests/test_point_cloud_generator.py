@@ -5,7 +5,7 @@ import mypackage.transformations as tf
 import math
 import numpy as np
 import copy
-import tests.helpers as helpers
+import tests._helpers as helpers
 
 
 # helpers ---------------------------------------------------------------------

@@ -4,7 +4,7 @@ import pytest
 import random
 import math
 import copy
-import tests.helpers as helper
+import tests._helpers as helper
 
 
 # helpers for tests -----------------------------------------------------------

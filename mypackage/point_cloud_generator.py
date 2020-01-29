@@ -8,6 +8,15 @@ import mypackage.transformations as tf
 # Helper functions ------------------------------------------------------------
 
 def to_list(var):
+    """
+    Store the passed variable into a list and return it.
+
+    If the variable is already a list, it is returned without modification.
+    If 'None' is passed, the function returns an empty list.
+
+    :param var: Arbitrary variable
+    :return: List
+    """
     if isinstance(var, list):
         return var
     if var is None:
@@ -142,7 +151,8 @@ class RadialHorizontalTraceSegment:
     @staticmethod
     def _arc_length(radius, angle):
         """
-        Calculate the arc length
+        Calculate the arc length.
+
         :param radius: Radius
         :param angle: Angle (rad)
         :return: Arc length
@@ -178,6 +188,11 @@ class RadialHorizontalTraceSegment:
 
     @property
     def is_clockwise(self):
+        """
+        Get True, if the segments winding is clockwise, False otherwise.
+
+        :return: True or False
+        """
         return self._sign_winding < 0
 
     def local_coordinate_system(self, relative_position):
@@ -348,7 +363,18 @@ class LinearProfileInterpolationSBS:
 # Varying profile class -------------------------------------------------------
 
 class VariableProfile:
+    """Class to define a profile of variable shape."""
+
     def __init__(self, profiles, locations, interpolation_schemes):
+        """
+        Constructor.
+
+        :param profiles: List of profiles.
+        :param locations: Ascending list of profile locations. Since the
+        first location needs to be 0, it can be omitted.
+        :param interpolation_schemes: List of interpolation schemes to
+        define the interpolation between two locations.
+        """
         locations = to_list(locations)
         interpolation_schemes = to_list(interpolation_schemes)
 
@@ -374,6 +400,12 @@ class VariableProfile:
         self._interpolation_schemes = interpolation_schemes
 
     def _segment_index(self, location):
+        """
+        Get the index of the segment at a certain location.
+
+        :param location: Location
+        :return: Segment index
+        """
         idx = 0
         while location > self._locations[idx + 1]:
             idx += 1
@@ -381,33 +413,74 @@ class VariableProfile:
 
     @property
     def interpolation_schemes(self):
+        """
+        Get the interpolation schemes.
+
+        :return: List of interpolation schemes
+        """
         return self._interpolation_schemes
 
     @property
     def locations(self):
+        """
+        Get the locations.
+
+        :return: List of locations
+        """
         return self._locations
 
     @property
     def max_location(self):
+        """
+        Get the maximum location.
+
+        :return: Maximum location
+        """
         return self._locations[-1]
 
     @property
     def num_interpolation_schemes(self):
+        """
+        Get the number of interpolation schemes.
+
+        :return: Number of interpolation schemes
+        """
         return len(self._interpolation_schemes)
 
     @property
     def num_locations(self):
+        """
+        Get the number of profile locations.
+
+        :return: Number of profile locations
+        """
         return len(self._locations)
 
     @property
     def num_profiles(self):
+        """
+        Get the number of profiles.
+
+        :return: Number of profiles
+        """
         return len(self._profiles)
 
     @property
     def profiles(self):
+        """
+        Get the profiles.
+
+        :return: List of profiles
+        """
         return self._profiles
 
     def local_profile(self, location):
+        """
+        Get the profile at the specified location.
+
+        :param location: Location
+        :return: Local profile.
+        """
         location = np.clip(location, 0, self.max_location)
 
         idx = self._segment_index(location)
@@ -421,7 +494,7 @@ class VariableProfile:
 #  Geometry class -------------------------------------------------------------
 
 class Geometry:
-    """Define the experimental geometry"""
+    """Define the experimental geometry."""
 
     def __init__(self, profile, trace):
         """
@@ -452,12 +525,25 @@ class Geometry:
                 "'trace' must be a 'Trace' class")
 
     def _get_local_profile_data(self, trace_location, raster_width):
+        """
+        Get a rasterized profile at a certain location on the trace.
+
+        :param trace_location: Location on the trace
+        :param raster_width: Raster width
+        :return:
+        """
         relative_location = trace_location / self._trace.length
         profile_location = relative_location * self._profile.max_location
         profile = self._profile.local_profile(profile_location)
-        return self._profile_data_3d(profile, raster_width)
+        return self._profile_raster_data_3d(profile, raster_width)
 
-    def _get_trace_locations(self, raster_width):
+    def _rasterize_trace(self, raster_width):
+        """
+        Rasterize the trace.
+
+        :param raster_width: Raster width
+        :return: Raster data
+        """
         raster_width = np.clip(raster_width, 0, self._trace.length)
         num_raster_segments = int(np.round(self._trace.length / raster_width))
         raster_width_eff = self._trace.length / num_raster_segments
@@ -466,22 +552,44 @@ class Geometry:
                               raster_width_eff)
         return np.hstack([locations, self._trace.length])
 
-    def _get_transformed_profile_data(self, profile_data, location):
+    def _get_transformed_profile_data(self, profile_raster_data, location):
+        """
+        Transform a profiles data to a specified location on the trace.
+
+        :param profile_raster_data: Rasterized profile
+        :param location: Location on the trace
+        :return: Transformed profile data
+        """
         local_cs = self._trace.local_coordinate_system(location)
-        local_data = np.matmul(local_cs.basis, profile_data)
+        local_data = np.matmul(local_cs.basis, profile_raster_data)
         return local_data + local_cs.origin[:, np.newaxis]
 
-    def _profile_data_3d(self, profile, raster_width):
+    def _profile_raster_data_3d(self, profile, raster_width):
+        """
+        Get the rasterized profile in 3d.
+
+        The profile is located in the x-z-plane.
+
+        :param profile: Profile
+        :param raster_width: Raster width
+        :return: Rasterized profile in 3d
+        """
         profile_data = profile.rasterize(raster_width)
         return np.insert(profile_data, 1, 0, axis=0)
 
     def _rasterize_constant_profile(self, profile_raster_width,
                                     trace_raster_width):
+        """
+        Rasterize the geometry with a constant profile.
 
-        profile_data = self._profile_data_3d(self._profile,
-                                             profile_raster_width)
+        :param profile_raster_width: Raster width of the profiles
+        :param trace_raster_width: Distance between two profiles
+        :return: Raster data
+        """
+        profile_data = self._profile_raster_data_3d(self._profile,
+                                                    profile_raster_width)
 
-        locations = self._get_trace_locations(trace_raster_width)
+        locations = self._rasterize_trace(trace_raster_width)
         raster_data = np.empty([3, 0])
         for i in range(len(locations)):
             local_data = self._get_transformed_profile_data(profile_data,
@@ -492,7 +600,14 @@ class Geometry:
 
     def _rasterize_variable_profile(self, profile_raster_width,
                                     trace_raster_width):
-        locations = self._get_trace_locations(trace_raster_width)
+        """
+        Rasterize the geometry with a variable profile.
+
+        :param profile_raster_width: Raster width of the profiles
+        :param trace_raster_width: Distance between two profiles
+        :return: Raster data
+        """
+        locations = self._rasterize_trace(trace_raster_width)
         raster_data = np.empty([3, 0])
         for i in range(len(locations)):
             profile_data = self._get_local_profile_data(locations[i],
@@ -506,13 +621,30 @@ class Geometry:
 
     @property
     def profile(self):
+        """
+        Get the geometry's profile.
+
+        :return: Profile
+        """
         return self._profile
 
     @property
     def trace(self):
+        """
+        Get the geometry's trace.
+
+        :return: Trace
+        """
         return self._trace
 
     def rasterize(self, profile_raster_width, trace_raster_width):
+        """
+        Rasterize the geometry.
+
+        :param profile_raster_width: Raster width of the profiles
+        :param trace_raster_width: Distance between two profiles
+        :return: Raster data
+        """
         if isinstance(self._profile, Profile):
             return self._rasterize_constant_profile(profile_raster_width,
                                                     trace_raster_width)

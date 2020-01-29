@@ -9,6 +9,15 @@ from scipy.spatial.transform import Rotation as R
 # Helper functions ------------------------------------------------------------
 
 def to_list(var):
+    """
+    Store the passed variable into a list and return it.
+
+    If the variable is already a list, it is returned without modification.
+    If 'None' is passed, the function returns an empty list.
+
+    :param var: Arbitrary variable
+    :return: List
+    """
     if isinstance(var, list):
         return var
     if var is None:
@@ -129,7 +138,6 @@ class LineSegment:
         :param point_end: End point of the segment
         :return: Line segment
         """
-
         points = np.transpose(np.array([point_start, point_end], dtype=float))
         return cls(points)
 
@@ -310,6 +318,7 @@ class ArcSegment:
     def _check_valid(self):
         """
         Check if the segments data is valid.
+
         :return: ---
         """
         point_start = self.point_start
@@ -492,11 +501,21 @@ class Shape2D:
 
         :param segments: Single segment or list of segments
         """
-
         self._segments = to_list(segments)
 
     @classmethod
     def interpolate(cls, a, b, weight, interpolation_schemes):
+        """
+        Interpolate 2 shapes.
+
+        :param a: First shape
+        :param b: Second shape
+        :param weight: Weighting factor in the range [0 .. 1] where 0 is
+        shape a and 1 is shape b
+        :param interpolation_schemes: List of interpolation schemes for each
+        segment of the shape.
+        :return: Interpolated shape
+        """
         if not a.num_segments == b.num_segments:
             raise Exception("Number of segments differ.")
 
@@ -540,11 +559,16 @@ class Shape2D:
 
     @property
     def segments(self):
+        """
+        Get the shape's segments.
+
+        :return: List of segments
+        """
         return self._segments
 
     def add_segments(self, segments):
         """
-        Add segments to the shape
+        Add segments to the shape.
 
         :param segments: Single segment or list of segments
         :return: ---
@@ -601,7 +625,6 @@ class Shape2D:
         :param raster_width: The desired distance between two raster points
         :return: Array of contour points (3d)
         """
-
         segments = self._segments
 
         raster_data = np.empty([2, 0])

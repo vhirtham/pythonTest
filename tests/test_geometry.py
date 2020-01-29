@@ -3,7 +3,7 @@ import mypackage.geometry as geo
 import numpy as np
 import math
 import copy
-import tests.helpers as helper
+import tests._helpers as helper
 
 
 def test_vector_points_to_left_of_vector():
