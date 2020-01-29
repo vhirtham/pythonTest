@@ -121,7 +121,7 @@ def test_single_axis_rotation_matrices():
 
 
 def test_normalize():
-    for i in range(20):
+    for _ in range(20):
         vec = random_non_unit_vector()
 
         unit = tf.normalize(vec)
