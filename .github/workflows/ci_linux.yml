@@ -37,7 +37,14 @@ jobs:
       run: |
         conda config --append channels conda-forge
         conda env create -f ./conda.recipe/build_env.yml
+        mkdir ./build
     - name: Run tests
       run: |
         source activate build_env
         conda build .
+        cp --parents $CONDA_PREFIX/conda-bld//noarch/mypackage-* ./build
+    - name: Archive conda package
+        uses: actions/upload-artifact@v1
+        with:
+          name: conda-package
+          path: build/*
