@@ -4,28 +4,30 @@ import math
 import numpy as np
 
 
-def is_column_in_matrix(column, array):
+def is_column_in_matrix(column, matrix):
     """
-    Check if a column (1d array) can be found inside of a 2d array.
+    Check if a column (1d array) can be found inside of a matrix.
 
     :param column: Column that should be checked
-    :param array: 2d array
+    :param matrix: Matrix
     :return: True or False
     """
-    return is_row_in_matrix(column, np.transpose(array))
+    return is_row_in_matrix(column, np.transpose(matrix))
 
 
-def is_row_in_matrix(row, array):
+def is_row_in_matrix(row, matrix):
     """
     Check if a row (1d array) can be found inside of a matrix.
 
     source: https://codereview.stackexchange.com/questions/193835
 
     :param row: Row that should be checked
-    :param array: 2d array
+    :param matrix: Matrix
     :return: True or False
     """
-    return (array == row).all(axis=1).any()
+    if not matrix.shape[1] == np.array(row).size:
+        return False
+    return (matrix == row).all(axis=1).any()
 
 
 def to_list(var):
