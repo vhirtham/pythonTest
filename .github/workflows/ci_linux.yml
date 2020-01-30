@@ -41,8 +41,10 @@ jobs:
       run: |
         source activate build_env
         conda build .
+    - id: getfilename
+        run: echo "::set-output name=file::$(ls /usr/share/miniconda/envs/build_env/conda-bld/noarch/mypackage-*)"
     - name: Archive conda package
       uses: actions/upload-artifact@v1
       with:
         name: conda-package
-        path: /usr/share/miniconda/envs/build_env/conda-bld/noarch/mypackage-*
+        path: ${{ steps.getfilename.outputs.file }}
