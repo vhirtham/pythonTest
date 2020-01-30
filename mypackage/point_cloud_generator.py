@@ -1,27 +1,9 @@
 """Contains methods and classes to generate 3d point clouds."""
 
 import numpy as np
+import mypackage._utility as utils
 import mypackage.geometry as geo
 import mypackage.transformations as tf
-
-
-# Helper functions ------------------------------------------------------------
-
-def to_list(var):
-    """
-    Store the passed variable into a list and return it.
-
-    If the variable is already a list, it is returned without modification.
-    If 'None' is passed, the function returns an empty list.
-
-    :param var: Arbitrary variable
-    :return: List
-    """
-    if isinstance(var, list):
-        return var
-    if var is None:
-        return []
-    return [var]
 
 
 # Profile class ---------------------------------------------------------------
@@ -229,7 +211,7 @@ class Trace:
                 "'coordinate_system' must be of type "
                 "'transformations.CoordinateSystem'")
 
-        self._segments = to_list(segments)
+        self._segments = utils.to_list(segments)
         self._create_lookups(coordinate_system)
 
         if self.length <= 0:
@@ -375,8 +357,8 @@ class VariableProfile:
         :param interpolation_schemes: List of interpolation schemes to
         define the interpolation between two locations.
         """
-        locations = to_list(locations)
-        interpolation_schemes = to_list(interpolation_schemes)
+        locations = utils.to_list(locations)
+        interpolation_schemes = utils.to_list(interpolation_schemes)
 
         if not locations[0] == 0:
             locations = [0] + locations

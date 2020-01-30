@@ -2,28 +2,12 @@
 
 import numpy as np
 import math
+import mypackage._utility as utils
 import mypackage.transformations as tf
 from scipy.spatial.transform import Rotation as R
 
 
 # Helper functions ------------------------------------------------------------
-
-def to_list(var):
-    """
-    Store the passed variable into a list and return it.
-
-    If the variable is already a list, it is returned without modification.
-    If 'None' is passed, the function returns an empty list.
-
-    :param var: Arbitrary variable
-    :return: List
-    """
-    if isinstance(var, list):
-        return var
-    if var is None:
-        return []
-    return [var]
-
 
 def is_col_in_array(col, array):
     """
@@ -505,7 +489,7 @@ class Shape2D:
 
         :param segments: Single segment or list of segments
         """
-        self._segments = to_list(segments)
+        self._segments = utils.to_list(segments)
 
     @classmethod
     def interpolate(cls, shape_a, shape_b, weight, interpolation_schemes):
@@ -577,7 +561,7 @@ class Shape2D:
         :param segments: Single segment or list of segments
         :return: ---
         """
-        self._segments += to_list(segments)
+        self._segments += utils.to_list(segments)
 
     def apply_transformation(self, transformation_matrix):
         """
