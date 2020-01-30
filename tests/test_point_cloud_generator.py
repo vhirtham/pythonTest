@@ -204,7 +204,7 @@ def default_trace_segment_tests(segment, tolerance_length=1E-9):
     lcs = segment.local_coordinate_system(0)
 
     # test that function actually returns a coordinate system class
-    assert isinstance(lcs, tf.CartesianCoordinateSystem3d)
+    assert isinstance(lcs, tf.CoordinateSystem)
 
     # check that origin for weight 0 is at [0,0,0]
     for i in range(3):
@@ -331,7 +331,7 @@ def test_trace_construction():
 
         @staticmethod
         def local_coordinate_system(*args):
-            return tf.CartesianCoordinateSystem3d
+            return tf.CoordinateSystem
 
     custom_segment = CustomSegment()
     custom_segment.length = 3
@@ -378,7 +378,7 @@ def test_trace_local_coordinate_system():
     # check with arbitrary coordinate system --------------
     basis = tf.rotation_matrix_x(np.pi / 2)
     origin = np.array([-3, 2.5, 5])
-    cs_base = tf.CartesianCoordinateSystem3d(basis, origin)
+    cs_base = tf.CoordinateSystem(basis, origin)
 
     trace = pcg.Trace([radial_segment, linear_segment], cs_base)
 

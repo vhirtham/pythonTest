@@ -31,4 +31,4 @@ def rotated_coordinate_system(angle_x=np.pi / 3, angle_y=np.pi / 4,
 
     rotated_basis = np.matmul(r_tot, basis)
 
-    return tf.CartesianCoordinateSystem3d(rotated_basis, np.array(origin))
+    return tf.CoordinateSystem(rotated_basis, np.array(origin))

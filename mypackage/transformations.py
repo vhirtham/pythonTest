@@ -148,8 +148,8 @@ def change_of_basis_translation(ccs_from, ccs_to):
 
 # cartesian coordinate system class -------------------------------------------
 
-class CartesianCoordinateSystem3d:
-    """Defines a 3d cartesian coordinate system."""
+class CoordinateSystem:
+    """Defines a cartesian coordinate system in 3d."""
 
     def __init__(self, basis=np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
                  origin=np.array([0, 0, 0])):
@@ -201,7 +201,7 @@ class CartesianCoordinateSystem3d:
         """
         basis = np.matmul(self.basis, rhs_cs.basis)
         origin = np.matmul(self.basis, rhs_cs.origin) + self.origin
-        return CartesianCoordinateSystem3d(basis, origin)
+        return CoordinateSystem(basis, origin)
 
     @classmethod
     def construct_from_orientation(cls, orientation,

@@ -121,7 +121,7 @@ class LinearHorizontalTraceSegment:
         relative_position = np.clip(relative_position, 0, 1)
 
         origin = np.array([0, 1, 0]) * relative_position * self._length
-        return tf.CartesianCoordinateSystem3d(origin=origin)
+        return tf.CoordinateSystem(origin=origin)
 
 
 class RadialHorizontalTraceSegment:
@@ -209,7 +209,7 @@ class RadialHorizontalTraceSegment:
         translation = np.array([1, 0, 0]) * self._radius * self._sign_winding
 
         origin = np.matmul(basis, translation) - translation
-        return tf.CartesianCoordinateSystem3d(basis, origin)
+        return tf.CoordinateSystem(basis, origin)
 
 
 # Trace class -----------------------------------------------------------------
@@ -217,18 +217,17 @@ class RadialHorizontalTraceSegment:
 class Trace:
     """Defines a 3d trace."""
 
-    def __init__(self, segments,
-                 coordinate_system=tf.CartesianCoordinateSystem3d()):
+    def __init__(self, segments, coordinate_system=tf.CoordinateSystem()):
         """
         Constructor.
 
         :param segments: Single segment or list of segments
         :param coordinate_system: Coordinate system of the trace
         """
-        if not isinstance(coordinate_system, tf.CartesianCoordinateSystem3d):
+        if not isinstance(coordinate_system, tf.CoordinateSystem):
             raise TypeError(
                 "'coordinate_system' must be of type "
-                "transformations.CartesianCoordinateSystem3d")
+                "'transformations.CoordinateSystem'")
 
         self._segments = to_list(segments)
         self._create_lookups(coordinate_system)

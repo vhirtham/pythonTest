@@ -243,10 +243,8 @@ def test_change_of_basis_rotation():
         base_from = rotated_positive_orthogonal_base(*angles_from)
         base_to = rotated_positive_orthogonal_base(*angles_to)
 
-        ccs_from = tf.CartesianCoordinateSystem3d(base_from,
-                                                  random_non_unit_vector())
-        ccs_to = tf.CartesianCoordinateSystem3d(base_to,
-                                                random_non_unit_vector())
+        ccs_from = tf.CoordinateSystem(base_from, random_non_unit_vector())
+        ccs_to = tf.CoordinateSystem(base_to, random_non_unit_vector())
 
         matrix = tf.change_of_basis_rotation(ccs_from, ccs_to)
 
@@ -260,8 +258,8 @@ def test_change_of_basis_translation():
         base_from = rotated_positive_orthogonal_base(*random_non_unit_vector())
         base_to = rotated_positive_orthogonal_base(*random_non_unit_vector())
 
-        ccs_from = tf.CartesianCoordinateSystem3d(base_from, origin_from)
-        ccs_to = tf.CartesianCoordinateSystem3d(base_to, origin_to)
+        ccs_from = tf.CoordinateSystem(base_from, origin_from)
+        ccs_to = tf.CoordinateSystem(base_to, origin_to)
 
         diff = tf.change_of_basis_translation(ccs_from, ccs_to)
 
@@ -274,7 +272,7 @@ def test_change_of_basis_translation():
 
 def test_cartesian_coordinate_system_construction():
     # alias name for class - name is too long :)
-    cls_ccs = tf.CartesianCoordinateSystem3d
+    cls_ccs = tf.CoordinateSystem
 
     # setup -----------------------------------------------
     origin = [4, -2, 6]
@@ -342,7 +340,7 @@ def test_cartesian_coordinate_system_construction():
 
 
 def test_cartesian_coordinate_system_addition():
-    cls_ccs = tf.CartesianCoordinateSystem3d
+    cls_ccs = tf.CoordinateSystem
 
     orientation0 = tf.rotation_matrix_z(np.pi / 2)
     origin0 = [1, 3, 2]
