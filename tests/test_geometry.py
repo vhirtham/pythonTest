@@ -567,22 +567,22 @@ def test_arc_segment_interpolation():
 test_arc_segment_interpolation()
 
 
-# test Shape2d ----------------------------------------------------------------
+# test Shape ------------------------------------------------------------------
 
-def test_shape2d_construction():
+def test_shape_construction():
     line_segment = geo.LineSegment.construct_from_points([1, 1], [1, 2])
     arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [0, 1])
 
     # Empty construction
-    shape = geo.Shape2D()
+    shape = geo.Shape()
     assert shape.num_segments == 0
 
     # Single element construction shape
-    shape = geo.Shape2D(line_segment)
+    shape = geo.Shape(line_segment)
     assert shape.num_segments == 1
 
     # Multi segment construction
-    shape = geo.Shape2D([arc_segment, line_segment])
+    shape = geo.Shape([arc_segment, line_segment])
     assert shape.num_segments == 2
     assert isinstance(shape.segments[0], geo.ArcSegment)
     assert isinstance(shape.segments[1], geo.LineSegment)
@@ -591,16 +591,16 @@ def test_shape2d_construction():
 
     # segments not connected
     with pytest.raises(Exception):
-        shape = geo.Shape2D([line_segment, arc_segment])
+        shape = geo.Shape([line_segment, arc_segment])
 
 
-def test_shape2d_segment_addition():
+def test_shape_segment_addition():
     # Create shape and add segments
     line_segment = geo.LineSegment.construct_from_points([1, 1], [0, 0])
     arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [0, 1])
     arc_segment2 = geo.ArcSegment.construct_from_points([1, 1], [0, 0], [0, 1])
 
-    shape = geo.Shape2D()
+    shape = geo.Shape()
     shape.add_segments(line_segment)
     assert shape.num_segments == 1
 
@@ -626,7 +626,7 @@ def test_shape2d_segment_addition():
     assert shape.num_segments == 3  # ensure shape is unmodified
 
 
-def test_shape2d_rasterization():
+def test_shape_rasterization():
     points = np.array([[0, 0],
                        [0, 1],
                        [1, 1],
@@ -634,7 +634,7 @@ def test_shape2d_rasterization():
 
     raster_width = 0.2
 
-    shape = geo.Shape2D(
+    shape = geo.Shape(
         geo.LineSegment.construct_from_points(points[0], points[1]))
     shape.add_segments(
         geo.LineSegment.construct_from_points(points[1], points[2]))
@@ -657,10 +657,10 @@ def default_test_shape():
     # create shape
     arc_segment = geo.ArcSegment.construct_from_points([3, 4], [5, 0], [6, 3])
     line_segment = geo.LineSegment.construct_from_points([5, 0], [11, 3])
-    return geo.Shape2D([arc_segment, line_segment])
+    return geo.Shape([arc_segment, line_segment])
 
 
-def test_shape2d_translation():
+def test_shape_translation():
     def check_point(point, point_ref, translation):
         helper.check_vectors_identical(point - translation, point_ref)
 
@@ -694,7 +694,7 @@ def test_shape2d_translation():
                 translation)
 
 
-def test_shape2d_transformation():
+def test_shape_transformation():
     # without reflection
     def check_point_rotation(point, point_ref):
         assert point[0] == point_ref[1]
@@ -769,7 +769,7 @@ def check_reflected_point(point, reflected_point, axis_offset,
     assert np.abs(determinant) < 1E-8
 
 
-def shape2d_reflect_testcase(normal, distance_to_origin):
+def shape_reflect_testcase(normal, distance_to_origin):
     direction_reflection_axis = np.array([normal[1], -normal[0]])
     normal_length = np.linalg.norm(normal)
     unit_normal = np.array(normal) / normal_length
@@ -810,28 +810,28 @@ def shape2d_reflect_testcase(normal, distance_to_origin):
                           direction_reflection_axis)
 
 
-def test_shape2d_reflect():
-    shape2d_reflect_testcase([2, 1], np.linalg.norm([2, 1]))
-    shape2d_reflect_testcase([0, 1], 5)
-    shape2d_reflect_testcase([1, 0], 3)
-    shape2d_reflect_testcase([1, 0], -3)
-    shape2d_reflect_testcase([-7, 2], 4.12)
-    shape2d_reflect_testcase([-7, -2], 4.12)
-    shape2d_reflect_testcase([7, -2], 4.12)
+def test_shape_reflect():
+    shape_reflect_testcase([2, 1], np.linalg.norm([2, 1]))
+    shape_reflect_testcase([0, 1], 5)
+    shape_reflect_testcase([1, 0], 3)
+    shape_reflect_testcase([1, 0], -3)
+    shape_reflect_testcase([-7, 2], 4.12)
+    shape_reflect_testcase([-7, -2], 4.12)
+    shape_reflect_testcase([7, -2], 4.12)
 
 
-def test_shape2d_linear_interpolation():
+def test_shape_linear_interpolation():
     segment_a0 = geo.LineSegment.construct_from_points([0, 0], [1, 1])
     segment_a1 = geo.LineSegment.construct_from_points([1, 1], [2, 0])
-    shape_a = geo.Shape2D([segment_a0, segment_a1])
+    shape_a = geo.Shape([segment_a0, segment_a1])
 
     segment_b0 = geo.LineSegment.construct_from_points([1, 1], [2, -1])
     segment_b1 = geo.LineSegment.construct_from_points([2, -1], [3, 5])
-    shape_b = geo.Shape2D([segment_b0, segment_b1])
+    shape_b = geo.Shape([segment_b0, segment_b1])
 
     for i in range(5):
         weight = i / 4.
-        shape_c = geo.Shape2D.linear_interpolation(shape_a, shape_b, weight)
+        shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, weight)
 
         helper.check_vectors_identical(shape_c.segments[0].point_start,
                                        [weight, weight])
@@ -845,7 +845,7 @@ def test_shape2d_linear_interpolation():
 
     # check weight clipped to valid range -----------------
 
-    shape_c = geo.Shape2D.linear_interpolation(shape_a, shape_b, -3)
+    shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, -3)
 
     helper.check_vectors_identical(shape_c.segments[0].point_start,
                                    shape_a.segments[0].point_start)
@@ -856,7 +856,7 @@ def test_shape2d_linear_interpolation():
     helper.check_vectors_identical(shape_c.segments[1].point_end,
                                    shape_a.segments[1].point_end)
 
-    shape_c = geo.Shape2D.linear_interpolation(shape_a, shape_b, 100)
+    shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, 100)
 
     helper.check_vectors_identical(shape_c.segments[0].point_start,
                                    shape_b.segments[0].point_start)
@@ -871,4 +871,4 @@ def test_shape2d_linear_interpolation():
 
     shape_a.add_segments(geo.LineSegment.construct_from_points([2, 0], [2, 2]))
     with pytest.raises(Exception):
-        geo.Shape2D.linear_interpolation(shape_a, shape_b, 0.25)
+        geo.Shape.linear_interpolation(shape_a, shape_b, 0.25)

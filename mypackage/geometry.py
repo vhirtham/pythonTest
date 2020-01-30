@@ -478,9 +478,9 @@ class ArcSegment:
         self._points += np.ndarray((2, 1), float, np.array(vector, float))
 
 
-# Shape2d class ---------------------------------------------------------------
+# Shape class -----------------------------------------------------------------
 
-class Shape2D:
+class Shape:
     """Defines a shape in 2 dimensions."""
 
     def __init__(self, segments=None):

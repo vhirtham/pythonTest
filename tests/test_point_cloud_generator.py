@@ -50,15 +50,15 @@ def get_default_profiles():
     a_0 = [0, 0]
     a_1 = [8, 16]
     a_2 = [16, 0]
-    shape_a01 = geo.Shape2D(geo.LineSegment.construct_from_points(a_0, a_1))
-    shape_a12 = geo.Shape2D(geo.LineSegment.construct_from_points(a_1, a_2))
+    shape_a01 = geo.Shape(geo.LineSegment.construct_from_points(a_0, a_1))
+    shape_a12 = geo.Shape(geo.LineSegment.construct_from_points(a_1, a_2))
     profile_a = pcg.Profile([shape_a01, shape_a12])
 
     b_0 = [-4, 8]
     b_1 = [0, 8]
     b_2 = [16, -16]
-    shape_b01 = geo.Shape2D(geo.LineSegment.construct_from_points(b_0, b_1))
-    shape_b12 = geo.Shape2D(geo.LineSegment.construct_from_points(b_1, b_2))
+    shape_b01 = geo.Shape(geo.LineSegment.construct_from_points(b_0, b_1))
+    shape_b12 = geo.Shape(geo.LineSegment.construct_from_points(b_1, b_2))
     profile_b = pcg.Profile([shape_b01, shape_b12])
     return [profile_a, profile_b]
 
@@ -70,7 +70,7 @@ def test_profile_construction_and_shape_addition():
     segment1 = geo.LineSegment.construct_from_points([1, 0], [2, -1])
     segment2 = geo.LineSegment.construct_from_points([2, -1], [0, -1])
 
-    shape = geo.Shape2D([segment0, segment1, segment2])
+    shape = geo.Shape([segment0, segment1, segment2])
 
     # Check invalid types
     with pytest.raises(TypeError):
@@ -126,10 +126,10 @@ def test_profile_construction_and_shape_addition():
 
 def test_profile_rasterization():
     raster_width = 0.1
-    shape0 = geo.Shape2D(
+    shape0 = geo.Shape(
         geo.LineSegment.construct_from_points([-1, 0], [-raster_width, 0]))
-    shape1 = geo.Shape2D(geo.LineSegment.construct_from_points([0, 0], [1, 0]))
-    shape2 = geo.Shape2D(
+    shape1 = geo.Shape(geo.LineSegment.construct_from_points([0, 0], [1, 0]))
+    shape2 = geo.Shape(
         geo.LineSegment.construct_from_points([1 + raster_width, 0], [2, 0]))
 
     profile = pcg.Profile([shape0, shape1])
@@ -428,15 +428,15 @@ def test_linear_profile_interpolation_sbs():
     a_0 = [0, 0]
     a_1 = [8, 16]
     a_2 = [16, 0]
-    shape_a01 = geo.Shape2D(geo.LineSegment.construct_from_points(a_0, a_1))
-    shape_a12 = geo.Shape2D(geo.LineSegment.construct_from_points(a_1, a_2))
+    shape_a01 = geo.Shape(geo.LineSegment.construct_from_points(a_0, a_1))
+    shape_a12 = geo.Shape(geo.LineSegment.construct_from_points(a_1, a_2))
     profile_a = pcg.Profile([shape_a01, shape_a12])
 
     b_0 = [-4, 8]
     b_1 = [0, 8]
     b_2 = [16, -16]
-    shape_b01 = geo.Shape2D(geo.LineSegment.construct_from_points(b_0, b_1))
-    shape_b12 = geo.Shape2D(geo.LineSegment.construct_from_points(b_1, b_2))
+    shape_b01 = geo.Shape(geo.LineSegment.construct_from_points(b_0, b_1))
+    shape_b12 = geo.Shape(geo.LineSegment.construct_from_points(b_1, b_2))
     profile_b = pcg.Profile([shape_b01, shape_b12])
 
     [profile_a, profile_b] = get_default_profiles()
@@ -474,8 +474,8 @@ def test_linear_profile_interpolation_sbs():
                                                       0.5)
 
     # number of segments differ
-    shape_b012 = geo.Shape2D([geo.LineSegment.construct_from_points(b_0, b_1),
-                              geo.LineSegment.construct_from_points(b_1, b_2)])
+    shape_b012 = geo.Shape([geo.LineSegment.construct_from_points(b_0, b_1),
+                            geo.LineSegment.construct_from_points(b_1, b_2)])
 
     profile_b2 = pcg.Profile([shape_b01, shape_b012])
     with pytest.raises(Exception):
@@ -645,10 +645,10 @@ def test_geometry_rasterization_trace():
     a3 = [1, 1]
     a4 = [1, 0]
 
-    shape_a012 = geo.Shape2D([geo.LineSegment.construct_from_points(a0, a1),
-                              geo.LineSegment.construct_from_points(a1, a2)])
-    shape_a234 = geo.Shape2D([geo.LineSegment.construct_from_points(a2, a3),
-                              geo.LineSegment.construct_from_points(a3, a4)])
+    shape_a012 = geo.Shape([geo.LineSegment.construct_from_points(a0, a1),
+                            geo.LineSegment.construct_from_points(a1, a2)])
+    shape_a234 = geo.Shape([geo.LineSegment.construct_from_points(a2, a3),
+                            geo.LineSegment.construct_from_points(a3, a4)])
 
     profile_a = pcg.Profile([shape_a012, shape_a234])
 
@@ -721,10 +721,10 @@ def test_geometry_rasterization_profile_interpolation():
     a3 = [1, 1]
     a4 = [1, 0]
 
-    shape_a012 = geo.Shape2D([geo.LineSegment.construct_from_points(a0, a1),
-                              geo.LineSegment.construct_from_points(a1, a2)])
-    shape_a234 = geo.Shape2D([geo.LineSegment.construct_from_points(a2, a3),
-                              geo.LineSegment.construct_from_points(a3, a4)])
+    shape_a012 = geo.Shape([geo.LineSegment.construct_from_points(a0, a1),
+                            geo.LineSegment.construct_from_points(a1, a2)])
+    shape_a234 = geo.Shape([geo.LineSegment.construct_from_points(a2, a3),
+                            geo.LineSegment.construct_from_points(a3, a4)])
 
     shape_b012 = copy.deepcopy(shape_a012)
     shape_b234 = copy.deepcopy(shape_a234)

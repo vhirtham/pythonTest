@@ -15,7 +15,7 @@ class Profile:
         """
         Construct profile class.
 
-        :param: shapes: Instance or list of geo.Shape2D class(es)
+        :param: shapes: Instance or list of geo.Shape class(es)
         """
         self._shapes = []
         self.add_shapes(shapes)
@@ -33,15 +33,15 @@ class Profile:
         """
         Add shapes to the profile.
 
-        :param shapes: Instance or list of geo.Shape2D class(es)
+        :param shapes: Instance or list of geo.Shape class(es)
         :return: ---
         """
         if not isinstance(shapes, list):
             shapes = [shapes]
 
-        if not all(isinstance(shape, geo.Shape2D) for shape in shapes):
+        if not all(isinstance(shape, geo.Shape) for shape in shapes):
             raise TypeError(
-                "Only instances or lists of Shape2d objects are accepted.")
+                "Only instances or lists of Shape objects are accepted.")
 
         self._shapes += shapes
 
@@ -335,9 +335,9 @@ class LinearProfileInterpolationSBS:
 
         shapes_c = []
         for i in range(profile_a.num_shapes):
-            shapes_c += [geo.Shape2D.linear_interpolation(profile_a.shapes[i],
-                                                          profile_b.shapes[i],
-                                                          weight)]
+            shapes_c += [geo.Shape.linear_interpolation(profile_a.shapes[i],
+                                                        profile_b.shapes[i],
+                                                        weight)]
 
         return Profile(shapes_c)
 
