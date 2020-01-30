@@ -4,7 +4,7 @@ import numpy as np
 import math
 import mypackage._utility as utils
 import mypackage.transformations as tf
-from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Rotation as Rot
 
 
 # Helper functions ------------------------------------------------------------
@@ -309,7 +309,7 @@ class ArcSegment:
         :param point_start: Starting point of the segment
         :param point_end: End point of the segment
         :param point_center: Center point of the arc
-        :param: arc_winding_ccw: Specifies if the arcs winding order is
+        :param arc_winding_ccw: Specifies if the arcs winding order is
         counter-clockwise
         :return: Arc segment
         """
@@ -440,7 +440,7 @@ class ArcSegment:
 
         angles = np.arange(0, max_angle, self._sign_arc_winding * delta_angle)
 
-        rotation_matrices = R.from_euler('z', angles).as_dcm()[:, 0:2, 0:2]
+        rotation_matrices = Rot.from_euler('z', angles).as_dcm()[:, 0:2, 0:2]
 
         data = np.matmul(rotation_matrices, vec_center_start) + point_center
 

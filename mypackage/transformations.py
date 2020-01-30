@@ -244,7 +244,7 @@ class CoordinateSystem:
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        vec_z = cls._calcualte_orthogonal_axis(vec_x,
+        vec_z = cls._calculate_orthogonal_axis(vec_x,
                                                vec_y) * cls._sign_orientation(
             positive_orientation)
 
@@ -265,7 +265,7 @@ class CoordinateSystem:
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        vec_x = cls._calcualte_orthogonal_axis(vec_y,
+        vec_x = cls._calculate_orthogonal_axis(vec_y,
                                                vec_z) * cls._sign_orientation(
             positive_orientation)
 
@@ -286,7 +286,7 @@ class CoordinateSystem:
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        vec_y = cls._calcualte_orthogonal_axis(vec_z,
+        vec_y = cls._calculate_orthogonal_axis(vec_z,
                                                vec_x) * cls._sign_orientation(
             positive_orientation)
 
@@ -308,15 +308,15 @@ class CoordinateSystem:
         return -1
 
     @staticmethod
-    def _calcualte_orthogonal_axis(a_0, a_1):
+    def _calculate_orthogonal_axis(a_0, a_1):
         """
         Calculate an axis which is orthogonal to two other axes.
 
         The calculated axis has a positive orientation towards the other 2
         axes.
 
-        :param a0: First axis
-        :param a1: Second axis
+        :param a_0: First axis
+        :param a_1: Second axis
         :return: Orthogonal axis
         """
         return np.cross(a_0, a_1)
