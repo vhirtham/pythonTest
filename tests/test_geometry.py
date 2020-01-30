@@ -1,9 +1,11 @@
-import pytest
+import mypackage._utility as utils
 import mypackage.geometry as geo
+import tests._helpers as helper
+
+import pytest
 import numpy as np
 import math
 import copy
-import tests._helpers as helper
 
 
 def test_vector_points_to_left_of_vector():
@@ -645,7 +647,7 @@ def test_shape_rasterization():
 
     # Segment start and end points points must be included
     for point in points:
-        assert geo.is_col_in_array(point, data)
+        assert utils.is_column_in_matrix(point, data)
 
     # check effective raster width
     for i in range(1, data.shape[1]):

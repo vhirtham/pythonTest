@@ -1,6 +1,31 @@
 """Contains package internal utility functions."""
 
 import math
+import numpy as np
+
+
+def is_column_in_matrix(column, array):
+    """
+    Check if a column (1d array) can be found inside of a 2d array.
+
+    :param column: Column that should be checked
+    :param array: 2d array
+    :return: True or False
+    """
+    return is_row_in_matrix(column, np.transpose(array))
+
+
+def is_row_in_matrix(row, array):
+    """
+    Check if a row (1d array) can be found inside of a matrix.
+
+    source: https://codereview.stackexchange.com/questions/193835
+
+    :param row: Row that should be checked
+    :param array: 2d array
+    :return: True or False
+    """
+    return (array == row).all(axis=1).any()
 
 
 def to_list(var):

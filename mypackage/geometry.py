@@ -9,28 +9,6 @@ from scipy.spatial.transform import Rotation as R
 
 # Helper functions ------------------------------------------------------------
 
-def is_col_in_array(col, array):
-    """
-    Check if a column (1d array) can be found inside of a 2d array.
-
-    :param row: Column that should be checked
-    :param array: 2d array
-    :return: True or False
-    """
-    return is_row_in_array(col, np.transpose(array))
-
-
-# https://codereview.stackexchange.com/questions/193835
-def is_row_in_array(row, array):
-    """
-    Check if a row (1d array) can be found inside of a 2d array.
-
-    :param row: Row that should be checked
-    :param array: 2d array
-    :return: True or False
-    """
-    return (array == row).all(axis=1).any()
-
 
 def vector_points_to_left_of_vector(vector, vector_reference):
     """
