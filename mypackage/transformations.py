@@ -156,7 +156,11 @@ class CartesianCoordinateSystem3d:
         """
         Construct a cartesian coordinate system.
 
-        :param basis: List of basis vectors
+        :param basis: Matrix of 3 orthogonal column vectors which represent
+        the coordinate systems basis. Keep in mind, that the columns of the
+        corresponding orientation matrix is equal to the normalized basis
+        vectors. So each orthogonal transformation matrix can also be
+        provided as basis.
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
@@ -170,9 +174,9 @@ class CartesianCoordinateSystem3d:
                 is_orthogonal(basis[:, 2], basis[:, 0])):
             raise Exception("Basis vectors must be orthogonal")
 
-        self._basis = basis
+        self._orientation = basis
 
-        self._origin = np.array(origin)
+        self._location = np.array(origin)
 
     def __add__(self, rhs_cs):
         """
@@ -200,21 +204,22 @@ class CartesianCoordinateSystem3d:
         return CartesianCoordinateSystem3d(basis, origin)
 
     @classmethod
-    def construct_from_basis(cls, basis, origin=np.array([0, 0, 0])):
+    def construct_from_orientation(cls, orientation,
+                                   origin=np.array([0, 0, 0])):
         """
-        Construct a cartesian coordinate system.
+        Construct a cartesian coordinate system from orientation matrix.
 
-        :param basis: List of basis vectors
+        :param orientation: Orthogonal transformation matrix
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        return cls(basis, origin=origin)
+        return cls(orientation, origin=origin)
 
     @classmethod
     def construct_from_xyz(cls, vec_x, vec_y, vec_z,
                            origin=np.array([0, 0, 0])):
         """
-        Construct a cartesian coordinate system.
+        Construct a cartesian coordinate system from 3 basis vectors.
 
         :param vec_x: Vector defining the x-axis
         :param vec_y: Vector defining the y-axis
@@ -230,7 +235,7 @@ class CartesianCoordinateSystem3d:
                                           positive_orientation=True,
                                           origin=np.array([0, 0, 0])):
         """
-        Construct a cartesian coordinate system.
+        Construct a coordinate system from 2 vectors and an orientation.
 
         :param vec_x: Vector defining the x-axis
         :param vec_y: Vector defining the y-axis
@@ -251,7 +256,7 @@ class CartesianCoordinateSystem3d:
                                           positive_orientation=True,
                                           origin=np.array([0, 0, 0])):
         """
-        Construct a cartesian coordinate system.
+        Construct a coordinate system from 2 vectors and an orientation.
 
         :param vec_y: Vector defining the y-axis
         :param vec_z: Vector defining the z-axis
@@ -272,7 +277,7 @@ class CartesianCoordinateSystem3d:
                                           positive_orientation=True,
                                           origin=np.array([0, 0, 0])):
         """
-        Construct a cartesian coordinate system.
+        Construct a coordinate system from 2 vectors and an orientation.
 
         :param vec_x: Vector defining the x-axis
         :param vec_z: Vector defining the z-axis
@@ -319,20 +324,46 @@ class CartesianCoordinateSystem3d:
     @property
     def basis(self):
         """
-        Get the coordinate systems basis.
+        Get the normalizes basis as matrix of 3 column vectors.
+
+        This function is identical to the 'orientation' function.
 
         :return: Basis of the coordinate system
         """
-        return self._basis
+        return self._orientation
+
+    @property
+    def orientation(self):
+        """
+        Get the coordinate systems orientation matrix.
+
+        This function is identical to the 'basis' function.
+
+        :return: Orientation matrix
+        """
+        return self._orientation
 
     @property
     def origin(self):
         """
         Get the coordinate systems origin.
 
+        This function is identical to the 'location' function.
+
         :return: Origin of the coordinate system
         """
-        return self._origin
+        return self._location
+
+    @property
+    def location(self):
+        """
+        Get the coordinate systems location.
+
+        This function is identical to the 'origin' function.
+
+        :return: Location of the coordinate system.
+        """
+        return self._location
 
 # def vector_to_vector_transformation(u, v):
 #    r = np.cross(u, v)

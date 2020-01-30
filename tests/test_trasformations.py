@@ -288,8 +288,8 @@ def test_cartesian_coordinate_system_construction():
 
     # construction with basis -----------------------------
 
-    ccs_basis_pos = cls_ccs.construct_from_basis(basis_pos, origin)
-    ccs_basis_neg = cls_ccs.construct_from_basis(basis_neg, origin)
+    ccs_basis_pos = cls_ccs.construct_from_orientation(basis_pos, origin)
+    ccs_basis_neg = cls_ccs.construct_from_orientation(basis_neg, origin)
 
     check_coordinate_system(ccs_basis_pos, basis_pos, origin, True)
     check_coordinate_system(ccs_basis_neg, basis_neg, origin, False)
