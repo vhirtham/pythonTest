@@ -570,7 +570,7 @@ test_arc_segment_interpolation()
 # test Shape2d ----------------------------------------------------------------
 
 def test_shape2d_construction():
-    line_segment = geo.LineSegment.construct_from_points([0, 0], [1, 1])
+    line_segment = geo.LineSegment.construct_from_points([1, 1], [1, 2])
     arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [0, 1])
 
     # Empty construction
@@ -587,21 +587,43 @@ def test_shape2d_construction():
     assert isinstance(shape.segments[0], geo.ArcSegment)
     assert isinstance(shape.segments[1], geo.LineSegment)
 
+    # exceptions ------------------------------------------
+
+    # segments not connected
+    with pytest.raises(Exception):
+        shape = geo.Shape2D([line_segment, arc_segment])
+
 
 def test_shape2d_segment_addition():
     # Create shape and add segments
-    line_segment = geo.LineSegment.construct_from_points([0, 0], [1, 1])
+    line_segment = geo.LineSegment.construct_from_points([1, 1], [0, 0])
     arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [0, 1])
+    arc_segment2 = geo.ArcSegment.construct_from_points([1, 1], [0, 0], [0, 1])
 
     shape = geo.Shape2D()
     shape.add_segments(line_segment)
     assert shape.num_segments == 1
 
-    shape.add_segments([arc_segment, arc_segment])
+    shape.add_segments([arc_segment, arc_segment2])
     assert shape.num_segments == 3
     assert isinstance(shape.segments[0], geo.LineSegment)
     assert isinstance(shape.segments[1], geo.ArcSegment)
     assert isinstance(shape.segments[2], geo.ArcSegment)
+
+    # exceptions ------------------------------------------
+
+    # new segment are not connected to already included segments
+    with pytest.raises(Exception):
+        shape.add_segments(arc_segment2)
+    assert shape.num_segments == 3  # ensure shape is unmodified
+
+    with pytest.raises(Exception):
+        shape.add_segments([arc_segment2, arc_segment])
+    assert shape.num_segments == 3  # ensure shape is unmodified
+
+    with pytest.raises(Exception):
+        shape.add_segments([arc_segment, arc_segment])
+    assert shape.num_segments == 3  # ensure shape is unmodified
 
 
 def test_shape2d_rasterization():
@@ -804,7 +826,7 @@ def test_shape2d_linear_interpolation():
     shape_a = geo.Shape2D([segment_a0, segment_a1])
 
     segment_b0 = geo.LineSegment.construct_from_points([1, 1], [2, -1])
-    segment_b1 = geo.LineSegment.construct_from_points([4, -1], [3, 5])
+    segment_b1 = geo.LineSegment.construct_from_points([2, -1], [3, 5])
     shape_b = geo.Shape2D([segment_b0, segment_b1])
 
     for i in range(5):
@@ -817,7 +839,7 @@ def test_shape2d_linear_interpolation():
                                        [1 + weight, 1 - 2 * weight])
 
         helper.check_vectors_identical(shape_c.segments[1].point_start,
-                                       [1 + 3 * weight, 1 - 2 * weight])
+                                       [1 + weight, 1 - 2 * weight])
         helper.check_vectors_identical(shape_c.segments[1].point_end,
                                        [2 + weight, 5 * weight])
 
@@ -847,6 +869,6 @@ def test_shape2d_linear_interpolation():
 
     # exceptions ------------------------------------------
 
-    shape_a.add_segments([segment_a1])
+    shape_a.add_segments(geo.LineSegment.construct_from_points([2, 0], [2, 2]))
     with pytest.raises(Exception):
         geo.Shape2D.linear_interpolation(shape_a, shape_b, 0.25)

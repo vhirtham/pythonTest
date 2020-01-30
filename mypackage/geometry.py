@@ -489,7 +489,25 @@ class Shape2D:
 
         :param segments: Single segment or list of segments
         """
-        self._segments = utils.to_list(segments)
+        segments = utils.to_list(segments)
+        self._check_segments_connected(segments)
+        self._segments = segments
+
+    @staticmethod
+    def _check_segments_connected(segments):
+        """
+        Check if all segments are connected to each other.
+
+        The start point of a segment must be identical to the end point of
+        the previous segment.
+
+        :param segments: List of segments
+        :return: ---
+        """
+        for i in range(len(segments) - 1):
+            if not utils.vector_is_close(segments[i].point_end,
+                                         segments[i + 1].point_start):
+                raise Exception("Segments are not connected.")
 
     @classmethod
     def interpolate(cls, shape_a, shape_b, weight, interpolation_schemes):
@@ -561,7 +579,11 @@ class Shape2D:
         :param segments: Single segment or list of segments
         :return: ---
         """
-        self._segments += utils.to_list(segments)
+        segments = utils.to_list(segments)
+        if self.num_segments > 0:
+            self._check_segments_connected([self.segments[-1], segments[0]])
+        self._check_segments_connected(segments)
+        self._segments += segments
 
     def apply_transformation(self, transformation_matrix):
         """
