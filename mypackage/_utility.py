@@ -30,6 +30,16 @@ def is_row_in_matrix(row, matrix):
     return (matrix == row).all(axis=1).any()
 
 
+def to_float_array(container):
+    """
+    Cast the passed container to a numpy array of floats.
+
+    :param container: Container which can be cast to a numpy array
+    :return:
+    """
+    return np.array(container, dtype=float)
+
+
 def to_list(var):
     """
     Store the passed variable into a list and return it.

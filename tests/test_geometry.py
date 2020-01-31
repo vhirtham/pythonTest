@@ -262,6 +262,18 @@ def test_line_segment_interpolation():
 
 # test ArcSegment ------------------------------------------------------------
 
+def check_arc_segment_values(segment, point_start, point_end, point_center,
+                             winding_ccw, radius, arc_angle, arc_length):
+    helper.check_vectors_identical(segment.point_start, point_start)
+    helper.check_vectors_identical(segment.point_end, point_end)
+    helper.check_vectors_identical(segment.point_center, point_center)
+
+    assert segment.is_arc_winding_ccw() is winding_ccw
+    assert math.isclose(segment.radius, radius)
+    assert math.isclose(segment.arc_angle, arc_angle)
+    assert math.isclose(segment.arc_length, arc_length)
+
+
 def arc_segment_test(point_center, point_start, point_end, raster_width,
                      arc_winding_ccw, check_winding):
     point_center = np.array(point_center)
@@ -339,24 +351,75 @@ def test_arc_segment_construction():
     with pytest.raises(ValueError):
         geo.ArcSegment([[[3, 5], [3, 4]]])
 
-    # factories -------------------------------------------
 
-    segment_cw = geo.ArcSegment.construct_from_points([3, 3], [6, 6], [6, 3],
+def test_arc_segment_factories():
+    # construction with center point ----------------------
+    point_start = [3, 3]
+    point_end = [6, 6]
+    point_center_left = [3, 6]
+    point_center_right = [6, 3]
+
+    # expected results
+    radius = 3
+    angle_small = np.pi * 0.5
+    angle_large = np.pi * 1.5
+    arc_length_small = np.pi * 1.5
+    arc_length_large = np.pi * 4.5
+
+    segment_cw = geo.ArcSegment.construct_from_points(point_start, point_end,
+                                                      point_center_right,
                                                       False)
-    segment_ccw = geo.ArcSegment.construct_from_points([3, 3], [6, 6], [6, 3],
+    segment_ccw = geo.ArcSegment.construct_from_points(point_start, point_end,
+                                                       point_center_right,
                                                        True)
 
-    assert not segment_cw.is_arc_winding_ccw()
-    assert segment_ccw.is_arc_winding_ccw()
+    check_arc_segment_values(segment_cw, point_start, point_end,
+                             point_center_right, False, radius, angle_small,
+                             arc_length_small)
+    check_arc_segment_values(segment_ccw, point_start, point_end,
+                             point_center_right, True, radius, angle_large,
+                             arc_length_large)
 
-    assert math.isclose(segment_cw.radius, 3)
-    assert math.isclose(segment_ccw.radius, 3)
+    # construction with radius ----------------------
 
-    assert math.isclose(segment_cw.arc_angle, 1 / 2 * np.pi)
-    assert math.isclose(segment_ccw.arc_angle, 3 / 2 * np.pi)
+    # center left of line
+    segment_cw = geo.ArcSegment.construct_with_radius(point_start, point_end,
+                                                      radius, True, False)
+    segment_ccw = geo.ArcSegment.construct_with_radius(point_start, point_end,
+                                                       radius, True, True)
 
-    assert math.isclose(segment_cw.arc_length, 3 / 2 * np.pi)
-    assert math.isclose(segment_ccw.arc_length, 9 / 2 * np.pi)
+    check_arc_segment_values(segment_cw, point_start, point_end,
+                             point_center_left, False, radius, angle_large,
+                             arc_length_large)
+    check_arc_segment_values(segment_ccw, point_start, point_end,
+                             point_center_left, True, radius, angle_small,
+                             arc_length_small)
+
+    # center right of line
+    segment_cw = geo.ArcSegment.construct_with_radius(point_start, point_end,
+                                                      radius, False, False)
+    segment_ccw = geo.ArcSegment.construct_with_radius(point_start, point_end,
+                                                       radius, False, True)
+
+    check_arc_segment_values(segment_cw, point_start, point_end,
+                             point_center_right, False, radius, angle_small,
+                             arc_length_small)
+    check_arc_segment_values(segment_ccw, point_start, point_end,
+                             point_center_right, True, radius, angle_large,
+                             arc_length_large)
+
+    # check that too small radii will be clipped to minimal radius
+    segment_cw = geo.ArcSegment.construct_with_radius(point_start, point_end,
+                                                      0.1, False, False)
+    segment_ccw = geo.ArcSegment.construct_with_radius(point_start, point_end,
+                                                       0.1, False, True)
+
+    check_arc_segment_values(segment_cw, point_start, point_end, [4.5, 4.5],
+                             False, np.sqrt(18) / 2, np.pi,
+                             np.pi * np.sqrt(18) / 2)
+    check_arc_segment_values(segment_ccw, point_start, point_end, [4.5, 4.5],
+                             True, np.sqrt(18) / 2, np.pi,
+                             np.pi * np.sqrt(18) / 2)
 
 
 def test_arc_segment_rasterization():
@@ -410,19 +473,6 @@ def test_arc_segment_rasterization():
                      not_below_center)
     arc_segment_test(point_center, point_start, point_end, raster_width, True,
                      not_above_center)
-
-
-def check_arc_segment_values(segment, point_start, point_end, point_center,
-                             winding_ccw, radius, arc_angle, arc_length):
-    helper.check_vectors_identical(segment.point_start, np.array(point_start))
-    helper.check_vectors_identical(segment.point_end, np.array(point_end))
-    helper.check_vectors_identical(segment.point_center,
-                                   np.array(point_center))
-
-    assert segment.is_arc_winding_ccw() is winding_ccw
-    assert math.isclose(segment.radius, radius)
-    assert math.isclose(segment.arc_angle, arc_angle)
-    assert math.isclose(segment.arc_length, arc_length)
 
 
 def test_arc_segment_transformations():
@@ -564,9 +614,6 @@ def test_arc_segment_interpolation():
     # not implemented yet
     with pytest.raises(Exception):
         geo.ArcSegment.linear_interpolation(segment_a, segment_b, 1)
-
-
-test_arc_segment_interpolation()
 
 
 # test Shape ------------------------------------------------------------------

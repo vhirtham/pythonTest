@@ -2,7 +2,7 @@
 
 import numpy as np
 import math
-import mypackage._utility as utils
+import mypackage._utility as ut
 import mypackage.transformations as tf
 from scipy.spatial.transform import Rotation as Rot
 
@@ -304,7 +304,7 @@ class ArcSegment:
     def construct_from_points(cls, point_start, point_end, point_center,
                               arc_winding_ccw=True):
         """
-        Construct an arc segment from three points.
+        Construct an arc segment from three points (start, end, center).
 
         :param point_start: Starting point of the segment
         :param point_end: End point of the segment
@@ -316,6 +316,42 @@ class ArcSegment:
         points = np.transpose(
             np.array([point_start, point_end, point_center], dtype=float))
         return cls(points, arc_winding_ccw)
+
+    @classmethod
+    def construct_with_radius(cls, point_start, point_end, radius,
+                              center_left_of_line=True, arc_winding_ccw=True):
+        """
+        Construct an arc segment with a radius and the start and end points.
+
+        :param point_start: Starting point of the segment
+        :param point_end: End point of the segment
+        :param radius: Radius
+        :param center_left_of_line: Specifies if the center point is located
+        to the left of the vectpr point_start -> point_end
+        :param arc_winding_ccw: Specifies if the arcs winding order is
+        counter-clockwise
+        :return: Arc segment
+        """
+        point_start = ut.to_float_array(point_start)
+        point_end = ut.to_float_array(point_end)
+
+        vec_start_end = point_end - point_start
+        if center_left_of_line:
+            vec_normal = np.array([-vec_start_end[1], vec_start_end[0]])
+        else:
+            vec_normal = np.array([vec_start_end[1], -vec_start_end[0]])
+
+        squared_length = np.dot(vec_start_end, vec_start_end)
+        squared_radius = radius * radius
+
+        normal_scaling = np.sqrt(
+            np.clip(squared_radius / squared_length - 0.25, 0, None))
+
+        vec_start_center = 0.5 * vec_start_end + vec_normal * normal_scaling
+        point_center = point_start + vec_start_center
+
+        return cls.construct_from_points(point_start, point_end, point_center,
+                                         arc_winding_ccw)
 
     @classmethod
     def linear_interpolation(cls, segment_a, segment_b, weight):
@@ -467,7 +503,7 @@ class Shape:
 
         :param segments: Single segment or list of segments
         """
-        segments = utils.to_list(segments)
+        segments = ut.to_list(segments)
         self._check_segments_connected(segments)
         self._segments = segments
 
@@ -483,8 +519,8 @@ class Shape:
         :return: ---
         """
         for i in range(len(segments) - 1):
-            if not utils.vector_is_close(segments[i].point_end,
-                                         segments[i + 1].point_start):
+            if not ut.vector_is_close(segments[i].point_end,
+                                      segments[i + 1].point_start):
                 raise Exception("Segments are not connected.")
 
     @classmethod
@@ -557,7 +593,7 @@ class Shape:
         :param segments: Single segment or list of segments
         :return: ---
         """
-        segments = utils.to_list(segments)
+        segments = ut.to_list(segments)
         if self.num_segments > 0:
             self._check_segments_connected([self.segments[-1], segments[0]])
         self._check_segments_connected(segments)
