@@ -327,7 +327,7 @@ class ArcSegment:
         :param point_end: End point of the segment
         :param radius: Radius
         :param center_left_of_line: Specifies if the center point is located
-        to the left of the vectpr point_start -> point_end
+        to the left of the vector point_start -> point_end
         :param arc_winding_ccw: Specifies if the arcs winding order is
         counter-clockwise
         :return: Arc segment
@@ -358,18 +358,29 @@ class ArcSegment:
         """
         Interpolate two arc segments linearly.
 
+        This function is not implemented, since linear interpolation of an
+        arc segment is not unique. The 'Shape' class requires succeeding
+        segments to be connected through a common point. Therefore two
+        connected segments must interpolate the connecting point in the same
+        way. Connecting an arc segment to two line segments would enforce a
+        linear interpolation of the start and end points. If the centre
+        point is also interpolated in a linear way, might (or might not)
+        result in different distances of start and end point to the center,
+        which invalidates the arc segment. Alternatively, one can
+        interpolate the radius linearly which guarantees a valid arc
+        segment, but this can cause the center point to vary even though it
+        is the same in both interpolated segments. To ensure the desired
+        interpolation behavior, you have to provide a custom interpolation.
+
         :param segment_a: First segment
         :param segment_b: Second segment
         :param weight: Weighting factor in the range [0 .. 1] where 0 is
         segment a and 1 is segment b
         :return: Interpolated segment
         """
-        # implementation ->segment start and end have to be interpolated
-        # linearly. Otherwise there might occur gaps in interpolated shapes
-        # at the connecting segment points --- the center point has to be
-        # determined automatically. 2 ways -> linear angle interpolation or
-        # linear radius interpolation
-        raise Exception("Not implemented.")
+        raise Exception(
+            "Linear interpolation of an arc segment is not unique (see "
+            "doctstring). You need to provide a custom interpolation.")
 
     @property
     def arc_angle(self):
@@ -388,6 +399,15 @@ class ArcSegment:
         :return: Arc length
         """
         return self._arc_length
+
+    @property
+    def arc_winding_ccw(self):
+        """
+        Get True if the winding order is counter-clockwise. False if clockwise.
+
+        :return: True or False
+        """
+        return self._sign_arc_winding > 0
 
     @property
     def point_center(self):
@@ -417,6 +437,18 @@ class ArcSegment:
         return self._points[:, 0]
 
     @property
+    def points(self):
+        """
+        Get the segments points in form of a 2x3 matrix.
+
+        The first column represents the starting point, the second one the
+        end and the third one the center.
+
+        :return: 2x3 matrix containing the segments points
+        """
+        return self._points
+
+    @property
     def radius(self):
         """
         Get the radius.
@@ -435,14 +467,6 @@ class ArcSegment:
         self._points = np.matmul(matrix, self._points)
         self._sign_arc_winding *= reflection_sign(matrix)
         self._calculate_arc_parameters()
-
-    def is_arc_winding_ccw(self):
-        """
-        Get True if the winding order is counter-clockwise. False if clockwise.
-
-        :return: True or False
-        """
-        return self._sign_arc_winding > 0
 
     def rasterize(self, raster_width, num_points_excluded_end=0):
         """

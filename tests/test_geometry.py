@@ -1,11 +1,22 @@
 import mypackage._utility as utils
 import mypackage.geometry as geo
-import tests._helpers as helper
+import tests._helpers as helpers
 
 import pytest
 import numpy as np
 import math
 import copy
+
+
+# helpers ---------------------------------------------------------------------
+
+def check_segments_identical(a, b):
+    assert isinstance(a, type(b))
+    helpers.check_vectors_identical(a.point_start, b.point_start)
+    helpers.check_vectors_identical(a.point_end, b.point_end)
+    if isinstance(a, geo.ArcSegment):
+        assert a.arc_winding_ccw == b.arc_winding_ccw
+        helpers.check_vectors_identical(a.point_center, b.point_center)
 
 
 def test_vector_points_to_left_of_vector():
@@ -83,8 +94,8 @@ def default_segment_rasterization_tests(segment, raster_width, point_start,
 
     # Check if first and last point of the data are identical to the segment
     # start and end
-    helper.check_vectors_identical(data[:, 0], point_start)
-    helper.check_vectors_identical(data[:, -1], point_end)
+    helpers.check_vectors_identical(data[:, 0], point_start)
+    helpers.check_vectors_identical(data[:, -1], point_end)
 
     for i in range(num_points - 1):
         point = data[:, i]
@@ -101,15 +112,15 @@ def default_segment_rasterization_tests(segment, raster_width, point_start,
     assert num_points - 2 == num_points_m2
 
     for i in range(num_points_m2):
-        helper.check_vectors_identical(data[:, i], data_m2[:, i])
+        helpers.check_vectors_identical(data[:, i], data_m2[:, i])
 
     # check that rasterization with to large raster width still works
     data_200 = segment.rasterize(200)
 
     num_points_200 = data_200.shape[1]
     assert num_points_200 == 2
-    helper.check_vectors_identical(point_start, data_200[:, 0])
-    helper.check_vectors_identical(point_end, data_200[:, 1])
+    helpers.check_vectors_identical(point_start, data_200[:, 0])
+    helpers.check_vectors_identical(point_end, data_200[:, 1])
 
     # check exceptions
     with pytest.raises(ValueError):
@@ -173,8 +184,8 @@ def test_line_segment_transformations():
     segment = geo.LineSegment.construct_from_points([3, 3], [4, 5])
     segment.translate([-1, 4])
 
-    helper.check_vectors_identical(segment.point_start, np.array([2, 7]))
-    helper.check_vectors_identical(segment.point_end, np.array([3, 9]))
+    helpers.check_vectors_identical(segment.point_start, np.array([2, 7]))
+    helpers.check_vectors_identical(segment.point_end, np.array([3, 9]))
     assert math.isclose(segment.length, np.sqrt(5))
 
     # 45 degree rotation ----------------------------------
@@ -188,8 +199,8 @@ def test_line_segment_transformations():
     exp_start = [0, np.sqrt(8)]
     exp_end = np.matmul(rotation_matrix, [3, 6])
 
-    helper.check_vectors_identical(segment.point_start, exp_start)
-    helper.check_vectors_identical(segment.point_end, exp_end)
+    helpers.check_vectors_identical(segment.point_start, exp_start)
+    helpers.check_vectors_identical(segment.point_end, exp_end)
     assert math.isclose(segment.length, np.sqrt(17))
 
     # reflection at 45 degree line ------------------------
@@ -199,8 +210,8 @@ def test_line_segment_transformations():
     segment = geo.LineSegment.construct_from_points([-1, 3], [6, 1])
     segment.apply_transformation(reflection_matrix)
 
-    helper.check_vectors_identical(segment.point_start, [3, -1])
-    helper.check_vectors_identical(segment.point_end, [1, 6])
+    helpers.check_vectors_identical(segment.point_start, [3, -1])
+    helpers.check_vectors_identical(segment.point_end, [1, 6])
     assert math.isclose(segment.length, np.sqrt(53))
 
     # scaling ---------------------------------------------
@@ -209,8 +220,8 @@ def test_line_segment_transformations():
     segment = geo.LineSegment.construct_from_points([-2, 2], [1, 4])
     segment.apply_transformation(scale_matrix)
 
-    helper.check_vectors_identical(segment.point_start, [-8, 1])
-    helper.check_vectors_identical(segment.point_end, [4, 2])
+    helpers.check_vectors_identical(segment.point_start, [-8, 1])
+    helpers.check_vectors_identical(segment.point_end, [4, 2])
     # length changes due to scaling!
     assert math.isclose(segment.length, np.sqrt(145))
 
@@ -239,14 +250,14 @@ def test_line_segment_interpolation():
     # check weight clipped to valid range -----------------
 
     segment_c = geo.LineSegment.linear_interpolation(segment_a, segment_b, -3)
-    helper.check_vectors_identical(segment_c.point_start,
-                                   segment_a.point_start)
-    helper.check_vectors_identical(segment_c.point_end, segment_a.point_end)
+    helpers.check_vectors_identical(segment_c.point_start,
+                                    segment_a.point_start)
+    helpers.check_vectors_identical(segment_c.point_end, segment_a.point_end)
 
     segment_c = geo.LineSegment.linear_interpolation(segment_a, segment_b, 6)
-    helper.check_vectors_identical(segment_c.point_start,
-                                   segment_b.point_start)
-    helper.check_vectors_identical(segment_c.point_end, segment_b.point_end)
+    helpers.check_vectors_identical(segment_c.point_start,
+                                    segment_b.point_start)
+    helpers.check_vectors_identical(segment_c.point_end, segment_b.point_end)
 
     # exceptions ------------------------------------------
 
@@ -264,11 +275,11 @@ def test_line_segment_interpolation():
 
 def check_arc_segment_values(segment, point_start, point_end, point_center,
                              winding_ccw, radius, arc_angle, arc_length):
-    helper.check_vectors_identical(segment.point_start, point_start)
-    helper.check_vectors_identical(segment.point_end, point_end)
-    helper.check_vectors_identical(segment.point_center, point_center)
+    helpers.check_vectors_identical(segment.point_start, point_start)
+    helpers.check_vectors_identical(segment.point_end, point_end)
+    helpers.check_vectors_identical(segment.point_center, point_center)
 
-    assert segment.is_arc_winding_ccw() is winding_ccw
+    assert segment.arc_winding_ccw is winding_ccw
     assert math.isclose(segment.radius, radius)
     assert math.isclose(segment.arc_angle, arc_angle)
     assert math.isclose(segment.arc_length, arc_length)
@@ -310,8 +321,8 @@ def test_arc_segment_construction():
     segment_cw = geo.ArcSegment(points, False)
     segment_ccw = geo.ArcSegment(points, True)
 
-    assert not segment_cw.is_arc_winding_ccw()
-    assert segment_ccw.is_arc_winding_ccw()
+    assert not segment_cw.arc_winding_ccw
+    assert segment_ccw.arc_winding_ccw
 
     assert math.isclose(segment_cw.radius, 3)
     assert math.isclose(segment_ccw.radius, 3)
@@ -609,7 +620,7 @@ def test_arc_segment_transformations():
 
 def test_arc_segment_interpolation():
     segment_a = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [1, 0])
-    segment_b = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [1, 0])
+    segment_b = geo.ArcSegment.construct_from_points([0, 0], [2, 2], [0, 2])
 
     # not implemented yet
     with pytest.raises(Exception):
@@ -711,7 +722,7 @@ def default_test_shape():
 
 def test_shape_translation():
     def check_point(point, point_ref, translation):
-        helper.check_vectors_identical(point - translation, point_ref)
+        helpers.check_vectors_identical(point - translation, point_ref)
 
     translation = [3, 4]
 
@@ -724,8 +735,7 @@ def test_shape_translation():
     arc_segment = shape._segments[0]
     arc_segment_ref = shape_ref._segments[0]
 
-    assert (arc_segment.is_arc_winding_ccw() ==
-            arc_segment_ref.is_arc_winding_ccw())
+    assert (arc_segment.arc_winding_ccw == arc_segment_ref.arc_winding_ccw)
 
     check_point(arc_segment.point_start, arc_segment_ref.point_start,
                 translation)
@@ -760,8 +770,7 @@ def test_shape_transformation():
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_ref.segments[0]
 
-    assert (arc_segment.is_arc_winding_ccw() ==
-            arc_segment_ref.is_arc_winding_ccw())
+    assert (arc_segment.arc_winding_ccw == arc_segment_ref.arc_winding_ccw)
 
     check_point_rotation(arc_segment.point_start, arc_segment_ref.point_start)
     check_point_rotation(arc_segment.point_end, arc_segment_ref.point_end)
@@ -790,8 +799,7 @@ def test_shape_transformation():
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_ref.segments[0]
 
-    assert (arc_segment.is_arc_winding_ccw() !=
-            arc_segment_ref.is_arc_winding_ccw())
+    assert (arc_segment.arc_winding_ccw != arc_segment_ref.arc_winding_ccw)
 
     check_point_reflection(arc_segment.point_start,
                            arc_segment_ref.point_start)
@@ -869,6 +877,40 @@ def test_shape_reflect():
     shape_reflect_testcase([7, -2], 4.12)
 
 
+def interpolation_nearest(segment_a, segment_b, weight):
+    if weight > 0.5:
+        return segment_b
+    else:
+        return segment_a
+
+
+def test_shape_interpolation_general():
+    segment_a0 = geo.LineSegment.construct_from_points([-1, -1], [1, 1])
+    segment_a1 = geo.LineSegment.construct_from_points([1, 1], [3, -1])
+    shape_a = geo.Shape([segment_a0, segment_a1])
+
+    segment_b0 = geo.LineSegment.construct_from_points([-1, 4], [1, 1])
+    segment_b1 = geo.LineSegment.construct_from_points([1, 1], [3, 4])
+    shape_b = geo.Shape([segment_b0, segment_b1])
+
+    interpolations = [geo.LineSegment.linear_interpolation,
+                      interpolation_nearest]
+    for i in range(6):
+        weight = i / 5.
+        shape_c = geo.Shape.interpolate(shape_a, shape_b, weight,
+                                        interpolations)
+        assert shape_c.num_segments == 2
+
+        exp_segment_c0 = geo.LineSegment.construct_from_points(
+            [-1, -1 + 5 * weight], [1, 1])
+        check_segments_identical(shape_c.segments[0], exp_segment_c0)
+        
+        if weight > 0.5:
+            check_segments_identical(shape_c.segments[1], segment_b1)
+        else:
+            check_segments_identical(shape_c.segments[1], segment_a1)
+
+
 def test_shape_linear_interpolation():
     segment_a0 = geo.LineSegment.construct_from_points([0, 0], [1, 1])
     segment_a1 = geo.LineSegment.construct_from_points([1, 1], [2, 0])
@@ -882,39 +924,39 @@ def test_shape_linear_interpolation():
         weight = i / 4.
         shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, weight)
 
-        helper.check_vectors_identical(shape_c.segments[0].point_start,
-                                       [weight, weight])
-        helper.check_vectors_identical(shape_c.segments[0].point_end,
-                                       [1 + weight, 1 - 2 * weight])
+        helpers.check_vectors_identical(shape_c.segments[0].point_start,
+                                        [weight, weight])
+        helpers.check_vectors_identical(shape_c.segments[0].point_end,
+                                        [1 + weight, 1 - 2 * weight])
 
-        helper.check_vectors_identical(shape_c.segments[1].point_start,
-                                       [1 + weight, 1 - 2 * weight])
-        helper.check_vectors_identical(shape_c.segments[1].point_end,
-                                       [2 + weight, 5 * weight])
+        helpers.check_vectors_identical(shape_c.segments[1].point_start,
+                                        [1 + weight, 1 - 2 * weight])
+        helpers.check_vectors_identical(shape_c.segments[1].point_end,
+                                        [2 + weight, 5 * weight])
 
     # check weight clipped to valid range -----------------
 
     shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, -3)
 
-    helper.check_vectors_identical(shape_c.segments[0].point_start,
-                                   shape_a.segments[0].point_start)
-    helper.check_vectors_identical(shape_c.segments[0].point_end,
-                                   shape_a.segments[0].point_end)
-    helper.check_vectors_identical(shape_c.segments[1].point_start,
-                                   shape_a.segments[1].point_start)
-    helper.check_vectors_identical(shape_c.segments[1].point_end,
-                                   shape_a.segments[1].point_end)
+    helpers.check_vectors_identical(shape_c.segments[0].point_start,
+                                    shape_a.segments[0].point_start)
+    helpers.check_vectors_identical(shape_c.segments[0].point_end,
+                                    shape_a.segments[0].point_end)
+    helpers.check_vectors_identical(shape_c.segments[1].point_start,
+                                    shape_a.segments[1].point_start)
+    helpers.check_vectors_identical(shape_c.segments[1].point_end,
+                                    shape_a.segments[1].point_end)
 
     shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, 100)
 
-    helper.check_vectors_identical(shape_c.segments[0].point_start,
-                                   shape_b.segments[0].point_start)
-    helper.check_vectors_identical(shape_c.segments[0].point_end,
-                                   shape_b.segments[0].point_end)
-    helper.check_vectors_identical(shape_c.segments[1].point_start,
-                                   shape_b.segments[1].point_start)
-    helper.check_vectors_identical(shape_c.segments[1].point_end,
-                                   shape_b.segments[1].point_end)
+    helpers.check_vectors_identical(shape_c.segments[0].point_start,
+                                    shape_b.segments[0].point_start)
+    helpers.check_vectors_identical(shape_c.segments[0].point_end,
+                                    shape_b.segments[0].point_end)
+    helpers.check_vectors_identical(shape_c.segments[1].point_start,
+                                    shape_b.segments[1].point_start)
+    helpers.check_vectors_identical(shape_c.segments[1].point_end,
+                                    shape_b.segments[1].point_end)
 
     # exceptions ------------------------------------------
 

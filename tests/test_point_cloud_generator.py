@@ -16,17 +16,19 @@ def check_profiles_identical(a, b):
         check_shapes_identical(a.shapes[i], b.shapes[i])
 
 
+def check_segments_identical(a, b):
+    assert isinstance(a, type(b))
+    helpers.check_vectors_identical(a.point_start, b.point_start)
+    helpers.check_vectors_identical(a.point_end, b.point_end)
+    if isinstance(a, geo.ArcSegment):
+        assert a.arc_winding_ccw == b.arc_winding_ccw
+        helpers.check_vectors_identical(a.point_center, b.point_center)
+
+
 def check_shapes_identical(a, b):
     assert a.num_segments == b.num_segments
     for i in range(a.num_segments):
-        assert isinstance(a.segments[i], type(b.segments[i]))
-        helpers.check_vectors_identical(a.segments[i].point_start,
-                                        b.segments[i].point_start)
-        helpers.check_vectors_identical(a.segments[i].point_end,
-                                        b.segments[i].point_end)
-        if isinstance(a.segments[i], geo.ArcSegment):
-            helpers.check_vectors_identical(a.segments[i].point_center,
-                                            b.segments[i].point_center)
+        check_segments_identical(a.segments[i], b.segments[i])
 
 
 def check_trace_segments_identical(a, b):
