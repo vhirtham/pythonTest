@@ -880,8 +880,7 @@ def test_shape_reflect():
 def interpolation_nearest(segment_a, segment_b, weight):
     if weight > 0.5:
         return segment_b
-    else:
-        return segment_a
+    return segment_a
 
 
 def test_shape_interpolation_general():
