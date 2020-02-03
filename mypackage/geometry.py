@@ -92,9 +92,9 @@ class LineSegment:
             raise ValueError("Segment length is 0.")
 
     @classmethod
-    def construct_from_points(cls, point_start, point_end):
+    def construct_with_points(cls, point_start, point_end):
         """
-        Construct a line segment from two points.
+        Construct a line segment with two points.
 
         :param point_start: Starting point of the segment
         :param point_end: End point of the segment
@@ -301,10 +301,10 @@ class ArcSegment:
             raise Exception("Arc length is 0.")
 
     @classmethod
-    def construct_from_points(cls, point_start, point_end, point_center,
+    def construct_with_points(cls, point_start, point_end, point_center,
                               arc_winding_ccw=True):
         """
-        Construct an arc segment from three points (start, end, center).
+        Construct an arc segment with three points (start, end, center).
 
         :param point_start: Starting point of the segment
         :param point_end: End point of the segment
@@ -350,7 +350,7 @@ class ArcSegment:
         vec_start_center = 0.5 * vec_start_end + vec_normal * normal_scaling
         point_center = point_start + vec_start_center
 
-        return cls.construct_from_points(point_start, point_end, point_center,
+        return cls.construct_with_points(point_start, point_end, point_center,
                                          arc_winding_ccw)
 
     @classmethod

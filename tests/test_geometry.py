@@ -146,7 +146,7 @@ def test_line_segment_construction():
         geo.LineSegment([[[3, 5], [3, 4]]])
 
     # factories -------------------------------------------
-    segment = geo.LineSegment.construct_from_points([3, 3], [4, 5])
+    segment = geo.LineSegment.construct_with_points([3, 3], [4, 5])
     assert math.isclose(segment.length, np.sqrt(5))
 
 
@@ -181,7 +181,7 @@ def test_line_segment_rasterization():
 
 def test_line_segment_transformations():
     # translation -----------------------------------------
-    segment = geo.LineSegment.construct_from_points([3, 3], [4, 5])
+    segment = geo.LineSegment.construct_with_points([3, 3], [4, 5])
     segment.translate([-1, 4])
 
     helpers.check_vectors_identical(segment.point_start, np.array([2, 7]))
@@ -193,7 +193,7 @@ def test_line_segment_transformations():
     c = np.cos(np.pi / 4.)
     rotation_matrix = [[c, -s], [s, c]]
 
-    segment = geo.LineSegment.construct_from_points([2, 2], [3, 6])
+    segment = geo.LineSegment.construct_with_points([2, 2], [3, 6])
     segment.apply_transformation(rotation_matrix)
 
     exp_start = [0, np.sqrt(8)]
@@ -207,7 +207,7 @@ def test_line_segment_transformations():
     v = np.array([-1, 1], dtype=float)
     reflection_matrix = np.identity(2) - 2 / np.dot(v, v) * np.outer(v, v)
 
-    segment = geo.LineSegment.construct_from_points([-1, 3], [6, 1])
+    segment = geo.LineSegment.construct_with_points([-1, 3], [6, 1])
     segment.apply_transformation(reflection_matrix)
 
     helpers.check_vectors_identical(segment.point_start, [3, -1])
@@ -217,7 +217,7 @@ def test_line_segment_transformations():
     # scaling ---------------------------------------------
     scale_matrix = [[4, 0], [0, 0.5]]
 
-    segment = geo.LineSegment.construct_from_points([-2, 2], [1, 4])
+    segment = geo.LineSegment.construct_with_points([-2, 2], [1, 4])
     segment.apply_transformation(scale_matrix)
 
     helpers.check_vectors_identical(segment.point_start, [-8, 1])
@@ -234,8 +234,8 @@ def test_line_segment_transformations():
 
 
 def test_line_segment_interpolation():
-    segment_a = geo.LineSegment.construct_from_points([1, 3], [7, -3])
-    segment_b = geo.LineSegment.construct_from_points([5, -5], [-1, 13])
+    segment_a = geo.LineSegment.construct_with_points([1, 3], [7, -3])
+    segment_b = geo.LineSegment.construct_with_points([5, -5], [-1, 13])
 
     for i in range(5):
         weight = i / 4
@@ -262,7 +262,7 @@ def test_line_segment_interpolation():
     # exceptions ------------------------------------------
 
     # wrong types
-    arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [1, 0])
+    arc_segment = geo.ArcSegment.construct_with_points([0, 0], [1, 1], [1, 0])
     with pytest.raises(TypeError):
         geo.LineSegment.linear_interpolation(segment_a, arc_segment, weight)
     with pytest.raises(TypeError):
@@ -293,7 +293,7 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
 
     radius_arc = np.linalg.norm(point_start - point_center)
 
-    arc_segment = geo.ArcSegment.construct_from_points(point_start,
+    arc_segment = geo.ArcSegment.construct_with_points(point_start,
                                                        point_end,
                                                        point_center,
                                                        arc_winding_ccw)
@@ -377,10 +377,10 @@ def test_arc_segment_factories():
     arc_length_small = np.pi * 1.5
     arc_length_large = np.pi * 4.5
 
-    segment_cw = geo.ArcSegment.construct_from_points(point_start, point_end,
+    segment_cw = geo.ArcSegment.construct_with_points(point_start, point_end,
                                                       point_center_right,
                                                       False)
-    segment_ccw = geo.ArcSegment.construct_from_points(point_start, point_end,
+    segment_ccw = geo.ArcSegment.construct_with_points(point_start, point_end,
                                                        point_center_right,
                                                        True)
 
@@ -488,9 +488,9 @@ def test_arc_segment_rasterization():
 
 def test_arc_segment_transformations():
     # translation -----------------------------------------
-    segment_cw = geo.ArcSegment.construct_from_points([3, 3], [5, 5], [5, 3],
+    segment_cw = geo.ArcSegment.construct_with_points([3, 3], [5, 5], [5, 3],
                                                       False)
-    segment_ccw = geo.ArcSegment.construct_from_points([3, 3], [5, 5], [5, 3],
+    segment_ccw = geo.ArcSegment.construct_with_points([3, 3], [5, 5], [5, 3],
                                                        True)
     segment_cw.translate([-1, 4])
     segment_ccw.translate([-1, 4])
@@ -514,9 +514,9 @@ def test_arc_segment_transformations():
     c = np.cos(np.pi / 4.)
     rotation_matrix = [[c, -s], [s, c]]
 
-    segment_cw = geo.ArcSegment.construct_from_points([3, 3], [5, 5], [5, 3],
+    segment_cw = geo.ArcSegment.construct_with_points([3, 3], [5, 5], [5, 3],
                                                       False)
-    segment_ccw = geo.ArcSegment.construct_from_points([3, 3], [5, 5], [5, 3],
+    segment_ccw = geo.ArcSegment.construct_with_points([3, 3], [5, 5], [5, 3],
                                                        True)
     segment_cw.apply_transformation(rotation_matrix)
     segment_ccw.apply_transformation(rotation_matrix)
@@ -534,9 +534,9 @@ def test_arc_segment_transformations():
     v = np.array([-1, 1], dtype=float)
     reflection_matrix = np.identity(2) - 2 / np.dot(v, v) * np.outer(v, v)
 
-    segment_cw = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+    segment_cw = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                       False)
-    segment_ccw = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+    segment_ccw = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                        True)
     segment_cw.apply_transformation(reflection_matrix)
     segment_ccw.apply_transformation(reflection_matrix)
@@ -555,9 +555,9 @@ def test_arc_segment_transformations():
     # scaling both coordinates equally --------------------
     scaling_matrix = [[4, 0], [0, 4]]
 
-    segment_cw = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+    segment_cw = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                       False)
-    segment_ccw = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+    segment_ccw = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                        True)
     segment_cw.apply_transformation(scaling_matrix)
     segment_ccw.apply_transformation(scaling_matrix)
@@ -579,9 +579,9 @@ def test_arc_segment_transformations():
     # non-uniform scaling which results in a valid arc ----
     scaling_matrix = [[0.25, 0], [0, 2]]
 
-    segment_cw = geo.ArcSegment.construct_from_points([8, 4], [32, 4], [20, 2],
+    segment_cw = geo.ArcSegment.construct_with_points([8, 4], [32, 4], [20, 2],
                                                       False)
-    segment_ccw = geo.ArcSegment.construct_from_points([8, 4], [32, 4],
+    segment_ccw = geo.ArcSegment.construct_with_points([8, 4], [32, 4],
                                                        [20, 2], True)
     segment_cw.apply_transformation(scaling_matrix)
     segment_ccw.apply_transformation(scaling_matrix)
@@ -605,13 +605,13 @@ def test_arc_segment_transformations():
     # exceptions ------------------------------------------
 
     # transformation distorts arc
-    segment = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+    segment = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                    False)
     with pytest.raises(Exception):
         segment.apply_transformation(scaling_matrix)
 
     # transformation results in length = 0
-    segment = geo.ArcSegment.construct_from_points([3, 2], [5, 4], [5, 2],
+    segment = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                    False)
     zero_matrix = np.zeros((2, 2))
     with pytest.raises(Exception):
@@ -619,8 +619,8 @@ def test_arc_segment_transformations():
 
 
 def test_arc_segment_interpolation():
-    segment_a = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [1, 0])
-    segment_b = geo.ArcSegment.construct_from_points([0, 0], [2, 2], [0, 2])
+    segment_a = geo.ArcSegment.construct_with_points([0, 0], [1, 1], [1, 0])
+    segment_b = geo.ArcSegment.construct_with_points([0, 0], [2, 2], [0, 2])
 
     # not implemented yet
     with pytest.raises(Exception):
@@ -630,8 +630,8 @@ def test_arc_segment_interpolation():
 # test Shape ------------------------------------------------------------------
 
 def test_shape_construction():
-    line_segment = geo.LineSegment.construct_from_points([1, 1], [1, 2])
-    arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [0, 1])
+    line_segment = geo.LineSegment.construct_with_points([1, 1], [1, 2])
+    arc_segment = geo.ArcSegment.construct_with_points([0, 0], [1, 1], [0, 1])
 
     # Empty construction
     shape = geo.Shape()
@@ -656,9 +656,9 @@ def test_shape_construction():
 
 def test_shape_segment_addition():
     # Create shape and add segments
-    line_segment = geo.LineSegment.construct_from_points([1, 1], [0, 0])
-    arc_segment = geo.ArcSegment.construct_from_points([0, 0], [1, 1], [0, 1])
-    arc_segment2 = geo.ArcSegment.construct_from_points([1, 1], [0, 0], [0, 1])
+    line_segment = geo.LineSegment.construct_with_points([1, 1], [0, 0])
+    arc_segment = geo.ArcSegment.construct_with_points([0, 0], [1, 1], [0, 1])
+    arc_segment2 = geo.ArcSegment.construct_with_points([1, 1], [0, 0], [0, 1])
 
     shape = geo.Shape()
     shape.add_segments(line_segment)
@@ -695,11 +695,11 @@ def test_shape_rasterization():
     raster_width = 0.2
 
     shape = geo.Shape(
-        geo.LineSegment.construct_from_points(points[0], points[1]))
+        geo.LineSegment.construct_with_points(points[0], points[1]))
     shape.add_segments(
-        geo.LineSegment.construct_from_points(points[1], points[2]))
+        geo.LineSegment.construct_with_points(points[1], points[2]))
     shape.add_segments(
-        geo.LineSegment.construct_from_points(points[2], points[3]))
+        geo.LineSegment.construct_with_points(points[2], points[3]))
 
     data = shape.rasterize(raster_width)
 
@@ -715,8 +715,8 @@ def test_shape_rasterization():
 
 def default_test_shape():
     # create shape
-    arc_segment = geo.ArcSegment.construct_from_points([3, 4], [5, 0], [6, 3])
-    line_segment = geo.LineSegment.construct_from_points([5, 0], [11, 3])
+    arc_segment = geo.ArcSegment.construct_with_points([3, 4], [5, 0], [6, 3])
+    line_segment = geo.LineSegment.construct_with_points([5, 0], [11, 3])
     return geo.Shape([arc_segment, line_segment])
 
 
@@ -885,12 +885,12 @@ def interpolation_nearest(segment_a, segment_b, weight):
 
 
 def test_shape_interpolation_general():
-    segment_a0 = geo.LineSegment.construct_from_points([-1, -1], [1, 1])
-    segment_a1 = geo.LineSegment.construct_from_points([1, 1], [3, -1])
+    segment_a0 = geo.LineSegment.construct_with_points([-1, -1], [1, 1])
+    segment_a1 = geo.LineSegment.construct_with_points([1, 1], [3, -1])
     shape_a = geo.Shape([segment_a0, segment_a1])
 
-    segment_b0 = geo.LineSegment.construct_from_points([-1, 4], [1, 1])
-    segment_b1 = geo.LineSegment.construct_from_points([1, 1], [3, 4])
+    segment_b0 = geo.LineSegment.construct_with_points([-1, 4], [1, 1])
+    segment_b1 = geo.LineSegment.construct_with_points([1, 1], [3, 4])
     shape_b = geo.Shape([segment_b0, segment_b1])
 
     interpolations = [geo.LineSegment.linear_interpolation,
@@ -901,10 +901,10 @@ def test_shape_interpolation_general():
                                         interpolations)
         assert shape_c.num_segments == 2
 
-        exp_segment_c0 = geo.LineSegment.construct_from_points(
+        exp_segment_c0 = geo.LineSegment.construct_with_points(
             [-1, -1 + 5 * weight], [1, 1])
         check_segments_identical(shape_c.segments[0], exp_segment_c0)
-        
+
         if weight > 0.5:
             check_segments_identical(shape_c.segments[1], segment_b1)
         else:
@@ -912,12 +912,12 @@ def test_shape_interpolation_general():
 
 
 def test_shape_linear_interpolation():
-    segment_a0 = geo.LineSegment.construct_from_points([0, 0], [1, 1])
-    segment_a1 = geo.LineSegment.construct_from_points([1, 1], [2, 0])
+    segment_a0 = geo.LineSegment.construct_with_points([0, 0], [1, 1])
+    segment_a1 = geo.LineSegment.construct_with_points([1, 1], [2, 0])
     shape_a = geo.Shape([segment_a0, segment_a1])
 
-    segment_b0 = geo.LineSegment.construct_from_points([1, 1], [2, -1])
-    segment_b1 = geo.LineSegment.construct_from_points([2, -1], [3, 5])
+    segment_b0 = geo.LineSegment.construct_with_points([1, 1], [2, -1])
+    segment_b1 = geo.LineSegment.construct_with_points([2, -1], [3, 5])
     shape_b = geo.Shape([segment_b0, segment_b1])
 
     for i in range(5):
@@ -960,6 +960,6 @@ def test_shape_linear_interpolation():
 
     # exceptions ------------------------------------------
 
-    shape_a.add_segments(geo.LineSegment.construct_from_points([2, 0], [2, 2]))
+    shape_a.add_segments(geo.LineSegment.construct_with_points([2, 0], [2, 2]))
     with pytest.raises(Exception):
         geo.Shape.linear_interpolation(shape_a, shape_b, 0.25)
