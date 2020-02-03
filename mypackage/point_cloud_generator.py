@@ -102,7 +102,7 @@ class LinearHorizontalTraceSegment:
         """
         relative_position = np.clip(relative_position, 0, 1)
 
-        origin = np.array([0, 1, 0]) * relative_position * self._length
+        origin = np.array([1, 0, 0]) * relative_position * self._length
         return tf.CoordinateSystem(origin=origin)
 
 
@@ -188,7 +188,7 @@ class RadialHorizontalTraceSegment:
 
         basis = tf.rotation_matrix_z(
             self._angle * relative_position * self._sign_winding)
-        translation = np.array([1, 0, 0]) * self._radius * self._sign_winding
+        translation = np.array([0, -1, 0]) * self._radius * self._sign_winding
 
         origin = np.matmul(basis, translation) - translation
         return tf.CoordinateSystem(basis, origin)
@@ -558,7 +558,7 @@ class Geometry:
         :return: Rasterized profile in 3d
         """
         profile_data = profile.rasterize(raster_width)
-        return np.insert(profile_data, 1, 0, axis=0)
+        return np.insert(profile_data, 0, 0, axis=0)
 
     def _rasterize_constant_profile(self, profile_raster_width,
                                     trace_raster_width):

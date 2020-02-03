@@ -198,7 +198,7 @@ def check_trace_segment_orientation(segment):
         trace_direction_numerical = tf.normalize(lcs.origin - lcs_d.origin)
 
         # Check that the y-axis is always aligned with the trace's direction
-        helpers.check_vectors_identical(lcs.basis[:, 1],
+        helpers.check_vectors_identical(lcs.basis[:, 0],
                                         trace_direction_numerical, 1E-6)
 
 
@@ -254,15 +254,15 @@ def test_radial_horizontal_trace_segment():
     # check positions
     for weight in np.arange(0.1, 1, 0.1):
         current_angle = angle * weight
-        x_exp = (1 - np.cos(current_angle)) * radius
-        y_exp = np.sin(current_angle) * radius
+        x_exp = np.sin(current_angle) * radius
+        y_exp = (1 - np.cos(current_angle)) * radius
 
         lcs_cw = segment_cw.local_coordinate_system(weight)
         lcs_ccw = segment_ccw.local_coordinate_system(weight)
 
         assert math.isclose(lcs_cw.origin[0], x_exp)
-        assert math.isclose(lcs_cw.origin[1], y_exp)
-        assert math.isclose(lcs_ccw.origin[0], -x_exp)
+        assert math.isclose(lcs_cw.origin[1], -y_exp)
+        assert math.isclose(lcs_ccw.origin[0], x_exp)
         assert math.isclose(lcs_ccw.origin[1], y_exp)
 
     # invalid inputs
@@ -371,7 +371,7 @@ def test_trace_local_coordinate_system():
         position_on_segment = linear_segment.length * weight
         position = radial_segment.length + position_on_segment
 
-        expected_origin = np.array([-2, -position_on_segment, 0])
+        expected_origin = np.array([-position_on_segment, 2, 0])
         cs_trace = trace.local_coordinate_system(position)
 
         helpers.check_matrices_identical(cs_trace.basis, expected_basis)
@@ -405,7 +405,7 @@ def test_trace_local_coordinate_system():
         position_on_segment = linear_segment.length * weight
         position = radial_segment.length + position_on_segment
 
-        expected_origin = np.array([-2, 0, -position_on_segment]) + origin
+        expected_origin = np.array([-position_on_segment, 0, 2]) + origin
         cs_trace = trace.local_coordinate_system(position)
 
         helpers.check_matrices_identical(cs_trace.basis, expected_basis)
@@ -641,11 +641,11 @@ def test_geometry_construction():
 
 
 def test_geometry_rasterization_trace():
-    a0 = [-1, 0]
-    a1 = [-1, 1]
+    a0 = [1, 0]
+    a1 = [1, 1]
     a2 = [0, 1]
-    a3 = [1, 1]
-    a4 = [1, 0]
+    a3 = [-1, 1]
+    a4 = [-1, 0]
 
     shape_a012 = geo.Shape([geo.LineSegment.construct_with_points(a0, a1),
                             geo.LineSegment.construct_with_points(a1, a2)])
@@ -654,7 +654,7 @@ def test_geometry_rasterization_trace():
 
     profile_a = pcg.Profile([shape_a012, shape_a234])
 
-    radial_segment = pcg.RadialHorizontalTraceSegment(1, np.pi / 2)
+    radial_segment = pcg.RadialHorizontalTraceSegment(1, np.pi / 2, False)
     linear_segment = pcg.LinearHorizontalTraceSegment(1)
     trace = pcg.Trace([linear_segment, radial_segment])
 
@@ -674,20 +674,19 @@ def test_geometry_rasterization_trace():
 
     for i in range(num_raster_profiles):
         idx_0 = i * 6
-        if data[1, idx_0 + 2] <= 1:
-            y = data[1, idx_0]
-            assert math.isclose(y, eff_raster_width * i, abs_tol=1E-6)
-
+        if data[0, idx_0 + 2] <= 1:
+            x = data[0, idx_0]
+            assert math.isclose(x, eff_raster_width * i, abs_tol=1E-6)
             for j in range(6):
-                assert math.isclose(data[0, idx_0 + j], profile_points[0, j])
+                assert math.isclose(data[1, idx_0 + j], profile_points[0, j])
                 assert math.isclose(data[2, idx_0 + j], profile_points[1, j])
-                assert math.isclose(data[1, idx_0 + j], data[1, idx_0])
+                assert math.isclose(data[0, idx_0 + j], data[0, idx_0])
         else:
-            assert math.isclose(data[0, idx_0], a0[0])
-            assert math.isclose(data[1, idx_0], 1)
+            assert math.isclose(data[0, idx_0], 1)
+            assert math.isclose(data[1, idx_0], a0[0])
             assert math.isclose(data[2, idx_0], a0[1])
-            assert math.isclose(data[0, idx_0 + 1], a1[0])
-            assert math.isclose(data[1, idx_0 + 1], 1)
+            assert math.isclose(data[0, idx_0 + 1], 1)
+            assert math.isclose(data[1, idx_0 + 1], a1[0])
             assert math.isclose(data[2, idx_0 + 1], a1[1])
 
             # z-values are constant
@@ -714,14 +713,17 @@ def test_geometry_rasterization_trace():
                                         point_distance)
 
 
+test_geometry_rasterization_trace()
+
+
 def test_geometry_rasterization_profile_interpolation():
     interpol = pcg.LinearProfileInterpolationSBS
 
-    a0 = [-1, 0]
-    a1 = [-1, 1]
+    a0 = [1, 0]
+    a1 = [1, 1]
     a2 = [0, 1]
-    a3 = [1, 1]
-    a4 = [1, 0]
+    a3 = [-1, 1]
+    a4 = [-1, 0]
 
     shape_a012 = geo.Shape([geo.LineSegment.construct_with_points(a0, a1),
                             geo.LineSegment.construct_with_points(a1, a2)])
@@ -760,8 +762,8 @@ def test_geometry_rasterization_profile_interpolation():
     for i in range(11):
         idx_0 = i * 6
         for j in range(6):
-            exp_point = np.array([profile_points[0, j] * (1 + i * 0.1),
-                                  i * 0.1,
+            exp_point = np.array([i * 0.1,
+                                  profile_points[0, j] * (1 + i * 0.1),
                                   profile_points[1, j] * (1 + i * 0.1)])
             helpers.check_vectors_identical(data[:, idx_0 + j], exp_point)
 
@@ -769,7 +771,7 @@ def test_geometry_rasterization_profile_interpolation():
     for i in range(20):
         idx_0 = (30 - i) * 6
         for j in range(6):
-            exp_point = np.array([profile_points[0, j] * (1 + i * 0.05),
-                                  3 - i * 0.1,
+            exp_point = np.array([3 - i * 0.1,
+                                  profile_points[0, j] * (1 + i * 0.05),
                                   profile_points[1, j] * (1 + i * 0.05)])
             helpers.check_vectors_identical(data[:, idx_0 + j], exp_point)
