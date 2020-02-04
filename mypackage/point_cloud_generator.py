@@ -317,6 +317,9 @@ class Trace:
 
         :return: Raster data
         """
+        if not raster_width > 0:
+            raise ValueError("'raster_width' must be > 0")
+
         raster_width = np.clip(raster_width, 0, self.length)
         num_raster_segments = int(np.round(self.length / raster_width))
         raster_width_eff = self.length / num_raster_segments

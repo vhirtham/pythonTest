@@ -140,6 +140,9 @@ def test_profile_rasterization():
     # rasterize
     data = profile.rasterize(0.1)
 
+    # no duplications
+    assert helpers.are_all_points_unique(data)
+
     # check raster data size
     expected_number_raster_points = int(round(3 / raster_width)) + 1
     assert data.shape[1] == expected_number_raster_points
@@ -149,6 +152,12 @@ def test_profile_rasterization():
         expected_raster_point_x = i * raster_width - 1
         assert data[0, i] - expected_raster_point_x < 1E-9
         assert data[1, i] == 0
+
+    # exceptions
+    with pytest.raises(Exception):
+        profile.rasterize(0)
+    with pytest.raises(Exception):
+        profile.rasterize(-3)
 
 
 # Test trace segment classes --------------------------------------------------
@@ -420,6 +429,9 @@ def test_trace_rasterization():
     trace = pcg.Trace([linear_segment, radial_segment])
     data = trace.rasterize(0.1)
 
+    # no duplications
+    assert helpers.are_all_points_unique(data)
+
     raster_width_eff = trace.length / (data.shape[1] - 1)
     for i in range(data.shape[1]):
         trace_location = i * raster_width_eff
@@ -457,8 +469,18 @@ def test_trace_rasterization():
 
         helpers.check_vectors_identical([x, y, z], data[:, i])
 
+    # check if raster width is clipped to valid range -----
+    data = trace.rasterize(1000)
 
-test_trace_rasterization()
+    assert data.shape[1] == 2
+    helpers.check_vectors_identical([-3, 2.5, 5], data[:, 0])
+    helpers.check_vectors_identical([-3, 4.5, 4], data[:, 1])
+
+    # exceptions ------------------------------------------
+    with pytest.raises(Exception):
+        trace.rasterize(0)
+    with pytest.raises(Exception):
+        trace.rasterize(-23.1)
 
 
 # Profile interpolation classes -----------------------------------------------

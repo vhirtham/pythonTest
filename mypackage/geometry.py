@@ -132,9 +132,9 @@ class LineSegment:
         multiple segments.
         :return: Array of contour points
         """
-        raster_width = np.clip(np.abs(raster_width), 0, self.length)
         if not raster_width > 0:
-            raise ValueError("'raster_width' is zero")
+            raise ValueError("'raster_width' must be > 0")
+        raster_width = np.clip(np.abs(raster_width), None, self.length)
 
         num_raster_segments = np.round(self.length / raster_width)
 
@@ -434,9 +434,9 @@ class ArcSegment:
         point_center = self.point_center
         vec_center_start = (point_start - point_center)
 
-        raster_width = np.clip(raster_width, 0, self.arc_length)
         if not raster_width > 0:
-            raise ValueError("'raster_width' is 0")
+            raise ValueError("'raster_width' must be > 0")
+        raster_width = np.clip(raster_width, None, self.arc_length)
 
         num_raster_segments = int(np.round(self._arc_length / raster_width))
         delta_angle = self._arc_angle / num_raster_segments
@@ -621,13 +621,14 @@ class Shape:
         :param raster_width: The desired distance between two raster points
         :return: Array of contour points (3d)
         """
-        segments = self._segments
+        if not raster_width > 0:
+            raise ValueError("'raster_width' must be > 0")
 
         raster_data = np.empty([2, 0])
         for i in range(self.num_segments):
-            segment_data = segments[i].rasterize(raster_width, 1)
+            segment_data = self.segments[i].rasterize(raster_width, 1)
             raster_data = np.hstack((raster_data, segment_data))
 
-        last_point = segments[-1].point_end[:, np.newaxis]
+        last_point = self.segments[-1].point_end[:, np.newaxis]
         raster_data = np.hstack((raster_data, last_point))
         return raster_data

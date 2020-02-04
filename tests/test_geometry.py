@@ -44,6 +44,9 @@ def default_segment_rasterization_tests(segment, raster_width, point_start,
         raster_width_eff = np.linalg.norm(next_point - point)
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
 
+    # check that there are no duplicate points
+    assert helpers.are_all_points_unique(data)
+
     # check rasterization with excluded points
     data_m2 = segment.rasterize(raster_width, 2)
 
@@ -62,9 +65,11 @@ def default_segment_rasterization_tests(segment, raster_width, point_start,
     helpers.check_vectors_identical(point_start, data_200[:, 0])
     helpers.check_vectors_identical(point_end, data_200[:, 1])
 
-    # check exceptions
+    # check exceptions when raster width <= 0
     with pytest.raises(ValueError):
         segment.rasterize(0)
+    with pytest.raises(ValueError):
+        segment.rasterize(-3)
 
 
 # test LineSegment ------------------------------------------------------------
@@ -643,14 +648,37 @@ def test_shape_rasterization():
 
     data = shape.rasterize(raster_width)
 
-    # Segment start and end points points must be included
+    # no duplications
+    assert helpers.are_all_points_unique(data)
+
+    # check each data point
+    num_data_points = data.shape[1]
+    for i in range(num_data_points):
+        if i < 6:
+            helpers.check_vectors_identical([0, i * 0.2], data[:, i])
+        elif i < 11:
+            helpers.check_vectors_identical([(i - 5) * 0.2, 1], data[:, i])
+        else:
+            helpers.check_vectors_identical([1, 1 - (i - 10) * 0.2],
+                                            data[:, i])
+
+    # Test with too large raster width --------------------
+    # The shape does not clip large values to the valid range itself. The
+    # added segments do the clipping. If a custom segment does not do that,
+    # there is currently no mechanism to correct it.
+    # However, this test somewhat ensures, that each segment is rasterized
+    # individually.
+
+    data = shape.rasterize(10)
+
     for point in points:
         assert utils.is_column_in_matrix(point, data)
 
-    # check effective raster width
-    for i in range(1, data.shape[1]):
-        raster_width_eff = np.linalg.norm(data[:, i] - data[:, i - 1])
-        assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
+    # exceptions ------------------------------------------
+    with pytest.raises(Exception):
+        shape.rasterize(0)
+    with pytest.raises(Exception):
+        shape.rasterize(-3)
 
 
 def default_test_shape():
@@ -672,8 +700,8 @@ def test_shape_translation():
     # apply translation
     shape.translate(translation)
 
-    arc_segment = shape._segments[0]
-    arc_segment_ref = shape_ref._segments[0]
+    arc_segment = shape.segments[0]
+    arc_segment_ref = shape_ref.segments[0]
 
     assert (arc_segment.arc_winding_ccw == arc_segment_ref.arc_winding_ccw)
 
@@ -684,8 +712,8 @@ def test_shape_translation():
     check_point(arc_segment.point_center, arc_segment_ref.point_center,
                 translation)
 
-    line_segment = shape._segments[1]
-    line_segment_ref = shape_ref._segments[1]
+    line_segment = shape.segments[1]
+    line_segment_ref = shape_ref.segments[1]
 
     check_point(line_segment.point_start, line_segment_ref.point_start,
                 translation)
