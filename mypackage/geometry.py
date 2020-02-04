@@ -72,7 +72,7 @@ class LineSegment:
         :param points: 2x2 matrix of points. The first column is the
         starting point and the second column the end point.
         """
-        points = np.array(points, float)
+        points = ut.to_float_array(points)
         if not len(points.shape) == 2:
             raise ValueError("'points' must be a 2d array/matrix.")
         if not (points.shape[0] == 2 and points.shape[1] == 2):
@@ -227,7 +227,7 @@ class ArcSegment:
         :param: arc_winding_ccw: Specifies if the arcs winding order is
         counter-clockwise
         """
-        points = np.array(points, float)
+        points = ut.to_float_array(points)
         if not len(points.shape) == 2:
             raise ValueError("'points' must be a 2d array/matrix.")
         if not (points.shape[0] == 2 and points.shape[1] == 3):

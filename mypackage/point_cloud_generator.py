@@ -82,7 +82,7 @@ class LinearHorizontalTraceSegment:
         """
         if length <= 0:
             raise ValueError("'length' must have a positive value.")
-        self._length = length
+        self._length = float(length)
 
     @property
     def length(self):
@@ -122,9 +122,9 @@ class RadialHorizontalTraceSegment:
             raise ValueError("'radius' must have a positive value.")
         if angle <= 0:
             raise ValueError("'angle' must have a positive value.")
-        self._radius = radius
-        self._angle = angle
-        self._length = self._arc_length(radius, angle)
+        self._radius = float(radius)
+        self._angle = float(angle)
+        self._length = self._arc_length(self.radius, self.angle)
         if clockwise:
             self._sign_winding = -1
         else:

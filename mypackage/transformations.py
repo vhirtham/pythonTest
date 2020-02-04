@@ -1,5 +1,6 @@
 """Contains methods and classes for coordinate transformations."""
 
+import mypackage._utility as ut
 import numpy as np
 import math
 from scipy.spatial.transform import Rotation as Rot
@@ -164,7 +165,7 @@ class CoordinateSystem:
         :param origin: Position of the origin
         :return: Cartesian coordinate system
         """
-        basis = np.array(basis, dtype=float)
+        basis = ut.to_float_array(basis)
         basis[:, 0] = normalize(basis[:, 0])
         basis[:, 1] = normalize(basis[:, 1])
         basis[:, 2] = normalize(basis[:, 2])
@@ -176,7 +177,7 @@ class CoordinateSystem:
 
         self._orientation = basis
 
-        self._location = np.array(origin)
+        self._location = ut.to_float_array(origin)
 
     def __add__(self, rhs_cs):
         """
