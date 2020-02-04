@@ -231,15 +231,14 @@ class Trace:
 
         segments = self._segments
 
-        # Fill coordinate system lookup
-        for i in range(len(segments) - 1):
+        total_length = 0
+        for i, segment in enumerate(segments):
+            # Fill coordinate system lookup
             lcs_segment_end = segments[i].local_coordinate_system(1)
             csys = self._coordinate_system_lookup[i] + lcs_segment_end
             self._coordinate_system_lookup += [csys]
 
-        # Fill length lookups
-        total_length = 0
-        for _, segment in enumerate(segments):
+            # Fill length lookups
             segment_length = segment.length
             total_length += segment_length
             self._segment_length_lookup += [segment_length]
@@ -311,6 +310,38 @@ class Trace:
         segment_start_cs = self._coordinate_system_lookup[idx]
 
         return segment_start_cs + local_segment_cs
+
+    def rasterize(self, raster_width):
+        """
+        Rasterize the trace.
+
+        :return: Raster data
+        """
+        raster_width = np.clip(raster_width, 0, self.length)
+        num_raster_segments = int(np.round(self.length / raster_width))
+        raster_width_eff = self.length / num_raster_segments
+
+        idx = 0
+        raster_data = np.empty((3, 0))
+        for i in range(num_raster_segments):
+            location = i * raster_width_eff
+            while not location <= self._total_length_lookup[idx + 1]:
+                idx += 1
+
+            segment_location = location - self._total_length_lookup[idx]
+            weight = segment_location / self._segment_length_lookup[idx]
+
+            local_segment_cs = self.segments[idx].local_coordinate_system(
+                weight)
+            segment_start_cs = self._coordinate_system_lookup[idx]
+
+            local_cs = segment_start_cs + local_segment_cs
+
+            data_point = local_cs.origin[:, np.newaxis]
+            raster_data = np.hstack([raster_data, data_point])
+
+        last_point = self._coordinate_system_lookup[-1].origin[:, np.newaxis]
+        return np.hstack([raster_data, last_point])
 
 
 # Linear profile interpolation class ------------------------------------------

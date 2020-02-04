@@ -333,7 +333,7 @@ def test_trace_construction():
 
         @staticmethod
         def local_coordinate_system(*args):
-            return tf.CoordinateSystem
+            return tf.CoordinateSystem()
 
     custom_segment = CustomSegment()
     custom_segment.length = 3
@@ -410,6 +410,55 @@ def test_trace_local_coordinate_system():
 
         helpers.check_matrices_identical(cs_trace.basis, expected_basis)
         helpers.check_vectors_identical(cs_trace.origin, expected_origin)
+
+
+def test_trace_rasterization():
+    radial_segment = pcg.RadialHorizontalTraceSegment(1, np.pi)
+    linear_segment = pcg.LinearHorizontalTraceSegment(1)
+
+    # check with default coordinate system ----------------
+    trace = pcg.Trace([linear_segment, radial_segment])
+    data = trace.rasterize(0.1)
+
+    raster_width_eff = trace.length / (data.shape[1] - 1)
+    for i in range(data.shape[1]):
+        trace_location = i * raster_width_eff
+        if trace_location <= 1:
+            helpers.check_vectors_identical([trace_location, 0, 0], data[:, i])
+        else:
+            arc_location = trace_location - 1
+            angle = arc_location  # radius 1!
+            x = np.sin(angle) + 1  # radius 1!
+            y = 1 - np.cos(angle)
+            helpers.check_vectors_identical([x, y, 0], data[:, i])
+
+    # check with arbitrary coordinate system --------------
+    basis = tf.rotation_matrix_y(np.pi / 2)
+    origin = np.array([-3, 2.5, 5])
+    cs_base = tf.CoordinateSystem(basis, origin)
+
+    trace = pcg.Trace([linear_segment, radial_segment], cs_base)
+    data = trace.rasterize(0.1)
+
+    raster_width_eff = trace.length / (data.shape[1] - 1)
+
+    for i in range(data.shape[1]):
+        trace_location = i * raster_width_eff
+        if trace_location <= 1:
+            x = origin[0]
+            y = origin[1]
+            z = origin[2] - trace_location
+        else:
+            arc_location = trace_location - 1
+            angle = arc_location  # radius 1!
+            x = origin[0]
+            y = origin[1] + 1 - np.cos(angle)
+            z = origin[2] - 1 - np.sin(angle)
+
+        helpers.check_vectors_identical([x, y, z], data[:, i])
+
+
+test_trace_rasterization()
 
 
 # Profile interpolation classes -----------------------------------------------
