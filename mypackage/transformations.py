@@ -147,6 +147,56 @@ def change_of_basis_translation(ccs_from, ccs_to):
     return ccs_from.origin - ccs_to.origin
 
 
+def point_left_of_line(point, line_start, line_end):
+    """
+    Determine if a point lies left of a line.
+
+    Returns 1 if the point is left of the line and -1 if it is to the right.
+    If the point is located on the line, this function returns 0.
+
+    :param point: Point
+    :param line_start: Starting point of the line
+    :param line_end: End point of the line
+    :return: 1,-1 or 0 (see description)
+    """
+    vec_line_start_end = line_end - line_start
+    vec_line_start_point = point - line_start
+    return vector_points_to_left_of_vector(vec_line_start_point,
+                                           vec_line_start_end)
+
+
+def reflection_sign(matrix):
+    """
+    Get a sign indicating if the transformation is a reflection.
+
+    Returns -1 if the transformation contains a reflection and 1 if not.
+
+    :param matrix: Transformation matrix
+    :return: 1 or -1 (see description)
+    """
+    sign = int(np.sign(np.linalg.det(matrix)))
+
+    if sign == 0:
+        raise Exception("Invalid transformation")
+
+    return sign
+
+
+def vector_points_to_left_of_vector(vector, vector_reference):
+    """
+    Determine if a vector points to the left of another vector.
+
+    Returns 1 if the vector points to the left of the reference vector and
+    -1 if it points to the right. In case both vectors point into the same
+    or the opposite directions, this function returns 0.
+
+    :param vector: Vector
+    :param vector_reference: Reference vector
+    :return: 1,-1 or 0 (see description)
+    """
+    return int(np.sign(np.linalg.det([vector_reference, vector])))
+
+
 # cartesian coordinate system class -------------------------------------------
 
 class CoordinateSystem:

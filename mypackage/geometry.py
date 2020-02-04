@@ -7,59 +7,6 @@ import mypackage.transformations as tf
 from scipy.spatial.transform import Rotation as Rot
 
 
-# Helper functions ------------------------------------------------------------
-
-
-def vector_points_to_left_of_vector(vector, vector_reference):
-    """
-    Determine if a vector points to the left of another vector.
-
-    Returns 1 if the vector points to the left of the reference vector and
-    -1 if it points to the right. In case both vectors point into the same
-    or the opposite directions, this function returns 0.
-
-    :param vector: Vector
-    :param vector_reference: Reference vector
-    :return: 1,-1 or 0 (see description)
-    """
-    return int(np.sign(np.linalg.det([vector_reference, vector])))
-
-
-def point_left_of_line(point, line_start, line_end):
-    """
-    Determine if a point lies left of a line.
-
-    Returns 1 if the point is left of the line and -1 if it is to the right.
-    If the point is located on the line, this function returns 0.
-
-    :param point: Point
-    :param line_start: Starting point of the line
-    :param line_end: End point of the line
-    :return: 1,-1 or 0 (see description)
-    """
-    vec_line_start_end = line_end - line_start
-    vec_line_start_point = point - line_start
-    return vector_points_to_left_of_vector(vec_line_start_point,
-                                           vec_line_start_end)
-
-
-def reflection_sign(matrix):
-    """
-    Get a sign indicating if the transformation is a reflection.
-
-    Returns -1 if the transformation contains a reflection and 1 if not.
-
-    :param matrix: Transformation matrix
-    :return: 1 or -1 (see description)
-    """
-    sign = int(np.sign(np.linalg.det(matrix)))
-
-    if sign == 0:
-        raise Exception("Invalid transformation")
-
-    return sign
-
-
 # LineSegment -----------------------------------------------------------------
 
 class LineSegment:
@@ -261,7 +208,7 @@ class ArcSegment:
         dot_unit = np.dot(unit_center_start, unit_center_end)
         angle_vecs = np.arccos(np.clip(dot_unit, -1, 1))
 
-        sign_winding_points = vector_points_to_left_of_vector(
+        sign_winding_points = tf.vector_points_to_left_of_vector(
             unit_center_end, unit_center_start)
 
         if np.abs(sign_winding_points + self._sign_arc_winding) > 0:
@@ -465,7 +412,7 @@ class ArcSegment:
         :return: ---
         """
         self._points = np.matmul(matrix, self._points)
-        self._sign_arc_winding *= reflection_sign(matrix)
+        self._sign_arc_winding *= tf.reflection_sign(matrix)
         self._calculate_arc_parameters()
 
     def rasterize(self, raster_width, num_points_excluded_end=0):

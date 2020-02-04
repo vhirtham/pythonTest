@@ -268,6 +268,66 @@ def test_change_of_basis_translation():
             assert math.isclose(diff[j], expected_diff[j])
 
 
+def test_vector_points_to_left_of_vector():
+    assert tf.vector_points_to_left_of_vector([-0.1, 1], [0, 1]) > 0
+    assert tf.vector_points_to_left_of_vector([-0.1, -1], [0, 1]) > 0
+    assert tf.vector_points_to_left_of_vector([3, 5], [1, 0]) > 0
+    assert tf.vector_points_to_left_of_vector([-3, 5], [1, 0]) > 0
+    assert tf.vector_points_to_left_of_vector([0, -0.1], [-4, 2]) > 0
+    assert tf.vector_points_to_left_of_vector([-1, -0.1], [-4, 2]) > 0
+
+    assert tf.vector_points_to_left_of_vector([0.1, 1], [0, 1]) < 0
+    assert tf.vector_points_to_left_of_vector([0.1, -1], [0, 1]) < 0
+    assert tf.vector_points_to_left_of_vector([3, -5], [1, 0]) < 0
+    assert tf.vector_points_to_left_of_vector([-3, -5], [1, 0]) < 0
+    assert tf.vector_points_to_left_of_vector([0, 0.1], [-4, 2]) < 0
+    assert tf.vector_points_to_left_of_vector([1, -0.1], [-4, 2]) < 0
+
+    assert tf.vector_points_to_left_of_vector([4, 4], [2, 2]) == 0
+    assert tf.vector_points_to_left_of_vector([-4, -4], [2, 2]) == 0
+
+
+def test_point_left_of_line():
+    line_start = np.array([2, 3])
+    line_end = np.array([5, 6])
+    assert tf.point_left_of_line([-8, 10], line_start, line_end) > 0
+    assert tf.point_left_of_line([3, 0], line_start, line_end) < 0
+    assert tf.point_left_of_line(line_start, line_start, line_end) == 0
+
+    line_start = np.array([2, 3])
+    line_end = np.array([1, -4])
+    assert tf.point_left_of_line([3, 0], line_start, line_end) > 0
+    assert tf.point_left_of_line([-8, 10], line_start, line_end) < 0
+    assert tf.point_left_of_line(line_start, line_start, line_end) == 0
+
+
+def test_reflection_sign():
+    assert tf.reflection_sign([[-1, 0], [0, 1]]) == -1
+    assert tf.reflection_sign([[1, 0], [0, -1]]) == -1
+    assert tf.reflection_sign([[0, 1], [1, 0]]) == -1
+    assert tf.reflection_sign([[0, -1], [-1, 0]]) == -1
+    assert tf.reflection_sign([[-4, 0], [0, 2]]) == -1
+    assert tf.reflection_sign([[6, 0], [0, -4]]) == -1
+    assert tf.reflection_sign([[0, 3], [8, 0]]) == -1
+    assert tf.reflection_sign([[0, -3], [-2, 0]]) == -1
+
+    assert tf.reflection_sign([[1, 0], [0, 1]]) == 1
+    assert tf.reflection_sign([[-1, 0], [0, -1]]) == 1
+    assert tf.reflection_sign([[0, -1], [1, 0]]) == 1
+    assert tf.reflection_sign([[0, 1], [-1, 0]]) == 1
+    assert tf.reflection_sign([[5, 0], [0, 6]]) == 1
+    assert tf.reflection_sign([[-3, 0], [0, -7]]) == 1
+    assert tf.reflection_sign([[0, -8], [9, 0]]) == 1
+    assert tf.reflection_sign([[0, 3], [-2, 0]]) == 1
+
+    with pytest.raises(Exception):
+        tf.reflection_sign([[0, 0], [0, 0]])
+    with pytest.raises(Exception):
+        tf.reflection_sign([[1, 0], [0, 0]])
+    with pytest.raises(Exception):
+        tf.reflection_sign([[2, 2], [1, 1]])
+
+
 # test cartesian coordinate system class --------------------------------------
 
 def test_cartesian_coordinate_system_construction():
