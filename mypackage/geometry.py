@@ -977,7 +977,7 @@ class Trace:
 
 # Linear profile interpolation class ------------------------------------------
 
-def LinearProfileInterpolationSBS(profile_a, profile_b, weight):
+def linear_profile_interpolation_sbs(profile_a, profile_b, weight):
     """
     Interpolate 2 profiles linearly, segment by segment.
 

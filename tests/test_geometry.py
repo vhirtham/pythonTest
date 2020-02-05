@@ -1438,8 +1438,8 @@ def test_linear_profile_interpolation_sbs():
 
     for i in range(5):
         weight = i / 4.
-        profile_c = geo.LinearProfileInterpolationSBS(profile_a, profile_b,
-                                                      weight)
+        profile_c = geo.linear_profile_interpolation_sbs(profile_a, profile_b,
+                                                         weight)
         check_interpolated_profile_points(profile_c,
                                           [-i, 2 * i],
                                           [8 - 2 * i, 16 - 2 * i],
@@ -1447,11 +1447,11 @@ def test_linear_profile_interpolation_sbs():
 
     # check weight clipped to valid range -----------------
 
-    profile_c = geo.LinearProfileInterpolationSBS(profile_a, profile_b, -3)
+    profile_c = geo.linear_profile_interpolation_sbs(profile_a, profile_b, -3)
 
     check_interpolated_profile_points(profile_c, a_0, a_1, a_2)
 
-    profile_c = geo.LinearProfileInterpolationSBS(profile_a, profile_b, 42)
+    profile_c = geo.linear_profile_interpolation_sbs(profile_a, profile_b, 42)
 
     check_interpolated_profile_points(profile_c, b_0, b_1, b_2)
 
@@ -1460,7 +1460,7 @@ def test_linear_profile_interpolation_sbs():
     # number of shapes differ
     profile_d = geo.Profile([shape_b01, shape_b12, shape_a12])
     with pytest.raises(Exception):
-        geo.LinearProfileInterpolationSBS(profile_d, profile_b, 0.5)
+        geo.linear_profile_interpolation_sbs(profile_d, profile_b, 0.5)
 
     # number of segments differ
     shape_b012 = geo.Shape([geo.LineSegment.construct_with_points(b_0, b_1),
@@ -1468,7 +1468,7 @@ def test_linear_profile_interpolation_sbs():
 
     profile_b2 = geo.Profile([shape_b01, shape_b012])
     with pytest.raises(Exception):
-        geo.LinearProfileInterpolationSBS(profile_a, profile_b2, 0.2)
+        geo.linear_profile_interpolation_sbs(profile_a, profile_b2, 0.2)
 
 
 # test variable profile -------------------------------------------------------
@@ -1484,7 +1484,7 @@ def check_variable_profile_state(variable_profile, locations):
 
 
 def test_variable_profile_construction():
-    interpol = geo.LinearProfileInterpolationSBS
+    interpol = geo.linear_profile_interpolation_sbs
 
     profile_a, profile_b = get_default_profiles()
 
@@ -1543,7 +1543,7 @@ def test_variable_profile_construction():
 
 
 def test_variable_profile_local_profile():
-    interpol = geo.LinearProfileInterpolationSBS
+    interpol = geo.linear_profile_interpolation_sbs
 
     profile_a, profile_b = get_default_profiles()
     variable_profile = geo.VariableProfile([profile_a, profile_b, profile_a],
@@ -1594,7 +1594,7 @@ def check_variable_profiles_identical(a, b):
 def test_geometry_construction():
     profile_a, profile_b = get_default_profiles()
     variable_profile = geo.VariableProfile([profile_a, profile_b], [0, 1],
-                                           geo.LinearProfileInterpolationSBS)
+                                           geo.linear_profile_interpolation_sbs)
 
     radial_segment = geo.RadialHorizontalTraceSegment(1, np.pi)
     linear_segment = geo.LinearHorizontalTraceSegment(1)
@@ -1724,7 +1724,7 @@ def test_geometry_rasterization_trace():
 
 
 def test_geometry_rasterization_profile_interpolation():
-    interpol = geo.LinearProfileInterpolationSBS
+    interpol = geo.linear_profile_interpolation_sbs
 
     a0 = [1, 0]
     a1 = [1, 1]
