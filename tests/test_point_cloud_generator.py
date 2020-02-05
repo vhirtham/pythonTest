@@ -790,11 +790,9 @@ def test_geometry_rasterization_trace():
 
     for i in range(12):
         if i < 6:
-            print(data[:, i])
-            assert data[0, i] == 0
+            math.isclose(data[0, i], 0)
         else:
-            print(data[:, i])
-            assert data[1, i] == 1
+            assert math.isclose(data[1, i], 1)
 
     # exceptions ------------------------------------------
     with pytest.raises(Exception):
