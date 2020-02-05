@@ -1593,8 +1593,10 @@ def check_variable_profiles_identical(a, b):
 
 def test_geometry_construction():
     profile_a, profile_b = get_default_profiles()
-    variable_profile = geo.VariableProfile([profile_a, profile_b], [0, 1],
-                                           geo.linear_profile_interpolation_sbs)
+    variable_profile = \
+        geo.VariableProfile([profile_a, profile_b],
+                            [0, 1],
+                            geo.linear_profile_interpolation_sbs)
 
     radial_segment = geo.RadialHorizontalTraceSegment(1, np.pi)
     linear_segment = geo.LinearHorizontalTraceSegment(1)
