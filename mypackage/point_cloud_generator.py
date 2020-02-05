@@ -560,7 +560,10 @@ class Geometry:
         :param raster_width: Raster width
         :return: Raster data
         """
-        raster_width = np.clip(raster_width, 0, self._trace.length)
+        if not raster_width > 0:
+            raise ValueError("'raster_width' must be > 0")
+        raster_width = np.clip(raster_width, None, self._trace.length)
+
         num_raster_segments = int(np.round(self._trace.length / raster_width))
         raster_width_eff = self._trace.length / num_raster_segments
         locations = np.arange(0,

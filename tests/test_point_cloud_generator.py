@@ -783,8 +783,32 @@ def test_geometry_rasterization_trace():
                     assert math.isclose(exp_point_distance[j - 2],
                                         point_distance)
 
+    # check if raster width is clipped to valid range -----
+    data = geometry.rasterize(7, 1000)
 
-test_geometry_rasterization_trace()
+    assert data.shape[1] == 12
+
+    for i in range(12):
+        if i < 6:
+            print(data[:, i])
+            assert data[0, i] == 0
+        else:
+            print(data[:, i])
+            assert data[1, i] == 1
+
+    # exceptions ------------------------------------------
+    with pytest.raises(Exception):
+        geometry.rasterize(0, 1)
+    with pytest.raises(Exception):
+        geometry.rasterize(1, 0)
+    with pytest.raises(Exception):
+        geometry.rasterize(0, 0)
+    with pytest.raises(Exception):
+        geometry.rasterize(-2.3, 1)
+    with pytest.raises(Exception):
+        geometry.rasterize(1, -4.6)
+    with pytest.raises(Exception):
+        geometry.rasterize(-2.3, -4.6)
 
 
 def test_geometry_rasterization_profile_interpolation():
