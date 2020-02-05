@@ -1438,9 +1438,8 @@ def test_linear_profile_interpolation_sbs():
 
     for i in range(5):
         weight = i / 4.
-        profile_c = geo.LinearProfileInterpolationSBS.interpolate(profile_a,
-                                                                  profile_b,
-                                                                  weight)
+        profile_c = geo.LinearProfileInterpolationSBS(profile_a, profile_b,
+                                                      weight)
         check_interpolated_profile_points(profile_c,
                                           [-i, 2 * i],
                                           [8 - 2 * i, 16 - 2 * i],
@@ -1448,15 +1447,11 @@ def test_linear_profile_interpolation_sbs():
 
     # check weight clipped to valid range -----------------
 
-    profile_c = geo.LinearProfileInterpolationSBS.interpolate(profile_a,
-                                                              profile_b,
-                                                              -3)
+    profile_c = geo.LinearProfileInterpolationSBS(profile_a, profile_b, -3)
 
     check_interpolated_profile_points(profile_c, a_0, a_1, a_2)
 
-    profile_c = geo.LinearProfileInterpolationSBS.interpolate(profile_a,
-                                                              profile_b,
-                                                              42)
+    profile_c = geo.LinearProfileInterpolationSBS(profile_a, profile_b, 42)
 
     check_interpolated_profile_points(profile_c, b_0, b_1, b_2)
 
@@ -1465,8 +1460,7 @@ def test_linear_profile_interpolation_sbs():
     # number of shapes differ
     profile_d = geo.Profile([shape_b01, shape_b12, shape_a12])
     with pytest.raises(Exception):
-        geo.LinearProfileInterpolationSBS.interpolate(profile_d, profile_b,
-                                                      0.5)
+        geo.LinearProfileInterpolationSBS(profile_d, profile_b, 0.5)
 
     # number of segments differ
     shape_b012 = geo.Shape([geo.LineSegment.construct_with_points(b_0, b_1),
@@ -1474,9 +1468,7 @@ def test_linear_profile_interpolation_sbs():
 
     profile_b2 = geo.Profile([shape_b01, shape_b012])
     with pytest.raises(Exception):
-        geo.LinearProfileInterpolationSBS.interpolate(profile_a,
-                                                      profile_b2,
-                                                      0.2)
+        geo.LinearProfileInterpolationSBS(profile_a, profile_b2, 0.2)
 
 
 # test variable profile -------------------------------------------------------

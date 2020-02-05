@@ -977,31 +977,27 @@ class Trace:
 
 # Linear profile interpolation class ------------------------------------------
 
-class LinearProfileInterpolationSBS:
-    """Linear segment by segment interpolation class for profiles."""
+def LinearProfileInterpolationSBS(profile_a, profile_b, weight):
+    """
+    Interpolate 2 profiles linearly, segment by segment.
 
-    @staticmethod
-    def interpolate(profile_a, profile_b, weight):
-        """
-        Interpolate 2 profiles.
+    :param profile_a: First profile
+    :param profile_b: Second profile
+    :param weight: Weighting factor [0 .. 1]. If 0, the profile is identical
+    to 'a' and if 1, it is identical to b.
+    :return: Interpolated profile
+    """
+    weight = np.clip(weight, 0, 1)
+    if not len(profile_a.shapes) == len(profile_b.shapes):
+        raise Exception("Number of profile shapes do not match.")
 
-        :param profile_a: First profile
-        :param profile_b: Second profile
-        :param weight: Weighting factor [0 .. 1]. If 0, the profile is
-        identical to 'a' and if 1, it is identical to b.
-        :return: Interpolated profile
-        """
-        weight = np.clip(weight, 0, 1)
-        if not len(profile_a.shapes) == len(profile_b.shapes):
-            raise Exception("Number of profile shapes do not match.")
+    shapes_c = []
+    for i in range(profile_a.num_shapes):
+        shapes_c += [Shape.linear_interpolation(profile_a.shapes[i],
+                                                profile_b.shapes[i],
+                                                weight)]
 
-        shapes_c = []
-        for i in range(profile_a.num_shapes):
-            shapes_c += [Shape.linear_interpolation(profile_a.shapes[i],
-                                                    profile_b.shapes[i],
-                                                    weight)]
-
-        return Profile(shapes_c)
+    return Profile(shapes_c)
 
 
 # Varying profile class -------------------------------------------------------
@@ -1131,8 +1127,9 @@ class VariableProfile:
         segment_length = self._locations[idx + 1] - self._locations[idx]
         weight = (location - self._locations[idx]) / segment_length
 
-        return self._interpolation_schemes[idx].interpolate(
-            self._profiles[idx], self._profiles[idx + 1], weight)
+        return self._interpolation_schemes[idx](self._profiles[idx],
+                                                self._profiles[idx + 1],
+                                                weight)
 
 
 #  Geometry class -------------------------------------------------------------
