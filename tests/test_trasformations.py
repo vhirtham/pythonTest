@@ -24,9 +24,11 @@ def check_coordinate_system(ccs, basis_expected, origin_expected,
 
         # check axis orientations match
         assert np.abs(np.dot(ccs.basis[:, i], unit_vec) - 1) < 1E-9
+        assert np.abs(np.dot(ccs.orientation[:, i], unit_vec) - 1) < 1E-9
 
         # check origin correct
         assert np.abs(origin_expected[i] - ccs.origin[i]) < 1E-9
+        assert np.abs(origin_expected[i] - ccs.location[i]) < 1E-9
 
 
 def check_matrix_does_not_reflect(matrix):

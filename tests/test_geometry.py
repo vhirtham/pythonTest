@@ -326,6 +326,13 @@ def test_arc_segment_construction():
     assert math.isclose(segment_cw.arc_length, 3 / 2 * np.pi)
     assert math.isclose(segment_ccw.arc_length, 9 / 2 * np.pi)
 
+    helpers.check_vectors_identical([3, 3], segment_cw.points[:, 0])
+    helpers.check_vectors_identical([3, 3], segment_ccw.points[:, 0])
+    helpers.check_vectors_identical([6, 6], segment_cw.points[:, 1])
+    helpers.check_vectors_identical([6, 6], segment_ccw.points[:, 1])
+    helpers.check_vectors_identical([6, 3], segment_cw.points[:, 2])
+    helpers.check_vectors_identical([6, 3], segment_ccw.points[:, 2])
+
     # check exceptions ------------------------------------
 
     # radius differs
