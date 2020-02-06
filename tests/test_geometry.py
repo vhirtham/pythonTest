@@ -260,6 +260,8 @@ def test_line_segment_transformations():
     zero_matrix = np.zeros((2, 2))
     with pytest.raises(Exception):
         segment.apply_transformation(zero_matrix)
+    with pytest.raises(Exception):
+        segment.transform(zero_matrix)
 
 
 def test_line_segment_interpolation():
@@ -528,9 +530,17 @@ def test_arc_segment_transformations():
                                                       False)
     segment_ccw = geo.ArcSegment.construct_with_points([3, 3], [5, 5], [5, 3],
                                                        True)
-    segment_cw.apply_translation([-1, 4])
-    segment_ccw.apply_translation([-1, 4])
 
+    segment_cw_2 = segment_cw.translate([-1, 4])
+    segment_ccw_2 = segment_ccw.translate([-1, 4])
+
+    # original segment not modified
+    check_arc_segment_values(segment_cw, [3, 3], [5, 5], [5, 3],
+                             False, 2, 0.5 * np.pi, np.pi)
+    check_arc_segment_values(segment_ccw, [3, 3], [5, 5], [5, 3],
+                             True, 2, 1.5 * np.pi, 3 * np.pi)
+
+    # check new segment
     exp_start = [2, 7]
     exp_end = [4, 9]
     exp_center = [4, 7]
@@ -540,10 +550,18 @@ def test_arc_segment_transformations():
     exp_arc_length_cw = np.pi
     exp_arc_length_ccw = 3 * np.pi
 
-    check_arc_segment_values(segment_cw, exp_start, exp_end, exp_center, False,
-                             exp_radius, exp_angle_cw, exp_arc_length_cw)
-    check_arc_segment_values(segment_ccw, exp_start, exp_end, exp_center, True,
-                             exp_radius, exp_angle_ccw, exp_arc_length_ccw)
+    check_arc_segment_values(segment_cw_2, exp_start, exp_end, exp_center,
+                             False, exp_radius, exp_angle_cw,
+                             exp_arc_length_cw)
+    check_arc_segment_values(segment_ccw_2, exp_start, exp_end, exp_center,
+                             True, exp_radius, exp_angle_ccw,
+                             exp_arc_length_ccw)
+
+    # apply same transformation in place
+    segment_cw.apply_translation([-1, 4])
+    segment_ccw.apply_translation([-1, 4])
+    check_segments_identical(segment_cw_2, segment_cw)
+    check_segments_identical(segment_ccw_2, segment_ccw)
 
     # 45 degree rotation ----------------------------------
     s = np.sin(np.pi / 4.)
@@ -554,17 +572,33 @@ def test_arc_segment_transformations():
                                                       False)
     segment_ccw = geo.ArcSegment.construct_with_points([3, 3], [5, 5], [5, 3],
                                                        True)
-    segment_cw.apply_transformation(rotation_matrix)
-    segment_ccw.apply_transformation(rotation_matrix)
 
+    segment_cw_2 = segment_cw.transform(rotation_matrix)
+    segment_ccw_2 = segment_ccw.transform(rotation_matrix)
+
+    # original segment not modified
+    check_arc_segment_values(segment_cw, [3, 3], [5, 5], [5, 3],
+                             False, 2, 0.5 * np.pi, np.pi)
+    check_arc_segment_values(segment_ccw, [3, 3], [5, 5], [5, 3],
+                             True, 2, 1.5 * np.pi, 3 * np.pi)
+
+    # check new segment
     exp_start = [0, np.sqrt(18)]
     exp_end = [0, np.sqrt(50)]
     exp_center = np.matmul(rotation_matrix, [5, 3])
 
-    check_arc_segment_values(segment_cw, exp_start, exp_end, exp_center, False,
-                             exp_radius, exp_angle_cw, exp_arc_length_cw)
-    check_arc_segment_values(segment_ccw, exp_start, exp_end, exp_center, True,
-                             exp_radius, exp_angle_ccw, exp_arc_length_ccw)
+    check_arc_segment_values(segment_cw_2, exp_start, exp_end, exp_center,
+                             False, exp_radius, exp_angle_cw,
+                             exp_arc_length_cw)
+    check_arc_segment_values(segment_ccw_2, exp_start, exp_end, exp_center,
+                             True, exp_radius, exp_angle_ccw,
+                             exp_arc_length_ccw)
+
+    # apply same transformation in place
+    segment_cw.apply_transformation(rotation_matrix)
+    segment_ccw.apply_transformation(rotation_matrix)
+    check_segments_identical(segment_cw_2, segment_cw)
+    check_segments_identical(segment_ccw_2, segment_ccw)
 
     # reflection at 45 degree line ------------------------
     v = np.array([-1, 1], dtype=float)
@@ -574,19 +608,33 @@ def test_arc_segment_transformations():
                                                       False)
     segment_ccw = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                        True)
-    segment_cw.apply_transformation(reflection_matrix)
-    segment_ccw.apply_transformation(reflection_matrix)
 
+    segment_cw_2 = segment_cw.transform(reflection_matrix)
+    segment_ccw_2 = segment_ccw.transform(reflection_matrix)
+
+    # original segment not modified
+    check_arc_segment_values(segment_cw, [3, 2], [5, 4], [5, 2],
+                             False, 2, 0.5 * np.pi, np.pi)
+    check_arc_segment_values(segment_ccw, [3, 2], [5, 4], [5, 2],
+                             True, 2, 1.5 * np.pi, 3 * np.pi)
+
+    # check new segment
     exp_start = [2, 3]
     exp_end = [4, 5]
     exp_center = [2, 5]
 
     # Reflection must change winding!
-    check_arc_segment_values(segment_cw, exp_start, exp_end, exp_center, True,
-                             exp_radius, exp_angle_cw, exp_arc_length_cw)
-    check_arc_segment_values(segment_ccw, exp_start, exp_end, exp_center,
+    check_arc_segment_values(segment_cw_2, exp_start, exp_end, exp_center,
+                             True, exp_radius, exp_angle_cw, exp_arc_length_cw)
+    check_arc_segment_values(segment_ccw_2, exp_start, exp_end, exp_center,
                              False, exp_radius, exp_angle_ccw,
                              exp_arc_length_ccw)
+
+    # apply same transformation in place
+    segment_cw.apply_transformation(reflection_matrix)
+    segment_ccw.apply_transformation(reflection_matrix)
+    check_segments_identical(segment_cw_2, segment_cw)
+    check_segments_identical(segment_ccw_2, segment_ccw)
 
     # scaling both coordinates equally --------------------
     scaling_matrix = [[4, 0], [0, 4]]
@@ -644,12 +692,16 @@ def test_arc_segment_transformations():
     segment = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                    False)
     with pytest.raises(Exception):
+        segment.transform(scaling_matrix)
+    with pytest.raises(Exception):
         segment.apply_transformation(scaling_matrix)
 
     # transformation results in length = 0
     segment = geo.ArcSegment.construct_with_points([3, 2], [5, 4], [5, 2],
                                                    False)
     zero_matrix = np.zeros((2, 2))
+    with pytest.raises(Exception):
+        segment.transform(zero_matrix)
     with pytest.raises(Exception):
         segment.apply_transformation(zero_matrix)
 

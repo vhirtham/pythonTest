@@ -486,6 +486,28 @@ class ArcSegment:
 
         return data.transpose()
 
+    def transform(self, matrix):
+        """
+        Get a transformed copy of the segment.
+
+        :param matrix: Transformation matrix
+        :return: Transformed copy
+        """
+        new_segment = copy.deepcopy(self)
+        new_segment.apply_transformation(matrix)
+        return new_segment
+
+    def translate(self, vector):
+        """
+        Get a translated copy of the segment.
+
+        :param vector: Translation vector
+        :return: Transformed copy
+        """
+        new_segment = copy.deepcopy(self)
+        new_segment.apply_translation(vector)
+        return new_segment
+
 
 # Shape class -----------------------------------------------------------------
 
