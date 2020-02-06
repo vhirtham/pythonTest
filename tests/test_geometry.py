@@ -729,6 +729,18 @@ def test_shape_rasterization():
     for point in points:
         assert utils.is_column_in_matrix(point, data)
 
+    assert data.shape[1] == 4
+
+    # no duplication if shape is closed -------------------
+
+    shape.add_segments(
+        geo.LineSegment.construct_with_points(points[3], points[0]))
+
+    data = shape.rasterize(10)
+
+    assert data.shape[1] == 4
+    assert helpers.are_all_points_unique(data)
+
     # exceptions ------------------------------------------
     with pytest.raises(Exception):
         shape.rasterize(0)

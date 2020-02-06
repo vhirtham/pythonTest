@@ -630,7 +630,8 @@ class Shape:
             raster_data = np.hstack((raster_data, segment_data))
 
         last_point = self.segments[-1].point_end[:, np.newaxis]
-        raster_data = np.hstack((raster_data, last_point))
+        if not ut.vector_is_close(last_point, self.segments[0].point_start):
+            raster_data = np.hstack((raster_data, last_point))
         return raster_data
 
 
