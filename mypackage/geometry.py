@@ -557,6 +557,37 @@ class Shape:
         """
         return self._segments
 
+    def add_line_segments(self, points):
+        """
+        Add line segments to the shape.
+
+        The line segments are constructed from the provided points.
+
+        :param points:  List of points / Matrix Nx2 matrix
+        :return: ---
+        """
+        points = ut.to_float_array(points)
+        dimension = len(points.shape)
+        if dimension == 1:
+            points = points[np.newaxis, :]
+        elif not dimension == 2:
+            raise Exception("Invalid input parameter")
+
+        if not points.shape[1] == 2:
+            raise Exception("Invalid point format")
+
+        if len(self.segments) > 0:
+            points = np.vstack((self.segments[-1].point_end, points))
+        elif points.shape[0] <= 1:
+            raise Exception("Insufficient number of points provided.")
+
+        num_new_segments = len(points) - 1
+        line_segments = []
+        for i in range(num_new_segments):
+            line_segments += [LineSegment.construct_with_points(points[i],
+                                                                points[i + 1])]
+        self.add_segments(line_segments)
+
     def add_segments(self, segments):
         """
         Add segments to the shape.

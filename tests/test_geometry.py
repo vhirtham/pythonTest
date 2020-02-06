@@ -686,6 +686,66 @@ def test_shape_segment_addition():
     assert shape.num_segments == 3  # ensure shape is unmodified
 
 
+def test_shape_line_segment_addition():
+    shape_0 = geo.Shape()
+    shape_0.add_line_segments([[0, 0], [1, 0]])
+    assert shape_0.num_segments == 1
+
+    shape_1 = geo.Shape()
+    shape_1.add_line_segments([[0, 0], [1, 0], [2, 0]])
+    assert shape_1.num_segments == 2
+
+    # test possible formats to add single line segment ----
+
+    shape_0.add_line_segments([2, 0])
+    assert shape_0.num_segments == 2
+    shape_0.add_line_segments([[3, 0]])
+    assert shape_0.num_segments == 3
+    shape_0.add_line_segments(np.array([4, 0]))
+    assert shape_0.num_segments == 4
+    shape_0.add_line_segments(np.array([[5, 0]]))
+    assert shape_0.num_segments == 5
+
+    # add multiple segments -------------------------------
+
+    shape_0.add_line_segments([[6, 0], [7, 0], [8, 0]])
+    assert shape_0.num_segments == 8
+    shape_0.add_line_segments(np.array([[9, 0], [10, 0], [11, 0]]))
+    assert shape_0.num_segments == 11
+
+    for i in range(11):
+        expected_segment = geo.LineSegment.construct_with_points([i, 0],
+                                                                 [i + 1, 0])
+        check_segments_identical(shape_0.segments[i], expected_segment)
+        if i < 2:
+            check_segments_identical(shape_1.segments[i], expected_segment)
+
+    # exceptions ------------------------------------------
+
+    shape_2 = geo.Shape()
+    # invalid inputs
+    with pytest.raises(Exception):
+        shape_2.add_line_segments([])
+    assert shape_2.num_segments == 0
+
+    with pytest.raises(Exception):
+        shape_2.add_line_segments(None)
+    assert shape_2.num_segments == 0
+
+    # single point with empty shape
+    with pytest.raises(Exception):
+        shape_2.add_line_segments([0, 1])
+    assert shape_2.num_segments == 0
+
+    # invalid point format
+    with pytest.raises(Exception):
+        shape_2.add_line_segments([[0, 1, 2], [1, 2, 3]])
+    assert shape_2.num_segments == 0
+
+
+test_shape_line_segment_addition()
+
+
 def test_shape_rasterization():
     points = np.array([[0, 0],
                        [0, 1],
