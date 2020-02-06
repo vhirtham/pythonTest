@@ -175,7 +175,7 @@ def test_line_segment_rasterization():
 def test_line_segment_transformations():
     # translation -----------------------------------------
     segment = geo.LineSegment.construct_with_points([3, 3], [4, 5])
-    segment.translate([-1, 4])
+    segment.apply_translation([-1, 4])
 
     helpers.check_vectors_identical(segment.point_start, np.array([2, 7]))
     helpers.check_vectors_identical(segment.point_end, np.array([3, 9]))
@@ -492,8 +492,8 @@ def test_arc_segment_transformations():
                                                       False)
     segment_ccw = geo.ArcSegment.construct_with_points([3, 3], [5, 5], [5, 3],
                                                        True)
-    segment_cw.translate([-1, 4])
-    segment_ccw.translate([-1, 4])
+    segment_cw.apply_translation([-1, 4])
+    segment_ccw.apply_translation([-1, 4])
 
     exp_start = [2, 7]
     exp_end = [4, 9]
@@ -743,9 +743,6 @@ def test_shape_line_segment_addition():
     assert shape_2.num_segments == 0
 
 
-test_shape_line_segment_addition()
-
-
 def test_shape_rasterization():
     points = np.array([[0, 0],
                        [0, 1],
@@ -825,7 +822,7 @@ def test_shape_translation():
     shape = copy.deepcopy(shape_ref)
 
     # apply translation
-    shape.translate(translation)
+    shape.apply_translation(translation)
 
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_ref.segments[0]

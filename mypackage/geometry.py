@@ -149,7 +149,7 @@ class LineSegment:
 
         return np.matmul(self._points, weight_matrix)
 
-    def translate(self, vector):
+    def apply_translation(self, vector):
         """
         Apply a translation to the segment.
 
@@ -453,7 +453,7 @@ class ArcSegment:
 
         return data.transpose()
 
-    def translate(self, vector):
+    def apply_translation(self, vector):
         """
         Apply a translation to the segment.
 
@@ -627,11 +627,11 @@ class Shape:
 
         offset = normal / np.sqrt(dot_product) * distance_to_origin
 
-        self.translate(-offset)
+        self.apply_translation(-offset)
         self.apply_transformation(householder_matrix)
-        self.translate(offset)
+        self.apply_translation(offset)
 
-    def translate(self, vector):
+    def apply_translation(self, vector):
         """
         Apply a translation to the shape.
 
@@ -639,7 +639,7 @@ class Shape:
         :return: ---
         """
         for i in range(self.num_segments):
-            self._segments[i].translate(vector)
+            self._segments[i].apply_translation(vector)
 
     def rasterize(self, raster_width):
         """
