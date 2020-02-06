@@ -175,11 +175,20 @@ def test_line_segment_rasterization():
 def test_line_segment_transformations():
     # translation -----------------------------------------
     segment = geo.LineSegment.construct_with_points([3, 3], [4, 5])
-    segment.apply_translation([-1, 4])
+    segment_2 = segment.translate([-1, 4])
 
-    helpers.check_vectors_identical(segment.point_start, np.array([2, 7]))
-    helpers.check_vectors_identical(segment.point_end, np.array([3, 9]))
-    assert math.isclose(segment.length, np.sqrt(5))
+    # original segment not modified
+    helpers.check_vectors_identical(segment.point_start, np.array([3, 3]))
+    helpers.check_vectors_identical(segment.point_end, np.array([4, 5]))
+
+    # check new segment
+    helpers.check_vectors_identical(segment_2.point_start, np.array([2, 7]))
+    helpers.check_vectors_identical(segment_2.point_end, np.array([3, 9]))
+    assert math.isclose(segment_2.length, np.sqrt(5))
+
+    # apply same transformation in place
+    segment.apply_translation([-1, 4])
+    check_segments_identical(segment, segment_2)
 
     # 45 degree rotation ----------------------------------
     s = np.sin(np.pi / 4.)
@@ -187,36 +196,63 @@ def test_line_segment_transformations():
     rotation_matrix = [[c, -s], [s, c]]
 
     segment = geo.LineSegment.construct_with_points([2, 2], [3, 6])
-    segment.apply_transformation(rotation_matrix)
+    segment_2 = segment.transform(rotation_matrix)
 
+    # original segment not modified
+    helpers.check_vectors_identical(segment.point_start, np.array([2, 2]))
+    helpers.check_vectors_identical(segment.point_end, np.array([3, 6]))
+
+    # check new segment
     exp_start = [0, np.sqrt(8)]
     exp_end = np.matmul(rotation_matrix, [3, 6])
 
-    helpers.check_vectors_identical(segment.point_start, exp_start)
-    helpers.check_vectors_identical(segment.point_end, exp_end)
-    assert math.isclose(segment.length, np.sqrt(17))
+    helpers.check_vectors_identical(segment_2.point_start, exp_start)
+    helpers.check_vectors_identical(segment_2.point_end, exp_end)
+    assert math.isclose(segment_2.length, np.sqrt(17))
+
+    # apply same transformation in place
+    segment.apply_transformation(rotation_matrix)
+    check_segments_identical(segment, segment_2)
 
     # reflection at 45 degree line ------------------------
     v = np.array([-1, 1], dtype=float)
     reflection_matrix = np.identity(2) - 2 / np.dot(v, v) * np.outer(v, v)
 
     segment = geo.LineSegment.construct_with_points([-1, 3], [6, 1])
-    segment.apply_transformation(reflection_matrix)
+    segment_2 = segment.transform(reflection_matrix)
 
-    helpers.check_vectors_identical(segment.point_start, [3, -1])
-    helpers.check_vectors_identical(segment.point_end, [1, 6])
-    assert math.isclose(segment.length, np.sqrt(53))
+    # original segment not modified
+    helpers.check_vectors_identical(segment.point_start, np.array([-1, 3]))
+    helpers.check_vectors_identical(segment.point_end, np.array([6, 1]))
+
+    # check new segment
+    helpers.check_vectors_identical(segment_2.point_start, [3, -1])
+    helpers.check_vectors_identical(segment_2.point_end, [1, 6])
+    assert math.isclose(segment_2.length, np.sqrt(53))
+
+    # apply same transformation in place
+    segment.apply_transformation(reflection_matrix)
+    check_segments_identical(segment, segment_2)
 
     # scaling ---------------------------------------------
     scale_matrix = [[4, 0], [0, 0.5]]
 
     segment = geo.LineSegment.construct_with_points([-2, 2], [1, 4])
-    segment.apply_transformation(scale_matrix)
+    segment_2 = segment.transform(scale_matrix)
 
-    helpers.check_vectors_identical(segment.point_start, [-8, 1])
-    helpers.check_vectors_identical(segment.point_end, [4, 2])
+    # original segment not modified
+    helpers.check_vectors_identical(segment.point_start, np.array([-2, 2]))
+    helpers.check_vectors_identical(segment.point_end, np.array([1, 4]))
+
+    # check new segment
+    helpers.check_vectors_identical(segment_2.point_start, [-8, 1])
+    helpers.check_vectors_identical(segment_2.point_end, [4, 2])
     # length changes due to scaling!
-    assert math.isclose(segment.length, np.sqrt(145))
+    assert math.isclose(segment_2.length, np.sqrt(145))
+
+    # apply same transformation in place
+    segment.apply_transformation(scale_matrix)
+    check_segments_identical(segment, segment_2)
 
     # exceptions ------------------------------------------
 

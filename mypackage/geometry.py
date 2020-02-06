@@ -1,10 +1,12 @@
 """Provides classes to define lines and surfaces."""
 
-import numpy as np
-import math
 import mypackage._utility as ut
 import mypackage.transformations as tf
 from scipy.spatial.transform import Rotation as Rot
+
+import copy
+import math
+import numpy as np
 
 
 # LineSegment -----------------------------------------------------------------
@@ -117,6 +119,15 @@ class LineSegment:
         self._points = np.matmul(matrix, self._points)
         self._calculate_length()
 
+    def apply_translation(self, vector):
+        """
+        Apply a translation to the segment.
+
+        :param vector: Translation vector
+        :return: ---
+        """
+        self._points += np.ndarray((2, 1), float, np.array(vector, float))
+
     def rasterize(self, raster_width, num_points_excluded_end=0):
         """
         Create an array of points that describe the segments contour.
@@ -149,14 +160,27 @@ class LineSegment:
 
         return np.matmul(self._points, weight_matrix)
 
-    def apply_translation(self, vector):
+    def transform(self, matrix):
         """
-        Apply a translation to the segment.
+        Get a transformed copy of the segment.
+
+        :param matrix: Transformation matrix
+        :return: Transformed copy
+        """
+        new_segment = copy.deepcopy(self)
+        new_segment.apply_transformation(matrix)
+        return new_segment
+
+    def translate(self, vector):
+        """
+        Get a translated copy of the segment.
 
         :param vector: Translation vector
-        :return: ---
+        :return: Transformed copy
         """
-        self._points += np.ndarray((2, 1), float, np.array(vector, float))
+        new_segment = copy.deepcopy(self)
+        new_segment.apply_translation(vector)
+        return new_segment
 
 
 # ArcSegment ------------------------------------------------------------------
@@ -415,6 +439,15 @@ class ArcSegment:
         self._sign_arc_winding *= tf.reflection_sign(matrix)
         self._calculate_arc_parameters()
 
+    def apply_translation(self, vector):
+        """
+        Apply a translation to the segment.
+
+        :param vector: Translation vector
+        :return: ---
+        """
+        self._points += np.ndarray((2, 1), float, np.array(vector, float))
+
     def rasterize(self, raster_width, num_points_excluded_end=0):
         """
         Create an array of points that describe the segments contour.
@@ -452,15 +485,6 @@ class ArcSegment:
         data = np.matmul(rotation_matrices, vec_center_start) + point_center
 
         return data.transpose()
-
-    def apply_translation(self, vector):
-        """
-        Apply a translation to the segment.
-
-        :param vector: Translation vector
-        :return: ---
-        """
-        self._points += np.ndarray((2, 1), float, np.array(vector, float))
 
 
 # Shape class -----------------------------------------------------------------
