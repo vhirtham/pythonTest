@@ -711,6 +711,28 @@ class Shape:
             raster_data = np.hstack((raster_data, last_point))
         return raster_data
 
+    def transform(self, matrix):
+        """
+        Get a transformed copy of the shape.
+
+        :param matrix: Transformation matrix
+        :return: Transformed copy
+        """
+        new_shape = copy.deepcopy(self)
+        new_shape.apply_transformation(matrix)
+        return new_shape
+
+    def translate(self, vector):
+        """
+        Get a translated copy of the shape.
+
+        :param vector: Translation vector
+        :return: Transformed copy
+        """
+        new_shape = copy.deepcopy(self)
+        new_shape.apply_translation(vector)
+        return new_shape
+
 
 # Profile class ---------------------------------------------------------------
 

@@ -907,10 +907,12 @@ def test_shape_translation():
     translation = [3, 4]
 
     shape_ref = default_test_shape()
-    shape = copy.deepcopy(shape_ref)
 
     # apply translation
-    shape.apply_translation(translation)
+    shape = shape_ref.translate(translation)
+
+    # original shape unchanged
+    check_shapes_identical(shape_ref, default_test_shape())
 
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_ref.segments[0]
@@ -932,9 +934,13 @@ def test_shape_translation():
     check_point(line_segment.point_end, line_segment_ref.point_end,
                 translation)
 
+    # apply same transformation in place
+    shape_ref.apply_translation(translation)
+    check_shapes_identical(shape_ref, shape)
+
 
 def test_shape_transformation():
-    # without reflection
+    # without reflection ----------------------------------
     def check_point_rotation(point, point_ref):
         assert point[0] == point_ref[1]
         assert point[1] == -point_ref[0]
@@ -942,10 +948,12 @@ def test_shape_transformation():
     rotation_matrix = np.array([[0, 1], [-1, 0]])
 
     shape_ref = default_test_shape()
-    shape = copy.deepcopy(shape_ref)
 
     # apply transformation
-    shape.apply_transformation(rotation_matrix)
+    shape = shape_ref.transform(rotation_matrix)
+
+    # original shape unchanged
+    check_shapes_identical(shape_ref, default_test_shape())
 
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_ref.segments[0]
@@ -964,17 +972,24 @@ def test_shape_transformation():
                          line_segment_ref.point_start)
     check_point_rotation(line_segment.point_end, line_segment_ref.point_end)
 
-    # with reflection
+    # apply same transformation in place
+    shape_ref.apply_transformation(rotation_matrix)
+    check_shapes_identical(shape_ref, shape)
+
+    # with reflection -------------------------------------
     def check_point_reflection(point, point_ref):
         assert point[0] == point_ref[1]
         assert point[1] == point_ref[0]
 
     reflection_matrix = np.array([[0, 1], [1, 0]])
 
-    shape = copy.deepcopy(shape_ref)
+    shape_ref = default_test_shape()
 
     # apply transformation
-    shape.apply_transformation(reflection_matrix)
+    shape = shape_ref.transform(reflection_matrix)
+
+    # original shape unchanged
+    check_shapes_identical(shape_ref, default_test_shape())
 
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_ref.segments[0]
@@ -993,6 +1008,10 @@ def test_shape_transformation():
     check_point_reflection(line_segment.point_start,
                            line_segment_ref.point_start)
     check_point_reflection(line_segment.point_end, line_segment_ref.point_end)
+
+    # apply same transformation in place
+    shape_ref.apply_transformation(reflection_matrix)
+    check_shapes_identical(shape_ref, shape)
 
 
 def check_reflected_point(point, reflected_point, axis_offset,
