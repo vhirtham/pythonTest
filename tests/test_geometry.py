@@ -1025,7 +1025,7 @@ def check_reflected_point(point, reflected_point, axis_offset,
     assert np.abs(determinant) < 1E-8
 
 
-def shape_reflect_testcase(normal, distance_to_origin):
+def shape_reflection_testcase(normal, distance_to_origin):
     direction_reflection_axis = np.array([normal[1], -normal[0]])
     normal_length = np.linalg.norm(normal)
     unit_normal = np.array(normal) / normal_length
@@ -1034,8 +1034,10 @@ def shape_reflect_testcase(normal, distance_to_origin):
     shape = default_test_shape()
 
     # create reflected shape
-    shape_reflected = copy.deepcopy(shape)
-    shape_reflected.reflect(normal, distance_to_origin)
+    shape_reflected = shape.reflect(normal, distance_to_origin)
+
+    # original shape is not modified
+    check_shapes_identical(shape, default_test_shape())
 
     arc_segment = shape.segments[0]
     arc_segment_ref = shape_reflected.segments[0]
@@ -1065,15 +1067,19 @@ def shape_reflect_testcase(normal, distance_to_origin):
                           offset,
                           direction_reflection_axis)
 
+    # apply same reflection in place
+    shape.apply_reflection(normal, distance_to_origin)
+    check_shapes_identical(shape, shape_reflected)
 
-def test_shape_reflect():
-    shape_reflect_testcase([2, 1], np.linalg.norm([2, 1]))
-    shape_reflect_testcase([0, 1], 5)
-    shape_reflect_testcase([1, 0], 3)
-    shape_reflect_testcase([1, 0], -3)
-    shape_reflect_testcase([-7, 2], 4.12)
-    shape_reflect_testcase([-7, -2], 4.12)
-    shape_reflect_testcase([7, -2], 4.12)
+
+def test_shape_reflection():
+    shape_reflection_testcase([2, 1], np.linalg.norm([2, 1]))
+    shape_reflection_testcase([0, 1], 5)
+    shape_reflection_testcase([1, 0], 3)
+    shape_reflection_testcase([1, 0], -3)
+    shape_reflection_testcase([-7, 2], 4.12)
+    shape_reflection_testcase([-7, -2], 4.12)
+    shape_reflection_testcase([7, -2], 4.12)
 
 
 def interpolation_nearest(segment_a, segment_b, weight):

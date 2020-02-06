@@ -657,12 +657,12 @@ class Shape:
         for i in range(self.num_segments):
             self._segments[i].apply_transformation(transformation_matrix)
 
-    def reflect(self, reflection_normal, distance_to_origin=0):
+    def apply_reflection(self, reflection_normal, distance_to_origin=0):
         """
         Apply a reflection at the given axis to the shape.
 
-        :param reflection_normal: Normal of the reflection axis
-        :param distance_to_origin: Distance of the reflection axis to the
+        :param reflection_normal: Normal of the line of reflection
+        :param distance_to_origin: Distance of the line of reflection to the
         origin
         :return: ---
         """
@@ -710,6 +710,19 @@ class Shape:
         if not ut.vector_is_close(last_point, self.segments[0].point_start):
             raster_data = np.hstack((raster_data, last_point))
         return raster_data
+
+    def reflect(self, reflection_normal, distance_to_origin=0):
+        """
+        Get a reflected copy of the shape.
+
+        :param reflection_normal: Normal of the line of reflection
+        :param distance_to_origin: Distance of the line of reflection to the
+        origin
+        :return: ---
+        """
+        new_shape = copy.deepcopy(self)
+        new_shape.apply_reflection(reflection_normal, distance_to_origin)
+        return new_shape
 
     def transform(self, matrix):
         """
