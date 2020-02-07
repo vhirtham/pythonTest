@@ -1154,6 +1154,7 @@ def test_shape_reflection_across_line():
     shape_reflection_across_line_testcase([-3, 2.5], [31.53, -23.44])
     shape_reflection_across_line_testcase([7, 8], [9, 10])
     shape_reflection_across_line_testcase([-4.26, -23.1], [-8, -0.12])
+    shape_reflection_across_line_testcase([-2, 1], [2, -4.5])
 
     # exceptions ------------------------------------------
     shape = default_test_shape()

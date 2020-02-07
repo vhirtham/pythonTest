@@ -701,7 +701,10 @@ class Shape:
             point_start[1] * point_end[0] - point_start[0] * point_end[
                 1]) / length_vector
 
-        normal = ut.to_float_array([-vector[1], vector[0]])
+        if tf.point_left_of_line([0, 0], point_start, point_end) > 0:
+            normal = ut.to_float_array([vector[1], -vector[0]])
+        else:
+            normal = ut.to_float_array([-vector[1], vector[0]])
 
         self.apply_reflection(normal, line_distance_origin)
 
