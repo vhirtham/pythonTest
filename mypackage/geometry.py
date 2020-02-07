@@ -666,7 +666,10 @@ class Shape:
         origin
         :return: ---
         """
-        normal = np.array(reflection_normal, float)
+        normal = ut.to_float_array(reflection_normal)
+        if ut.vector_is_close(normal, ut.to_float_array([0, 0])):
+            raise Exception("Normal has no length.")
+
         dot_product = np.dot(normal, normal)
         outer_product = np.outer(normal, normal)
         householder_matrix = np.identity(2) - 2 / dot_product * outer_product
@@ -676,6 +679,31 @@ class Shape:
         self.apply_translation(-offset)
         self.apply_transformation(householder_matrix)
         self.apply_translation(offset)
+
+    def apply_reflection_across_line(self, point_start, point_end):
+        """
+        Apply a reflection across a line.
+
+        :param point_start: Line of reflection's start point
+        :param point_start: Line of reflection's end point
+        :return: ---
+        """
+        point_start = ut.to_float_array(point_start)
+        point_end = ut.to_float_array(point_end)
+
+        if ut.vector_is_close(point_start, point_end):
+            raise Exception("Line start and end point are identical.")
+
+        vector = point_end - point_start
+        length_vector = np.linalg.norm(vector)
+
+        line_distance_origin = np.abs(
+            point_start[1] * point_end[0] - point_start[0] * point_end[
+                1]) / length_vector
+
+        normal = ut.to_float_array([-vector[1], vector[0]])
+
+        self.apply_reflection(normal, line_distance_origin)
 
     def apply_translation(self, vector):
         """
@@ -722,6 +750,18 @@ class Shape:
         """
         new_shape = copy.deepcopy(self)
         new_shape.apply_reflection(reflection_normal, distance_to_origin)
+        return new_shape
+
+    def reflect_across_line(self, point_start, point_end):
+        """
+        Get a reflected copy across a line.
+
+        :param point_start: Line of reflection's start point
+        :param point_start: Line of reflection's end point
+        :return
+        """
+        new_shape = copy.deepcopy(self)
+        new_shape.apply_reflection_across_line(point_start, point_end)
         return new_shape
 
     def transform(self, matrix):

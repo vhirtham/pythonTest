@@ -1081,6 +1081,88 @@ def test_shape_reflection():
     shape_reflection_testcase([-7, -2], 4.12)
     shape_reflection_testcase([7, -2], 4.12)
 
+    # exceptions ------------------------------------------
+    shape = default_test_shape()
+
+    with pytest.raises(Exception):
+        shape.reflect([0, 0], 2)
+    with pytest.raises(Exception):
+        shape.apply_reflection([0, 0])
+
+
+def check_point_reflected_across_line(point, reflected_point, point_start,
+                                      point_end):
+    """Check if the midpoint lies on the reflection axis."""
+    vec_original_reflected = reflected_point - point
+    mid_point = point + 0.5 * vec_original_reflected
+
+    vec_start_mid = mid_point - point_start
+    vec_start_end = point_end - point_start
+
+    determinant = np.linalg.det([vec_start_end, vec_start_mid])
+    assert np.abs(determinant) < 1E-8
+
+
+def shape_reflection_across_line_testcase(point_start, point_end):
+    point_start = np.array(point_start, float)
+    point_end = np.array(point_end, float)
+
+    shape = default_test_shape()
+
+    # create reflected shape
+    shape_reflected = shape.reflect_across_line(point_start, point_end)
+
+    # original shape is not modified
+    check_shapes_identical(shape, default_test_shape())
+
+    arc_segment = shape.segments[0]
+    arc_segment_ref = shape_reflected.segments[0]
+    line_segment = shape.segments[1]
+    line_segment_ref = shape_reflected.segments[1]
+
+    # check reflected points
+    check_point_reflected_across_line(arc_segment.point_start,
+                                      arc_segment_ref.point_start,
+                                      point_start,
+                                      point_end)
+    check_point_reflected_across_line(arc_segment.point_end,
+                                      arc_segment_ref.point_end,
+                                      point_start,
+                                      point_end)
+    check_point_reflected_across_line(arc_segment.point_center,
+                                      arc_segment_ref.point_center,
+                                      point_start,
+                                      point_end)
+
+    check_point_reflected_across_line(line_segment.point_start,
+                                      line_segment_ref.point_start,
+                                      point_start,
+                                      point_end)
+    check_point_reflected_across_line(line_segment.point_end,
+                                      line_segment_ref.point_end,
+                                      point_start,
+                                      point_end)
+
+    # apply same reflection in place
+    shape.apply_reflection_across_line(point_start, point_end)
+    check_shapes_identical(shape, shape_reflected)
+
+
+def test_shape_reflection_across_line():
+    shape_reflection_across_line_testcase([0, 0], [0, 1])
+    shape_reflection_across_line_testcase([0, 0], [1, 0])
+    shape_reflection_across_line_testcase([-3, 2.5], [31.53, -23.44])
+    shape_reflection_across_line_testcase([7, 8], [9, 10])
+    shape_reflection_across_line_testcase([-4.26, -23.1], [-8, -0.12])
+
+    # exceptions ------------------------------------------
+    shape = default_test_shape()
+
+    with pytest.raises(Exception):
+        shape.reflect_across_line([2, 5], [2, 5])
+    with pytest.raises(Exception):
+        shape.apply_reflection_across_line([-3, 2], [-3, 2])
+
 
 def interpolation_nearest(segment_a, segment_b, weight):
     if weight > 0.5:
