@@ -2,7 +2,6 @@
 
 import mypackage._utility as ut
 import mypackage.transformations as tf
-from scipy.spatial.transform import Rotation as Rot
 
 import copy
 import math
@@ -128,7 +127,7 @@ class LineSegment:
         """
         self._points += np.ndarray((2, 1), float, np.array(vector, float))
 
-    def rasterize(self, raster_width, num_points_excluded_end=0):
+    def rasterize(self, raster_width):
         """
         Create an array of points that describe the segments contour.
 
@@ -137,10 +136,6 @@ class LineSegment:
         raster points.
 
         :param raster_width: The desired distance between two raster points
-        :param num_points_excluded_end: Specifies how many points from the
-        end should be excluded from the rasterization. The main purpose of
-        this parameter is to avoid point duplication when rasterizing
-        multiple segments.
         :return: Array of contour points
         """
         if not raster_width > 0:
@@ -152,10 +147,7 @@ class LineSegment:
         # normalized effective raster width
         nerw = 1. / num_raster_segments
 
-        range_modifier = (0.5 - np.floor(
-            np.abs(num_points_excluded_end))) * nerw
-
-        multiplier = np.arange(0, 1 + range_modifier, nerw)
+        multiplier = np.arange(0, 1 + 0.5 * nerw, nerw)
         weight_matrix = np.array([1 - multiplier, multiplier])
 
         return np.matmul(self._points, weight_matrix)
@@ -448,7 +440,7 @@ class ArcSegment:
         """
         self._points += np.ndarray((2, 1), float, np.array(vector, float))
 
-    def rasterize(self, raster_width, num_points_excluded_end=0):
+    def rasterize(self, raster_width):
         """
         Create an array of points that describe the segments contour.
 
@@ -457,10 +449,6 @@ class ArcSegment:
         raster points.
 
         :param raster_width: The desired distance between two raster points
-        :param num_points_excluded_end: Specifies how many points from the
-        end should be excluded from the rasterization. The main purpose of
-        this parameter is to avoid point duplication when rasterizing
-        multiple segments.
         :return: Array of contour points
         """
         point_start = self.point_start
@@ -474,13 +462,11 @@ class ArcSegment:
         num_raster_segments = int(np.round(self._arc_length / raster_width))
         delta_angle = self._arc_angle / num_raster_segments
 
-        range_modifier = (0.5 - np.floor(
-            np.abs(num_points_excluded_end))) * delta_angle
-        max_angle = self._sign_arc_winding * (self._arc_angle + range_modifier)
-
+        max_angle = self._sign_arc_winding * (self._arc_angle +
+                                              0.5 * delta_angle)
         angles = np.arange(0, max_angle, self._sign_arc_winding * delta_angle)
 
-        rotation_matrices = Rot.from_euler('z', angles).as_dcm()[:, 0:2, 0:2]
+        rotation_matrices = tf.rotation_matrix_z(angles)[:, 0:2, 0:2]
 
         data = np.matmul(rotation_matrices, vec_center_start) + point_center
 
@@ -734,8 +720,8 @@ class Shape:
 
         raster_data = np.empty([2, 0])
         for i in range(self.num_segments):
-            segment_data = self.segments[i].rasterize(raster_width, 1)
-            raster_data = np.hstack((raster_data, segment_data))
+            segment_data = self.segments[i].rasterize(raster_width)
+            raster_data = np.hstack((raster_data, segment_data[:, :-1]))
 
         last_point = self.segments[-1].point_end[:, np.newaxis]
         if not ut.vector_is_close(last_point, self.segments[0].point_start):

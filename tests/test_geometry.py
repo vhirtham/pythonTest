@@ -95,16 +95,6 @@ def default_segment_rasterization_tests(segment, raster_width, point_start,
     # check that there are no duplicate points
     assert helpers.are_all_points_unique(data)
 
-    # check rasterization with excluded points
-    data_m2 = segment.rasterize(raster_width, 2)
-
-    num_points_m2 = data_m2.shape[1]
-
-    assert num_points - 2 == num_points_m2
-
-    for i in range(num_points_m2):
-        helpers.check_vectors_identical(data[:, i], data_m2[:, i])
-
     # check that rasterization with to large raster width still works
     data_200 = segment.rasterize(200)
 
