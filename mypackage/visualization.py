@@ -1,5 +1,5 @@
 """Contains some functions to help with visualization."""
-import matplotlib.pyplot as plt
+
 import numpy as np
 
 
@@ -32,7 +32,6 @@ def set_axes_equal(axes):
 
     :param axes: Matplotlib axes object (output from plt.gca())
     """
-
     x_limits = axes.get_xlim3d()
     y_limits = axes.get_ylim3d()
     z_limits = axes.get_zlim3d()
