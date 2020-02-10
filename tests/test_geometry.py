@@ -881,6 +881,10 @@ def test_shape_rasterization():
         shape.rasterize(0)
     with pytest.raises(Exception):
         shape.rasterize(-3)
+    # empty shape
+    shape_empty = geo.Shape()
+    with pytest.raises(Exception):
+        shape_empty.rasterize(0.2)
 
 
 def default_test_shape():

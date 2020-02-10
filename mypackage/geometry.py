@@ -715,6 +715,8 @@ class Shape:
         :param raster_width: The desired distance between two raster points
         :return: Array of contour points (3d)
         """
+        if self.num_segments == 0:
+            raise Exception("Can't rasterize empty shape.")
         if not raster_width > 0:
             raise ValueError("'raster_width' must be > 0")
 
