@@ -8,3 +8,4 @@ API Documentation
    :toctree: _autosummary
 
    my_funcs
+   geometry

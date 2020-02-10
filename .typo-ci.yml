@@ -26,3 +26,11 @@ excluded_files:
 # Any typos we should ignore?
 excluded_words:
   - typoci
+  - numpy
+  - scipy
+  - matmul
+  - arange
+  - vstack
+  - pytest
+  - linalg
+  - ndim
