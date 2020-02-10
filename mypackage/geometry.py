@@ -671,7 +671,7 @@ class Shape:
         Apply a reflection across a line.
 
         :param point_start: Line of reflection's start point
-        :param point_start: Line of reflection's end point
+        :param point_end: Line of reflection's end point
         :return: ---
         """
         point_start = ut.to_float_array(point_start)
@@ -746,7 +746,7 @@ class Shape:
         Get a reflected copy across a line.
 
         :param point_start: Line of reflection's start point
-        :param point_start: Line of reflection's end point
+        :param point_end: Line of reflection's end point
         :return
         """
         new_shape = copy.deepcopy(self)
