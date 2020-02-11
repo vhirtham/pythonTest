@@ -3,12 +3,28 @@
 import numpy as np
 
 
-def plot_coordinate_system(coordinate_system, axes):
+def _check_color_key_valid(color_key):
+    """
+    Check if a color key is valid.
+
+    :param color_key: Matplotlib color key letter (e.g. 'r' for red etc).
+    :return: ---
+    """
+    valid_colors = ["r", "g", "b", "y", "c", "m", "k", "w"]
+    if color_key not in valid_colors:
+        raise Exception("Invalid color key.")
+
+
+def plot_coordinate_system(coordinate_system, axes, color=None, label=None):
     """
     Plot a coordinate system in a matplotlib 3d plot.
 
     :param coordinate_system: Coordinate system
     :param axes: Matplotlib axes object (output from plt.gca())
+    :param color: Matplotlib color key letter (e.g. 'r' for red etc). The
+    origin of the coordinate system will be marked with this color.
+    :param label: Name that appears in the legend. Only viable if a color
+    was specified.
     :return: ---
     """
     p0 = coordinate_system.origin
@@ -16,9 +32,14 @@ def plot_coordinate_system(coordinate_system, axes):
     py = p0 + coordinate_system.orientation[:, 1]
     pz = p0 + coordinate_system.orientation[:, 2]
 
-    axes.plot([p0[0], px[0]], [p0[1], px[1]], [p0[2], px[2]], 'r')
-    axes.plot([p0[0], py[0]], [p0[1], py[1]], [p0[2], py[2]], 'g')
-    axes.plot([p0[0], pz[0]], [p0[1], pz[1]], [p0[2], pz[2]], 'b')
+    axes.plot([p0[0], px[0]], [p0[1], px[1]], [p0[2], px[2]], "r")
+    axes.plot([p0[0], py[0]], [p0[1], py[1]], [p0[2], py[2]], "g")
+    axes.plot([p0[0], pz[0]], [p0[1], pz[1]], [p0[2], pz[2]], "b")
+    if color is not None:
+        _check_color_key_valid(color)
+        axes.plot([p0[0]], [p0[1]], [p0[2]], color + "o", label=label)
+    elif label is not None:
+        raise Exception("Labels can only be assigned if a color was specified")
 
 
 def set_axes_equal(axes):

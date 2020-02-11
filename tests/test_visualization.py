@@ -5,6 +5,7 @@ import mypackage.transformations as tf
 
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 import matplotlib.pyplot as plt
+import pytest
 
 
 def test_plot_coordinate_system():
@@ -12,7 +13,17 @@ def test_plot_coordinate_system():
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
-    vs.plot_coordinate_system(cs, ax)
+    vs.plot_coordinate_system(cs, ax, "g")
+    vs.plot_coordinate_system(cs, ax, "r", "test")
+
+    # exceptions ------------------------------------------
+
+    # invalid color
+    with pytest.raises(Exception):
+        vs.plot_coordinate_system(cs, ax, color="color")
+    # label without color
+    with pytest.raises(Exception):
+        vs.plot_coordinate_system(cs, ax, label="label")
 
 
 def test_set_axes_equal():
