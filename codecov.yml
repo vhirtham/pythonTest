@@ -25,7 +25,6 @@ coverage:
 ignore:
   - "tests"
   - "*__init__.py"
-  - "*visualization.py"
 
   #comment:
   #layout: "reach, diff, flags, files"
