@@ -3,7 +3,10 @@
 import mypackage.visualization as vs
 import mypackage.transformations as tf
 
+# pylint: disable=W0611
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
+# pylint: enable=W0611
+
 import matplotlib.pyplot as plt
 import pytest
 
