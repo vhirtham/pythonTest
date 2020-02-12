@@ -1007,7 +1007,7 @@ class Trace:
         for i, segment in enumerate(segments):
             # Fill coordinate system lookup
             lcs_segment_end = segments[i].local_coordinate_system(1)
-            csys = self._coordinate_system_lookup[i] + lcs_segment_end
+            csys = lcs_segment_end + self._coordinate_system_lookup[i]
             self._coordinate_system_lookup += [csys]
 
             # Fill length lookups
@@ -1081,7 +1081,7 @@ class Trace:
         local_segment_cs = self.segments[idx].local_coordinate_system(weight)
         segment_start_cs = self._coordinate_system_lookup[idx]
 
-        return segment_start_cs + local_segment_cs
+        return local_segment_cs + segment_start_cs
 
     def rasterize(self, raster_width):
         """
@@ -1110,7 +1110,7 @@ class Trace:
                 weight)
             segment_start_cs = self._coordinate_system_lookup[idx]
 
-            local_cs = segment_start_cs + local_segment_cs
+            local_cs = local_segment_cs + segment_start_cs
 
             data_point = local_cs.origin[:, np.newaxis]
             raster_data = np.hstack([raster_data, data_point])

@@ -233,15 +233,15 @@ class CoordinateSystem:
         """
         Add 2 coordinate systems.
 
-        Generates a new coordinate system by treating the right-hand side
-        coordinate system as being defined in the left hand-side coordinate
+        Generates a new coordinate system by treating the left-hand side
+        coordinate system as being defined in the right hand-side coordinate
         system.
         The transformations from the base coordinate system to the new
         coordinate system are equivalent to the combination of the
         transformations from both added coordinate systems:
 
-        R_n = R_l * R_r
-        T_n = R_l * T_r + T_l
+        R_n = R_r * R_l
+        T_n = R_r * T_l + T_r
 
         R_r and T_r are rotation matrix and translation vector of the
         right-hand side coordinate system, R_l and T_l of the left-hand side
@@ -250,8 +250,33 @@ class CoordinateSystem:
         :param rhs_cs: Right-hand side coordinate system
         :return: Resulting coordinate system.
         """
-        basis = np.matmul(self.basis, rhs_cs.basis)
-        origin = np.matmul(self.basis, rhs_cs.origin) + self.origin
+        basis = np.matmul(rhs_cs.basis, self.basis)
+        origin = np.matmul(rhs_cs.basis, self.origin) + rhs_cs.origin
+        return CoordinateSystem(basis, origin)
+
+    def __sub__(self, rhs_cs):
+        """
+        Substract 2 coordinate systems.
+
+        Generates a new coordinate system from two local coordinate systems
+        with the same reference coordinate system. The resulting system is
+        equivalent to the left-hand side system but with the right-hand side
+        as reference coordinate system.
+        This is achieved by the following transformations:
+
+        R_n = R_r^(-1) * R_l
+        T_n = R_r^(-1) * (T_l - T_r)
+
+        R_r and T_r are rotation matrix and translation vector of the
+        right-hand side coordinate system, R_l and T_l of the left-hand side
+        coordinate system and R_n and T_n of the resulting coordinate system.
+
+        :param rhs_cs: Right-hand side coordinate system
+        :return: Resulting coordinate system.
+        """
+        transformation_matrix = rhs_cs.basis.transpose()
+        basis = np.matmul(transformation_matrix, self.basis)
+        origin = np.matmul(transformation_matrix, self.origin - rhs_cs.origin)
         return CoordinateSystem(basis, origin)
 
     @classmethod

@@ -332,7 +332,7 @@ def test_reflection_sign():
 
 # test cartesian coordinate system class --------------------------------------
 
-def test_cartesian_coordinate_system_construction():
+def test_coordinate_system_construction():
     # alias name for class - name is too long :)
     cls_ccs = tf.CoordinateSystem
 
@@ -401,7 +401,7 @@ def test_cartesian_coordinate_system_construction():
         cls_ccs([x, y, [0, 0, 1]])
 
 
-def test_cartesian_coordinate_system_addition():
+def test_coordinate_system_addition_and_substraction():
     cls_ccs = tf.CoordinateSystem
 
     orientation0 = tf.rotation_matrix_z(np.pi / 2)
@@ -416,14 +416,23 @@ def test_cartesian_coordinate_system_addition():
     origin2 = [-3, 4, 2]
     ccs2 = cls_ccs(orientation2, origin2)
 
-    # check i
-    ccs_tot_0 = ccs0 + (ccs1 + ccs2)
-    ccs_tot_1 = (ccs0 + ccs1) + ccs2
-    helper.check_matrices_identical(ccs_tot_0.basis, ccs_tot_1.basis)
-    helper.check_vectors_identical(ccs_tot_0.origin, ccs_tot_1.origin)
+    # addition --------------------------------------------
+
+    # is associative
+    ccs_sum_0 = ccs2 + (ccs1 + ccs0)
+    ccs_sum_1 = (ccs2 + ccs1) + ccs0
+    helper.check_matrices_identical(ccs_sum_0.basis, ccs_sum_1.basis)
+    helper.check_vectors_identical(ccs_sum_0.origin, ccs_sum_1.origin)
 
     expected_origin = np.array([-1, 9, 6])
     expected_orientation = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]])
 
-    helper.check_matrices_identical(ccs_tot_0.basis, expected_orientation)
-    helper.check_vectors_identical(ccs_tot_0.origin, expected_origin)
+    helper.check_matrices_identical(ccs_sum_0.basis, expected_orientation)
+    helper.check_vectors_identical(ccs_sum_0.origin, expected_origin)
+
+    # subtraction --------------------------------------------
+
+    ccs_diff_0 = ccs_sum_0 - ccs0 - ccs1
+
+    helper.check_matrices_identical(ccs_diff_0.basis, ccs2.basis)
+    helper.check_vectors_identical(ccs_diff_0.origin, ccs2.origin)
