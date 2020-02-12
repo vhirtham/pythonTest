@@ -12,7 +12,7 @@ import pytest
 
 
 def test_plot_coordinate_system():
-    cs = tf.CoordinateSystem()
+    cs = tf.LocalCoordinateSystem()
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 

@@ -31,7 +31,7 @@ def rotated_coordinate_system(angle_x=np.pi / 3, angle_y=np.pi / 4,
 
     rotated_basis = np.matmul(r_tot, basis)
 
-    return tf.CoordinateSystem(rotated_basis, np.array(origin))
+    return tf.LocalCoordinateSystem(rotated_basis, np.array(origin))
 
 
 def are_all_points_unique(data, decimals=3):

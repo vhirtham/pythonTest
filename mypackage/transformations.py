@@ -199,8 +199,8 @@ def vector_points_to_left_of_vector(vector, vector_reference):
 
 # cartesian coordinate system class -------------------------------------------
 
-class CoordinateSystem:
-    """Defines a cartesian coordinate system in 3d."""
+class LocalCoordinateSystem:
+    """Defines a local cartesian coordinate system in 3d."""
 
     def __init__(self, basis=np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
                  origin=np.array([0, 0, 0])):
@@ -252,7 +252,7 @@ class CoordinateSystem:
         """
         basis = np.matmul(rhs_cs.basis, self.basis)
         origin = np.matmul(rhs_cs.basis, self.origin) + rhs_cs.origin
-        return CoordinateSystem(basis, origin)
+        return LocalCoordinateSystem(basis, origin)
 
     def __sub__(self, rhs_cs):
         """
@@ -277,7 +277,7 @@ class CoordinateSystem:
         transformation_matrix = rhs_cs.basis.transpose()
         basis = np.matmul(transformation_matrix, self.basis)
         origin = np.matmul(transformation_matrix, self.origin - rhs_cs.origin)
-        return CoordinateSystem(basis, origin)
+        return LocalCoordinateSystem(basis, origin)
 
     @classmethod
     def construct_from_orientation(cls, orientation,
