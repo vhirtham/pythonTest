@@ -2,10 +2,8 @@
 
 from astropy.units import Quantity
 import numpy as np
-import copy
 
 import mypackage.geometry as geo
-import mypackage.point_cloud_generator as pcg
 
 
 def singleVGrooveButtWeld(d, width_default=Quantity(5, unit="millimeter")):
@@ -44,16 +42,13 @@ def singleVGrooveButtWeld(d, width_default=Quantity(5, unit="millimeter")):
     top = geo.LineSegment([[-s, -width], [t, t]])
     segment_list.append(top)
 
-    shape = geo.Shape2D(segment_list)
+    shape = geo.Shape(segment_list)
 
-    shape.translate([-b / 2, 0])
-    shape_r = copy.deepcopy(shape)
-    if b != 0:
-        shape_r.reflect([-b / 2, 0])
-    else:
-        shape_r.reflect([-1, 0])
+    shape = shape.translate([-b / 2, 0])
+    # y Achse als Spiegelachse
+    shape_r = shape.reflect_across_line([0, 0], [0, 1])
 
-    profile = pcg.Profile([shape, shape_r])
+    profile = geo.Profile([shape, shape_r])
 
     return profile
 
@@ -95,8 +90,8 @@ def singleUGrooveButtWeld(d, width_default=Quantity(15, unit="millimeter")):
     y = R * np.sin(beta)
     # m = [0,c+R] Kreismittelpunkt
     # => [-x,c+R-y] ist der nächste Punkt
-    groove_face_arc = geo.ArcSegment([[0, -x, 0],
-                                      [c, c + R - y, c + R]], False)
+    groove_face_arc = geo.ArcSegment([[0, -x, 0], [c, c + R - y, c + R]],
+                                     False)
     segment_list.append(groove_face_arc)
 
     s = np.tan(beta) * (t - (c + R - y))
@@ -106,15 +101,12 @@ def singleUGrooveButtWeld(d, width_default=Quantity(15, unit="millimeter")):
     top = geo.LineSegment([[-x - s, -width], [t, t]])
     segment_list.append(top)
 
-    shape = geo.Shape2D(segment_list)
+    shape = geo.Shape(segment_list)
 
-    shape.translate([-b / 2, 0])
-    shape_r = copy.deepcopy(shape)
-    if b != 0:
-        shape_r.reflect([-b / 2, 0])
-    else:
-        shape_r.reflect([-1, 0])
+    shape = shape.translate([-b / 2, 0])
+    # y Achse als Spiegelachse
+    shape_r = shape.reflect_across_line([0, 0], [0, 1])
 
-    profile = pcg.Profile([shape, shape_r])
+    profile = geo.Profile([shape, shape_r])
 
     return profile
