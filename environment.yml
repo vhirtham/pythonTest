@@ -24,5 +24,12 @@ dependencies:
   - sphinx
   - recommonmark
   - matplotlib
-  - seaborn # only needed for xarray tutorial
+  - seaborn 
   - openpyxl # only needed for pandas tutorial
+  - ipykernel
+  - ipympl
+  - snakeviz
+  - graphviz
+  - python-graphviz
+  - line_profiler
+  - memory_profiler
