@@ -6,24 +6,25 @@ import numpy as np
 import mypackage.geometry as geo
 
 
-def singleVGrooveButtWeld(d, width_default=Quantity(5, unit="millimeter")):
+def singleVGrooveButtWeld(
+    t, alpha, b, c, width_default=Quantity(5, unit="millimeter")
+):
     """
     The calculation of a Single-V Groove Butt Weld.
-    Required variables in the dictionary are in Quantity(astropy):
-    t: the workpiece thickness
-    alpha: the groove angle
-    b: the root opening
-    c: the root face
+    Required variables are in Quantity(astropy):
 
-
-    :param d: input dictionary with astropy Quantity
+    :param t: the workpiece thickness
+    :param alpha: the groove angle
+    :param b: the root opening
+    :param c: the root face
     :param width_default: the width of the workpiece
+
     :return: point_could_generator.Profile
     """
-    t = d["t"].to_value("millimeter")
-    alpha = d["alpha"].to_value("rad")
-    b = d["b"].to_value("millimeter")
-    c = d["c"].to_value("millimeter")
+    t = t.to_value("millimeter")
+    alpha = alpha.to_value("rad")
+    b = b.to_value("millimeter")
+    c = c.to_value("millimeter")
     width = width_default.to_value("millimeter")
 
     segment_list = []
@@ -53,27 +54,28 @@ def singleVGrooveButtWeld(d, width_default=Quantity(5, unit="millimeter")):
     return profile
 
 
-def singleUGrooveButtWeld(d, width_default=Quantity(15, unit="millimeter")):
+def singleUGrooveButtWeld(
+    t, beta, R, b, c, width_default=Quantity(15, unit="millimeter")
+):
     """
     The calculation of a Single-U Groove Butt Weld.
-    Required variables in the dictionary are in Quantity(astropy):
-    t: the workpiece thickness
-    beta: the bevel angle
-    R: radius
-    b: the root opening
-    c: the root face
+    Required variables are in Quantity(astropy):
 
-
-    :param d: input dictionary with astropy Quantity
+    :param t: the workpiece thickness
+    :param beta: the bevel angle
+    :param R: radius
+    :param b: the root opening
+    :param c: the root face
     :param width_default: the width of the workpiece
+
     :return: point_could_generator.Profile
     """
 
-    t = d["t"].to_value("millimeter")
-    beta = d["beta"].to_value("rad")
-    R = d["R"].to_value("millimeter")
-    b = d["b"].to_value("millimeter")
-    c = d["c"].to_value("millimeter")
+    t = t.to_value("millimeter")
+    beta = beta.to_value("rad")
+    R = R.to_value("millimeter")
+    b = b.to_value("millimeter")
+    c = c.to_value("millimeter")
     width = width_default.to_value("millimeter")
 
     segment_list = []
