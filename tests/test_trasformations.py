@@ -24,9 +24,11 @@ def check_coordinate_system(ccs, basis_expected, origin_expected,
 
         # check axis orientations match
         assert np.abs(np.dot(ccs.basis[:, i], unit_vec) - 1) < 1E-9
+        assert np.abs(np.dot(ccs.orientation[:, i], unit_vec) - 1) < 1E-9
 
         # check origin correct
         assert np.abs(origin_expected[i] - ccs.origin[i]) < 1E-9
+        assert np.abs(origin_expected[i] - ccs.location[i]) < 1E-9
 
 
 def check_matrix_does_not_reflect(matrix):
@@ -121,7 +123,7 @@ def test_single_axis_rotation_matrices():
 
 
 def test_normalize():
-    for i in range(20):
+    for _ in range(20):
         vec = random_non_unit_vector()
 
         unit = tf.normalize(vec)
@@ -243,10 +245,8 @@ def test_change_of_basis_rotation():
         base_from = rotated_positive_orthogonal_base(*angles_from)
         base_to = rotated_positive_orthogonal_base(*angles_to)
 
-        ccs_from = tf.CartesianCoordinateSystem3d(base_from,
-                                                  random_non_unit_vector())
-        ccs_to = tf.CartesianCoordinateSystem3d(base_to,
-                                                random_non_unit_vector())
+        ccs_from = tf.CoordinateSystem(base_from, random_non_unit_vector())
+        ccs_to = tf.CoordinateSystem(base_to, random_non_unit_vector())
 
         matrix = tf.change_of_basis_rotation(ccs_from, ccs_to)
 
@@ -254,14 +254,14 @@ def test_change_of_basis_rotation():
 
 
 def test_change_of_basis_translation():
-    for i in range(20):
+    for _ in range(20):
         origin_from = random_non_unit_vector()
         origin_to = random_non_unit_vector()
         base_from = rotated_positive_orthogonal_base(*random_non_unit_vector())
         base_to = rotated_positive_orthogonal_base(*random_non_unit_vector())
 
-        ccs_from = tf.CartesianCoordinateSystem3d(base_from, origin_from)
-        ccs_to = tf.CartesianCoordinateSystem3d(base_to, origin_to)
+        ccs_from = tf.CoordinateSystem(base_from, origin_from)
+        ccs_to = tf.CoordinateSystem(base_to, origin_to)
 
         diff = tf.change_of_basis_translation(ccs_from, ccs_to)
 
@@ -270,11 +270,71 @@ def test_change_of_basis_translation():
             assert math.isclose(diff[j], expected_diff[j])
 
 
+def test_vector_points_to_left_of_vector():
+    assert tf.vector_points_to_left_of_vector([-0.1, 1], [0, 1]) > 0
+    assert tf.vector_points_to_left_of_vector([-0.1, -1], [0, 1]) > 0
+    assert tf.vector_points_to_left_of_vector([3, 5], [1, 0]) > 0
+    assert tf.vector_points_to_left_of_vector([-3, 5], [1, 0]) > 0
+    assert tf.vector_points_to_left_of_vector([0, -0.1], [-4, 2]) > 0
+    assert tf.vector_points_to_left_of_vector([-1, -0.1], [-4, 2]) > 0
+
+    assert tf.vector_points_to_left_of_vector([0.1, 1], [0, 1]) < 0
+    assert tf.vector_points_to_left_of_vector([0.1, -1], [0, 1]) < 0
+    assert tf.vector_points_to_left_of_vector([3, -5], [1, 0]) < 0
+    assert tf.vector_points_to_left_of_vector([-3, -5], [1, 0]) < 0
+    assert tf.vector_points_to_left_of_vector([0, 0.1], [-4, 2]) < 0
+    assert tf.vector_points_to_left_of_vector([1, -0.1], [-4, 2]) < 0
+
+    assert tf.vector_points_to_left_of_vector([4, 4], [2, 2]) == 0
+    assert tf.vector_points_to_left_of_vector([-4, -4], [2, 2]) == 0
+
+
+def test_point_left_of_line():
+    line_start = np.array([2, 3])
+    line_end = np.array([5, 6])
+    assert tf.point_left_of_line([-8, 10], line_start, line_end) > 0
+    assert tf.point_left_of_line([3, 0], line_start, line_end) < 0
+    assert tf.point_left_of_line(line_start, line_start, line_end) == 0
+
+    line_start = np.array([2, 3])
+    line_end = np.array([1, -4])
+    assert tf.point_left_of_line([3, 0], line_start, line_end) > 0
+    assert tf.point_left_of_line([-8, 10], line_start, line_end) < 0
+    assert tf.point_left_of_line(line_start, line_start, line_end) == 0
+
+
+def test_reflection_sign():
+    assert tf.reflection_sign([[-1, 0], [0, 1]]) == -1
+    assert tf.reflection_sign([[1, 0], [0, -1]]) == -1
+    assert tf.reflection_sign([[0, 1], [1, 0]]) == -1
+    assert tf.reflection_sign([[0, -1], [-1, 0]]) == -1
+    assert tf.reflection_sign([[-4, 0], [0, 2]]) == -1
+    assert tf.reflection_sign([[6, 0], [0, -4]]) == -1
+    assert tf.reflection_sign([[0, 3], [8, 0]]) == -1
+    assert tf.reflection_sign([[0, -3], [-2, 0]]) == -1
+
+    assert tf.reflection_sign([[1, 0], [0, 1]]) == 1
+    assert tf.reflection_sign([[-1, 0], [0, -1]]) == 1
+    assert tf.reflection_sign([[0, -1], [1, 0]]) == 1
+    assert tf.reflection_sign([[0, 1], [-1, 0]]) == 1
+    assert tf.reflection_sign([[5, 0], [0, 6]]) == 1
+    assert tf.reflection_sign([[-3, 0], [0, -7]]) == 1
+    assert tf.reflection_sign([[0, -8], [9, 0]]) == 1
+    assert tf.reflection_sign([[0, 3], [-2, 0]]) == 1
+
+    with pytest.raises(Exception):
+        tf.reflection_sign([[0, 0], [0, 0]])
+    with pytest.raises(Exception):
+        tf.reflection_sign([[1, 0], [0, 0]])
+    with pytest.raises(Exception):
+        tf.reflection_sign([[2, 2], [1, 1]])
+
+
 # test cartesian coordinate system class --------------------------------------
 
 def test_cartesian_coordinate_system_construction():
     # alias name for class - name is too long :)
-    cls_ccs = tf.CartesianCoordinateSystem3d
+    cls_ccs = tf.CoordinateSystem
 
     # setup -----------------------------------------------
     origin = [4, -2, 6]
@@ -288,8 +348,8 @@ def test_cartesian_coordinate_system_construction():
 
     # construction with basis -----------------------------
 
-    ccs_basis_pos = cls_ccs.construct_from_basis(basis_pos, origin)
-    ccs_basis_neg = cls_ccs.construct_from_basis(basis_neg, origin)
+    ccs_basis_pos = cls_ccs.construct_from_orientation(basis_pos, origin)
+    ccs_basis_neg = cls_ccs.construct_from_orientation(basis_neg, origin)
 
     check_coordinate_system(ccs_basis_pos, basis_pos, origin, True)
     check_coordinate_system(ccs_basis_neg, basis_neg, origin, False)
@@ -342,7 +402,7 @@ def test_cartesian_coordinate_system_construction():
 
 
 def test_cartesian_coordinate_system_addition():
-    cls_ccs = tf.CartesianCoordinateSystem3d
+    cls_ccs = tf.CoordinateSystem
 
     orientation0 = tf.rotation_matrix_z(np.pi / 2)
     origin0 = [1, 3, 2]
