@@ -10,7 +10,7 @@ def singleVGrooveButtWeld(
     t, alpha, b, c, width_default=Quantity(5, unit="millimeter")
 ):
     """
-    Calculation of a Single-V Groove Butt Weld.
+    Calculates a Single-V Groove Butt Weld.
 
     :param t: the workpiece thickness, as Astropy unit
     :param alpha: the groove angle, as Astropy unit
@@ -56,7 +56,7 @@ def singleUGrooveButtWeld(
     t, beta, R, b, c, width_default=Quantity(15, unit="millimeter")
 ):
     """
-    Calculation of a Single-U Groove Butt Weld.
+    Calculates a Single-U Groove Butt Weld.
 
     :param t: the workpiece thickness, as Astropy unit
     :param beta: the bevel angle, as Astropy unit
