@@ -1,4 +1,4 @@
-"""provides the calculation of all Groove-Types"""
+"""provides the calculation of all Groove-Types."""
 
 from astropy.units import Quantity
 import numpy as np
@@ -10,15 +10,13 @@ def singleVGrooveButtWeld(
     t, alpha, b, c, width_default=Quantity(5, unit="millimeter")
 ):
     """
-    The calculation of a Single-V Groove Butt Weld.
-    Required variables are in Quantity(astropy):
+    Calculation of a Single-V Groove Butt Weld.
 
-    :param t: the workpiece thickness
-    :param alpha: the groove angle
-    :param b: the root opening
-    :param c: the root face
-    :param width_default: the width of the workpiece
-
+    :param t: the workpiece thickness, as Astropy unit
+    :param alpha: the groove angle, as Astropy unit
+    :param b: the root opening, as Astropy unit
+    :param c: the root face, as Astropy unit
+    :param width_default: the width of the workpiece, as Astropy unit
     :return: point_could_generator.Profile
     """
     t = t.to_value("millimeter")
@@ -58,19 +56,16 @@ def singleUGrooveButtWeld(
     t, beta, R, b, c, width_default=Quantity(15, unit="millimeter")
 ):
     """
-    The calculation of a Single-U Groove Butt Weld.
-    Required variables are in Quantity(astropy):
+    Calculation of a Single-U Groove Butt Weld.
 
-    :param t: the workpiece thickness
-    :param beta: the bevel angle
-    :param R: radius
-    :param b: the root opening
-    :param c: the root face
-    :param width_default: the width of the workpiece
-
+    :param t: the workpiece thickness, as Astropy unit
+    :param beta: the bevel angle, as Astropy unit
+    :param R: radius, as Astropy unit
+    :param b: the root opening, as Astropy unit
+    :param c: the root face, as Astropy unit
+    :param width_default: the width of the workpiece, as Astropy unit
     :return: point_could_generator.Profile
     """
-
     t = t.to_value("millimeter")
     beta = beta.to_value("rad")
     R = R.to_value("millimeter")
