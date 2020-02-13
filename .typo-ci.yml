@@ -22,6 +22,7 @@ dictionaries:
 excluded_files:
   - ".*"
   - "docs*"
+  - "environment.yml"
 
 # Any typos we should ignore?
 excluded_words:
@@ -34,3 +35,10 @@ excluded_words:
   - pytest
   - linalg
   - ndim
+  - dtype
+  - isclose
+  - ndarray
+  - hstack
+  - matplotlib
+  - gca
+  - plt

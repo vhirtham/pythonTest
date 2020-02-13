@@ -256,7 +256,7 @@ class LocalCoordinateSystem:
 
     def __sub__(self, rhs_cs):
         """
-        Substract 2 coordinate systems.
+        Subtract 2 coordinate systems.
 
         Generates a new coordinate system from two local coordinate systems
         with the same reference coordinate system. The resulting system is

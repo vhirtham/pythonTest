@@ -343,7 +343,7 @@ class ArcSegment:
         """
         raise Exception(
             "Linear interpolation of an arc segment is not unique (see "
-            "doctstring). You need to provide a custom interpolation.")
+            "docstring). You need to provide a custom interpolation.")
 
     @property
     def arc_angle(self):
