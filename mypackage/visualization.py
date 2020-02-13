@@ -27,17 +27,17 @@ def plot_coordinate_system(coordinate_system, axes, color=None, label=None):
     was specified.
     :return: ---
     """
-    p0 = coordinate_system.origin
-    px = p0 + coordinate_system.orientation[:, 0]
-    py = p0 + coordinate_system.orientation[:, 1]
-    pz = p0 + coordinate_system.orientation[:, 2]
+    p_0 = coordinate_system.origin
+    p_x = p_0 + coordinate_system.orientation[:, 0]
+    p_y = p_0 + coordinate_system.orientation[:, 1]
+    p_z = p_0 + coordinate_system.orientation[:, 2]
 
-    axes.plot([p0[0], px[0]], [p0[1], px[1]], [p0[2], px[2]], "r")
-    axes.plot([p0[0], py[0]], [p0[1], py[1]], [p0[2], py[2]], "g")
-    axes.plot([p0[0], pz[0]], [p0[1], pz[1]], [p0[2], pz[2]], "b")
+    axes.plot([p_0[0], p_x[0]], [p_0[1], p_x[1]], [p_0[2], p_x[2]], "r")
+    axes.plot([p_0[0], p_y[0]], [p_0[1], p_y[1]], [p_0[2], p_y[2]], "g")
+    axes.plot([p_0[0], p_z[0]], [p_0[1], p_z[1]], [p_0[2], p_z[2]], "b")
     if color is not None:
         _check_color_key_valid(color)
-        axes.plot([p0[0]], [p0[1]], [p0[2]], color + "o", label=label)
+        axes.plot([p_0[0]], [p_0[1]], [p_0[2]], color + "o", label=label)
     elif label is not None:
         raise Exception("Labels can only be assigned if a color was specified")
 
