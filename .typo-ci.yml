@@ -42,3 +42,8 @@ excluded_words:
   - matplotlib
   - gca
   - plt
+  - ipynb
+  - noqa
+  - ipywidgets
+  - pyplot
+  - jupyter
