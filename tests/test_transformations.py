@@ -9,26 +9,26 @@ import tests._helpers as helper
 
 # helpers for tests -----------------------------------------------------------
 
-def check_coordinate_system(ccs, basis_expected, origin_expected,
+def check_coordinate_system(cs_, basis_expected, origin_expected,
                             positive_orientation_expected):
     # check orientation is as expected
-    assert is_orientation_positive(ccs) == positive_orientation_expected
+    assert is_orientation_positive(cs_) == positive_orientation_expected
 
     # check basis vectors are orthogonal
-    assert tf.is_orthogonal(ccs.basis[0], ccs.basis[1])
-    assert tf.is_orthogonal(ccs.basis[1], ccs.basis[2])
-    assert tf.is_orthogonal(ccs.basis[2], ccs.basis[0])
+    assert tf.is_orthogonal(cs_.basis[0], cs_.basis[1])
+    assert tf.is_orthogonal(cs_.basis[1], cs_.basis[2])
+    assert tf.is_orthogonal(cs_.basis[2], cs_.basis[0])
 
     for i in range(3):
         unit_vec = tf.normalize(basis_expected[:, i])
 
         # check axis orientations match
-        assert np.abs(np.dot(ccs.basis[:, i], unit_vec) - 1) < 1E-9
-        assert np.abs(np.dot(ccs.orientation[:, i], unit_vec) - 1) < 1E-9
+        assert np.abs(np.dot(cs_.basis[:, i], unit_vec) - 1) < 1E-9
+        assert np.abs(np.dot(cs_.orientation[:, i], unit_vec) - 1) < 1E-9
 
         # check origin correct
-        assert np.abs(origin_expected[i] - ccs.origin[i]) < 1E-9
-        assert np.abs(origin_expected[i] - ccs.location[i]) < 1E-9
+        assert np.abs(origin_expected[i] - cs_.origin[i]) < 1E-9
+        assert np.abs(origin_expected[i] - cs_.location[i]) < 1E-9
 
 
 def check_matrix_does_not_reflect(matrix):
@@ -51,10 +51,10 @@ def check_matrix_identical(a, b):
             assert math.isclose(a[i, j], b[i, j], abs_tol=1E-9)
 
 
-def is_orientation_positive(ccs):
-    return tf.orientation_point_plane_containing_origin(ccs.basis[2],
-                                                        ccs.basis[0],
-                                                        ccs.basis[1]) > 0
+def is_orientation_positive(cs_):
+    return tf.orientation_point_plane_containing_origin(cs_.basis[2],
+                                                        cs_.basis[0],
+                                                        cs_.basis[1]) > 0
 
 
 def random_non_unit_vector():
@@ -245,11 +245,11 @@ def test_change_of_basis_rotation():
         base_from = rotated_positive_orthogonal_base(*angles_from)
         base_to = rotated_positive_orthogonal_base(*angles_to)
 
-        ccs_from = tf.LocalCoordinateSystem(base_from,
-                                            random_non_unit_vector())
-        ccs_to = tf.LocalCoordinateSystem(base_to, random_non_unit_vector())
+        cs_from = tf.LocalCoordinateSystem(base_from,
+                                           random_non_unit_vector())
+        cs_to = tf.LocalCoordinateSystem(base_to, random_non_unit_vector())
 
-        matrix = tf.change_of_basis_rotation(ccs_from, ccs_to)
+        matrix = tf.change_of_basis_rotation(cs_from, cs_to)
 
         check_matrix_identical(matrix, ref_mat[i])
 
@@ -261,10 +261,10 @@ def test_change_of_basis_translation():
         base_from = rotated_positive_orthogonal_base(*random_non_unit_vector())
         base_to = rotated_positive_orthogonal_base(*random_non_unit_vector())
 
-        ccs_from = tf.LocalCoordinateSystem(base_from, origin_from)
-        ccs_to = tf.LocalCoordinateSystem(base_to, origin_to)
+        cs_from = tf.LocalCoordinateSystem(base_from, origin_from)
+        cs_to = tf.LocalCoordinateSystem(base_to, origin_to)
 
-        diff = tf.change_of_basis_translation(ccs_from, ccs_to)
+        diff = tf.change_of_basis_translation(cs_from, cs_to)
 
         expected_diff = origin_from - origin_to
         for j in range(3):
@@ -335,7 +335,7 @@ def test_reflection_sign():
 
 def test_coordinate_system_construction():
     # alias name for class - name is too long :)
-    cls_ccs = tf.LocalCoordinateSystem
+    lcs = tf.LocalCoordinateSystem
 
     # setup -----------------------------------------------
     origin = [4, -2, 6]
@@ -349,91 +349,91 @@ def test_coordinate_system_construction():
 
     # construction with basis -----------------------------
 
-    ccs_basis_pos = cls_ccs.construct_from_orientation(basis_pos, origin)
-    ccs_basis_neg = cls_ccs.construct_from_orientation(basis_neg, origin)
+    cs_basis_pos = lcs.construct_from_orientation(basis_pos, origin)
+    cs_basis_neg = lcs.construct_from_orientation(basis_neg, origin)
 
-    check_coordinate_system(ccs_basis_pos, basis_pos, origin, True)
-    check_coordinate_system(ccs_basis_neg, basis_neg, origin, False)
+    check_coordinate_system(cs_basis_pos, basis_pos, origin, True)
+    check_coordinate_system(cs_basis_neg, basis_neg, origin, False)
 
     # construction with x,y,z-vectors ---------------------
 
-    ccs_xyz_pos = cls_ccs.construct_from_xyz(x, y, z, origin)
-    ccs_xyz_neg = cls_ccs.construct_from_xyz(x, y, -z, origin)
+    cs_xyz_pos = lcs.construct_from_xyz(x, y, z, origin)
+    cs_xyz_neg = lcs.construct_from_xyz(x, y, -z, origin)
 
-    check_coordinate_system(ccs_xyz_pos, basis_pos, origin, True)
-    check_coordinate_system(ccs_xyz_neg, basis_neg, origin, False)
+    check_coordinate_system(cs_xyz_pos, basis_pos, origin, True)
+    check_coordinate_system(cs_xyz_neg, basis_neg, origin, False)
 
     # construction with x,y-vectors and orientation -------
-    ccs_xyo_pos = cls_ccs.construct_from_xy_and_orientation(x, y, True, origin)
-    ccs_xyo_neg = cls_ccs.construct_from_xy_and_orientation(x, y, False,
-                                                            origin)
+    cs_xyo_pos = lcs.construct_from_xy_and_orientation(x, y, True, origin)
+    cs_xyo_neg = lcs.construct_from_xy_and_orientation(x, y, False,
+                                                       origin)
 
-    check_coordinate_system(ccs_xyo_pos, basis_pos, origin, True)
-    check_coordinate_system(ccs_xyo_neg, basis_neg, origin, False)
+    check_coordinate_system(cs_xyo_pos, basis_pos, origin, True)
+    check_coordinate_system(cs_xyo_neg, basis_neg, origin, False)
 
     # construction with y,z-vectors and orientation -------
-    ccs_yzo_pos = cls_ccs.construct_from_yz_and_orientation(y, z, True, origin)
-    ccs_yzo_neg = cls_ccs.construct_from_yz_and_orientation(y, -z, False,
-                                                            origin)
+    cs_yzo_pos = lcs.construct_from_yz_and_orientation(y, z, True, origin)
+    cs_yzo_neg = lcs.construct_from_yz_and_orientation(y, -z, False,
+                                                       origin)
 
-    check_coordinate_system(ccs_yzo_pos, basis_pos, origin, True)
-    check_coordinate_system(ccs_yzo_neg, basis_neg, origin, False)
+    check_coordinate_system(cs_yzo_pos, basis_pos, origin, True)
+    check_coordinate_system(cs_yzo_neg, basis_neg, origin, False)
 
     # construction with x,z-vectors and orientation -------
-    ccs_xzo_pos = cls_ccs.construct_from_xz_and_orientation(x, z, True, origin)
-    ccs_xzo_neg = cls_ccs.construct_from_xz_and_orientation(x, -z, False,
-                                                            origin)
+    cs_xzo_pos = lcs.construct_from_xz_and_orientation(x, z, True, origin)
+    cs_xzo_neg = lcs.construct_from_xz_and_orientation(x, -z, False,
+                                                       origin)
 
-    check_coordinate_system(ccs_xzo_pos, basis_pos, origin, True)
-    check_coordinate_system(ccs_xzo_neg, basis_neg, origin, False)
+    check_coordinate_system(cs_xzo_pos, basis_pos, origin, True)
+    check_coordinate_system(cs_xzo_neg, basis_neg, origin, False)
 
     # test integers as inputs -----------------------------
     x_i = [1, 1, 0]
     y_i = [-1, 1, 0]
     z_i = [0, 0, 1]
 
-    cls_ccs.construct_from_xyz(x_i, y_i, z_i, origin)
-    cls_ccs.construct_from_xy_and_orientation(x_i, y_i)
-    cls_ccs.construct_from_yz_and_orientation(y_i, z_i)
-    cls_ccs.construct_from_xz_and_orientation(z_i, x_i)
+    lcs.construct_from_xyz(x_i, y_i, z_i, origin)
+    lcs.construct_from_xy_and_orientation(x_i, y_i)
+    lcs.construct_from_yz_and_orientation(y_i, z_i)
+    lcs.construct_from_xz_and_orientation(z_i, x_i)
 
     # check exceptions ------------------------------------
     with pytest.raises(Exception):
-        cls_ccs([x, y, [0, 0, 1]])
+        lcs([x, y, [0, 0, 1]])
 
 
 def test_coordinate_system_addition_and_substraction():
-    cls_ccs = tf.LocalCoordinateSystem
+    lcs = tf.LocalCoordinateSystem
 
     orientation0 = tf.rotation_matrix_z(np.pi / 2)
     origin0 = [1, 3, 2]
-    ccs0 = cls_ccs(orientation0, origin0)
+    cs_0 = lcs(orientation0, origin0)
 
     orientation1 = tf.rotation_matrix_y(np.pi / 2)
     origin1 = [4, -2, 1]
-    ccs1 = cls_ccs(orientation1, origin1)
+    cs_1 = lcs(orientation1, origin1)
 
     orientation2 = tf.rotation_matrix_x(np.pi / 2)
     origin2 = [-3, 4, 2]
-    ccs2 = cls_ccs(orientation2, origin2)
+    cs_2 = lcs(orientation2, origin2)
 
     # addition --------------------------------------------
 
     # is associative
-    ccs_sum_0 = ccs2 + (ccs1 + ccs0)
-    ccs_sum_1 = (ccs2 + ccs1) + ccs0
-    helper.check_matrices_identical(ccs_sum_0.basis, ccs_sum_1.basis)
-    helper.check_vectors_identical(ccs_sum_0.origin, ccs_sum_1.origin)
+    cs_sum_0 = cs_2 + (cs_1 + cs_0)
+    cs_sum_1 = (cs_2 + cs_1) + cs_0
+    helper.check_matrices_identical(cs_sum_0.basis, cs_sum_1.basis)
+    helper.check_vectors_identical(cs_sum_0.origin, cs_sum_1.origin)
 
     expected_origin = np.array([-1, 9, 6])
     expected_orientation = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]])
 
-    helper.check_matrices_identical(ccs_sum_0.basis, expected_orientation)
-    helper.check_vectors_identical(ccs_sum_0.origin, expected_origin)
+    helper.check_matrices_identical(cs_sum_0.basis, expected_orientation)
+    helper.check_vectors_identical(cs_sum_0.origin, expected_origin)
 
     # subtraction --------------------------------------------
 
-    ccs_diff_0 = ccs_sum_0 - ccs0 - ccs1
+    cs_diff_0 = cs_sum_0 - cs_0 - cs_1
 
-    helper.check_matrices_identical(ccs_diff_0.basis, ccs2.basis)
-    helper.check_vectors_identical(ccs_diff_0.origin, ccs2.origin)
+    helper.check_matrices_identical(cs_diff_0.basis, cs_2.basis)
+    helper.check_vectors_identical(cs_diff_0.origin, cs_2.origin)

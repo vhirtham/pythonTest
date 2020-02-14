@@ -27,23 +27,32 @@ excluded_files:
 # Any typos we should ignore?
 excluded_words:
   - typoci
+  # python packages -----------------------------
   - numpy
   - scipy
-  - matmul
-  - arange
-  - vstack
   - pytest
+  - matplotlib
+  # matplotlib ----------------------------------
+  - pyplot
+  - gca
+  - plt
+  # flake8 --------------------------------------
+  - noqa
+  # numpy ---------------------------------------
   - linalg
   - ndim
   - dtype
   - isclose
   - ndarray
   - hstack
-  - matplotlib
-  - gca
-  - plt
-  - ipynb
-  - noqa
-  - ipywidgets
-  - pyplot
+  - matmul
+  - arange
+  - det
+  - vstack
+  # jupyter notebooks ---------------------------
   - jupyter
+  # iPython -------------------------------------
+  - ipynb
+  - ipywidgets
+  - ipython
+  # other ---------------------------------------
