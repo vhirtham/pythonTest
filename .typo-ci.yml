@@ -23,6 +23,7 @@ excluded_files:
   - ".*"
   - "docs*"
   - "environment.yml"
+  - "tools*"
 
 # Any typos we should ignore?
 excluded_words:
