@@ -1,6 +1,6 @@
 """Contains methods and classes for coordinate transformations."""
 
-import mypackage._utility as ut
+import mypackage.utility as ut
 import numpy as np
 import math
 from scipy.spatial.transform import Rotation as Rot

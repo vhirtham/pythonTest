@@ -1,7 +1,7 @@
 """Test the internal utility functions."""
 
 import numpy as np
-import mypackage._utility as utils
+import mypackage.utility as utils
 
 
 def test_is_column_in_matrix():

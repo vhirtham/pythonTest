@@ -1,4 +1,5 @@
 import mypackage.transformations as tf
+import mypackage.utility as ut
 import numpy as np
 import pytest
 import random
@@ -9,66 +10,110 @@ import tests._helpers as helper
 
 # helpers for tests -----------------------------------------------------------
 
-def check_coordinate_system(cs_, basis_expected, origin_expected,
+def check_coordinate_system(cs_p, basis_expected, origin_expected,
                             positive_orientation_expected):
+    """
+    Check the values of a coordinate system.
+
+    :param cs_p: Coordinate system that should be checked
+    :param basis_expected: Expected basis
+    :param origin_expected: Expected origin
+    :param positive_orientation_expected: Expected orientation
+    :return: ---
+    """
     # check orientation is as expected
-    assert is_orientation_positive(cs_) == positive_orientation_expected
+    assert is_orientation_positive(cs_p) == positive_orientation_expected
 
     # check basis vectors are orthogonal
-    assert tf.is_orthogonal(cs_.basis[0], cs_.basis[1])
-    assert tf.is_orthogonal(cs_.basis[1], cs_.basis[2])
-    assert tf.is_orthogonal(cs_.basis[2], cs_.basis[0])
+    assert tf.is_orthogonal(cs_p.basis[0], cs_p.basis[1])
+    assert tf.is_orthogonal(cs_p.basis[1], cs_p.basis[2])
+    assert tf.is_orthogonal(cs_p.basis[2], cs_p.basis[0])
 
     for i in range(3):
         unit_vec = tf.normalize(basis_expected[:, i])
 
         # check axis orientations match
-        assert np.abs(np.dot(cs_.basis[:, i], unit_vec) - 1) < 1E-9
-        assert np.abs(np.dot(cs_.orientation[:, i], unit_vec) - 1) < 1E-9
+        assert np.abs(np.dot(cs_p.basis[:, i], unit_vec) - 1) < 1E-9
+        assert np.abs(np.dot(cs_p.orientation[:, i], unit_vec) - 1) < 1E-9
 
         # check origin correct
-        assert np.abs(origin_expected[i] - cs_.origin[i]) < 1E-9
-        assert np.abs(origin_expected[i] - cs_.location[i]) < 1E-9
+        assert np.abs(origin_expected[i] - cs_p.origin[i]) < 1E-9
+        assert np.abs(origin_expected[i] - cs_p.location[i]) < 1E-9
 
 
 def check_matrix_does_not_reflect(matrix):
+    """
+    Check if a matrix does not reflect.
+
+    :param matrix: Matrix that should be checked
+    :return: ---
+    """
     assert np.linalg.det(matrix) >= 0
 
 
 def check_matrix_orthogonal(matrix):
+    """
+    Check if a matrix is orthogonal. Condition: A^-1 = A^T
+
+    :param matrix: Matrix that should be checked
+    :return: ---
+    """
     transposed = np.transpose(matrix)
 
     product = np.matmul(transposed, matrix)
-    unit = np.identity(3)
-    for i in range(3):
-        for j in range(3):
-            assert np.abs(product[i][j] - unit[i][j]) < 1E-9
+    helper.check_matrices_identical(product, np.identity(3))
 
 
-def check_matrix_identical(a, b):
-    for i in range(3):
-        for j in range(3):
-            assert math.isclose(a[i, j], b[i, j], abs_tol=1E-9)
+def is_orientation_positive(cs_p):
+    """
+    Return `True` if the coordinate system has a positive orientation.
+
+    Otherwise, `False` is returned.
+
+    :param cs_p: Coordinate system that should be checked
+    :return: True / False
+    """
+    return tf.orientation_point_plane_containing_origin(cs_p.basis[2],
+                                                        cs_p.basis[0],
+                                                        cs_p.basis[1]) > 0
 
 
-def is_orientation_positive(cs_):
-    return tf.orientation_point_plane_containing_origin(cs_.basis[2],
-                                                        cs_.basis[0],
-                                                        cs_.basis[1]) > 0
+def random_vector():
+    """
+    Get a random 3d vector.
+
+    :return: Random 3d vector.
+    """
+    return np.array([random.random(), random.random(),
+                     random.random()]) * 10 * random.random()
 
 
 def random_non_unit_vector():
-    vec = np.array([random.random(), random.random(),
-                    random.random()]) * 10 * random.random()
+    """
+    Get a random 3d vector that is not of unit length.
+
+    :return: Random 3d vector.
+    """
+    vec = random_vector()
     while math.isclose(np.linalg.norm(vec), 1) or math.isclose(
             np.linalg.norm(vec), 0):
-        vec = np.array([random.random(), random.random(),
-                        random.random()]) * 10 * random.random()
+        vec = random_vector()
     return vec
 
 
-def rotated_positive_orthogonal_base(angle_x=np.pi / 3, angle_y=np.pi / 4,
-                                     angle_z=np.pi / 5):
+def rotated_positive_orthogonal_basis(angle_x=np.pi / 3, angle_y=np.pi / 4,
+                                      angle_z=np.pi / 5):
+    """
+    Get a rotated orthogonal base.
+
+    If X,Y,Z are the rotation matrices of the passed angles, the resulting
+    base is Z * Y * X.
+
+    :param angle_x: Rotation angle around the x-axis
+    :param angle_y: Rotation angle around the y-axis
+    :param angle_z: Rotation angle around the z-axis
+    :return:
+    """
     x = [1, 0, 0]
     y = [0, 1, 0]
     z = [0, 0, 1]
@@ -79,17 +124,22 @@ def rotated_positive_orthogonal_base(angle_x=np.pi / 3, angle_y=np.pi / 4,
     r_z = tf.rotation_matrix_z(angle_z)
 
     r_tot = np.matmul(r_z, np.matmul(r_y, r_x))
-
-    x = np.matmul(r_tot, x)
-    y = np.matmul(r_tot, y)
-    z = np.matmul(r_tot, z)
-
-    return np.transpose([x, y, z])
+    return r_tot
 
 
 # test functions --------------------------------------------------------------
 
-def test_single_axis_rotation_matrices():
+def test_coordinate_axis_rotation_matrices():
+    """
+    Test the rotation matrices that rotate around one coordinate axis.
+
+    This test creates the rotation matrices using 10 degree steps and
+    multiplies them with a given vector. The result is compared to the
+    expected values, which are determined using the sine and cosine.
+    Additionally, some matrix properties are checked.
+
+    :return: ---
+    """
     matrix_funcs = [tf.rotation_matrix_x, tf.rotation_matrix_y,
                     tf.rotation_matrix_z]
     vec = np.array([1, 1, 1])
@@ -108,45 +158,63 @@ def test_single_axis_rotation_matrices():
             # rotate vector
             res = np.matmul(matrix, vec)
 
-            # check component of rotation axis
-            assert np.abs(res[i] - 1) < 1E-9
-
-            # check other components
             i_1 = (i + 1) % 3
             i_2 = (i + 2) % 3
 
             exp_1 = np.cos(angle) - np.sin(angle)
             exp_2 = np.cos(angle) + np.sin(angle)
 
-            assert np.abs(res[i_1] - exp_1) < 1E-9
-            assert np.abs(res[i_2] - exp_2) < 1E-9
+            assert math.isclose(res[i], 1)
+            assert math.isclose(res[i_1], exp_1)
+            assert math.isclose(res[i_2], exp_2)
 
 
 def test_normalize():
+    """
+    Test the normalize function.
+
+    This test creates some random vectors and normalizes them. Afterwards
+    the results are checked.
+
+    :return: ---
+    """
     for _ in range(20):
         vec = random_non_unit_vector()
 
         unit = tf.normalize(vec)
 
         # check that vector is modified
-        for i in range(vec.size):
-            assert not math.isclose(unit[i], vec[i])
+        assert not ut.vector_is_close(unit, vec)
 
         # check length is 1
         assert math.isclose(np.linalg.norm(unit), 1)
 
         # check that both vectors point into the same direction
         vec2 = unit * np.linalg.norm(vec)
-        for i in range(vec.size):
-            assert math.isclose(vec2[i], vec[i])
+        assert ut.vector_is_close(vec2, vec)
 
-    # check exception if length is 0
+    #  exception ------------------------------------------
+
+    # length is 0
     with pytest.raises(Exception):
         tf.normalize(np.array([0, 0, 0]))
 
 
 def test_orientation_point_plane_containing_origin():
-    [a, b, n] = rotated_positive_orthogonal_base()
+    """
+    Test the orientation_point_plane_containing_origin function.
+
+    This test takes the first two basis vectors of an orthogonal basis to
+    describe the plane which contains the origin. Afterwards, several
+    factors are multiplied with the normal vector of the plane (third column
+    of the basis) to get some test points. Since the plane contains the
+    origin, the sign returned by the orientation function must be equal to
+    the sign of the factor (0 is a special case and tested at the end).
+    Additionally some exceptions and special cases are tested.
+
+    :return: ---
+    """
+    [a, b, n] = rotated_positive_orthogonal_basis()
     a *= 2.3
     b /= 1.5
 
@@ -171,7 +239,21 @@ def test_orientation_point_plane_containing_origin():
 
 
 def test_orientation_point_plane():
-    [b, c, n] = rotated_positive_orthogonal_base()
+    """
+    Test the test_orientation_point_plane function.
+
+    This test takes the first two basis vectors of an orthogonal basis and
+    adds an offset to them to describe the plane. Afterwards, several points
+    are calculated by multiplying the normal vector of the plane (third
+    column of the basis) with a certain factor and shifting the result by
+    the same offset as the plane. The result of the orientation function
+    must be equal to the factors sign (0 is a special case and tested at the
+    end).
+    Additionally some exceptions and special cases are tested.
+
+    :return: ---
+    """
+    [b, c, n] = rotated_positive_orthogonal_basis()
     a = [3.2, -2.1, 5.4]
     b = b * 6.5 + a
     c = c * 0.3 + a
@@ -199,7 +281,15 @@ def test_orientation_point_plane():
 
 
 def test_is_orthogonal():
-    basis = rotated_positive_orthogonal_base()
+    """
+    Test the is_orthogonal function.
+
+    This test creates some vectors and checks if the function returns the
+    correct results.
+
+    :return: ---
+    """
+    basis = rotated_positive_orthogonal_basis()
     x = basis[:, 0]
     y = basis[:, 1]
     z = basis[:, 2]
@@ -219,7 +309,9 @@ def test_is_orthogonal():
     assert not tf.is_orthogonal(x + 0.00001, z, 1E-6)
     assert tf.is_orthogonal(x + 0.00001, z, 1E-4)
 
-    # check zero length vectors cause exception
+    # exceptions ------------------------------------------
+
+    # vectors with length=0
     with pytest.raises(Exception):
         tf.is_orthogonal([0, 0, 0], z)
     with pytest.raises(Exception):
@@ -242,8 +334,8 @@ def test_change_of_basis_rotation():
         angles_to = copy.deepcopy(angles_from)
         angles_to[i] += diff_angle
 
-        base_from = rotated_positive_orthogonal_base(*angles_from)
-        base_to = rotated_positive_orthogonal_base(*angles_to)
+        base_from = rotated_positive_orthogonal_basis(*angles_from)
+        base_to = rotated_positive_orthogonal_basis(*angles_to)
 
         cs_from = tf.LocalCoordinateSystem(base_from,
                                            random_non_unit_vector())
@@ -251,15 +343,16 @@ def test_change_of_basis_rotation():
 
         matrix = tf.change_of_basis_rotation(cs_from, cs_to)
 
-        check_matrix_identical(matrix, ref_mat[i])
+        helper.check_matrices_identical(matrix, ref_mat[i])
 
 
 def test_change_of_basis_translation():
     for _ in range(20):
         origin_from = random_non_unit_vector()
         origin_to = random_non_unit_vector()
-        base_from = rotated_positive_orthogonal_base(*random_non_unit_vector())
-        base_to = rotated_positive_orthogonal_base(*random_non_unit_vector())
+        base_from = rotated_positive_orthogonal_basis(
+            *random_non_unit_vector())
+        base_to = rotated_positive_orthogonal_basis(*random_non_unit_vector())
 
         cs_from = tf.LocalCoordinateSystem(base_from, origin_from)
         cs_to = tf.LocalCoordinateSystem(base_to, origin_to)
@@ -339,7 +432,7 @@ def test_coordinate_system_construction():
 
     # setup -----------------------------------------------
     origin = [4, -2, 6]
-    basis_pos = rotated_positive_orthogonal_base()
+    basis_pos = rotated_positive_orthogonal_basis()
 
     x = basis_pos[:, 0]
     y = basis_pos[:, 1]

@@ -1,6 +1,6 @@
 """Provides classes to define lines and surfaces."""
 
-import mypackage._utility as ut
+import mypackage.utility as ut
 import mypackage.transformations as tf
 
 import copy

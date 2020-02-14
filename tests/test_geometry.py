@@ -1,6 +1,6 @@
 import mypackage.geometry as geo
 import mypackage.transformations as tf
-import mypackage._utility as utils
+import mypackage.utility as utils
 
 import tests._helpers as helpers
 
