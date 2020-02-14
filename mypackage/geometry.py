@@ -596,7 +596,7 @@ class Shape:
         The line segments are constructed from the provided points.
 
         :param points:  List of points / Matrix Nx2 matrix
-        :return: ---
+        :return: self
         """
         points = ut.to_float_array(points)
         dimension = len(points.shape)
@@ -619,6 +619,8 @@ class Shape:
             line_segments += [LineSegment.construct_with_points(points[i],
                                                                 points[i + 1])]
         self.add_segments(line_segments)
+
+        return self
 
     def add_segments(self, segments):
         """

@@ -27,6 +27,7 @@ def is_row_in_matrix(row, matrix):
     """
     if not matrix.shape[1] == np.array(row).size:
         return False
+    # noinspection PyUnresolvedReferences
     return (matrix == row).all(axis=1).any()
 
 

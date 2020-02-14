@@ -1,3 +1,5 @@
+"""Tests the geometry package"""
+
 import mypackage.geometry as geo
 import mypackage.transformations as tf
 import mypackage.utility as utils
@@ -12,65 +14,114 @@ import copy
 
 # helpers ---------------------------------------------------------------------
 
-def check_segments_identical(a, b):
-    assert isinstance(a, type(b))
-    helpers.check_vectors_identical(a.point_start, b.point_start)
-    helpers.check_vectors_identical(a.point_end, b.point_end)
-    if isinstance(a, geo.ArcSegment):
-        assert a.arc_winding_ccw == b.arc_winding_ccw
-        helpers.check_vectors_identical(a.point_center, b.point_center)
+def check_segments_identical(seg_a, seg_b):
+    """
+    Check if 2 segments are identical within floating point tolerance.
+
+    :param seg_a: First segment
+    :param seg_b: Second segment
+    :return: ---
+    """
+    assert isinstance(seg_a, type(seg_b))
+    helpers.check_vectors_identical(seg_a.point_start, seg_b.point_start)
+    helpers.check_vectors_identical(seg_a.point_end, seg_b.point_end)
+    if isinstance(seg_a, geo.ArcSegment):
+        assert seg_a.arc_winding_ccw == seg_b.arc_winding_ccw
+        helpers.check_vectors_identical(seg_a.point_center, seg_b.point_center)
 
 
-def check_profiles_identical(a, b):
-    assert a.num_shapes == b.num_shapes
-    for i in range(a.num_shapes):
-        check_shapes_identical(a.shapes[i], b.shapes[i])
+def check_shapes_identical(shp_a, shp_b):
+    """
+    Check if 2 shapes are identical within floating point tolerance.
+
+    :param shp_a: First profile
+    :param shp_b: Second profile
+    :return: ---
+    """
+    assert shp_a.num_segments == shp_b.num_segments
+    for i in range(shp_a.num_segments):
+        check_segments_identical(shp_a.segments[i], shp_b.segments[i])
 
 
-def check_shapes_identical(a, b):
-    assert a.num_segments == b.num_segments
-    for i in range(a.num_segments):
-        check_segments_identical(a.segments[i], b.segments[i])
+def check_profiles_identical(pro_a, pro_b):
+    """
+    Check if 2 profiles are identical within floating point tolerance.
+
+    :param pro_a: First profile
+    :param pro_b: Second profile
+    :return: ---
+    """
+    assert pro_a.num_shapes == pro_b.num_shapes
+    for i in range(pro_a.num_shapes):
+        check_shapes_identical(pro_a.shapes[i], pro_b.shapes[i])
 
 
-def check_trace_segments_identical(a, b):
-    assert isinstance(a, type(b))
-    if isinstance(a, geo.LinearHorizontalTraceSegment):
-        assert a.length == b.length
+def check_trace_segments_identical(seg_a, seg_b):
+    """
+    Check if 2 trace segments are identical within floating point tolerance.
+
+    :param seg_a: First segment
+    :param seg_b: Second segment
+    :return: ---
+    """
+    assert isinstance(seg_a, type(seg_b))
+    if isinstance(seg_a, geo.LinearHorizontalTraceSegment):
+        assert seg_a.length == seg_b.length
     else:
-        assert a.is_clockwise == b.is_clockwise
-        assert math.isclose(a.angle, b.angle)
-        assert math.isclose(a.length, b.length)
-        assert math.isclose(a.radius, b.radius)
+        assert seg_a.is_clockwise == seg_b.is_clockwise
+        assert math.isclose(seg_a.angle, seg_b.angle)
+        assert math.isclose(seg_a.length, seg_b.length)
+        assert math.isclose(seg_a.radius, seg_b.radius)
 
 
-def check_traces_identical(a, b):
-    assert a.num_segments == b.num_segments
-    for i in range(a.num_segments):
-        check_trace_segments_identical(a.segments[i], b.segments[i])
+def check_traces_identical(trc_a, trc_b):
+    """
+    Check if 2 traces are identical within floating point tolerance.
+
+    :param trc_a: First segment
+    :param trc_b: Second segment
+    :return: ---
+    """
+    assert trc_a.num_segments == trc_b.num_segments
+    for i in range(trc_a.num_segments):
+        check_trace_segments_identical(trc_a.segments[i], trc_b.segments[i])
 
 
 def get_default_profiles():
+    """
+    Get 2 profiles.
+
+    :return: List containing 2 profiles
+    """
     a_0 = [0, 0]
     a_1 = [8, 16]
     a_2 = [16, 0]
-    shape_a01 = geo.Shape(geo.LineSegment.construct_with_points(a_0, a_1))
-    shape_a12 = geo.Shape(geo.LineSegment.construct_with_points(a_1, a_2))
+    shape_a01 = geo.Shape().add_line_segments([a_0, a_1])
+    shape_a12 = geo.Shape().add_line_segments([a_1, a_2])
     profile_a = geo.Profile([shape_a01, shape_a12])
 
     b_0 = [-4, 8]
     b_1 = [0, 8]
     b_2 = [16, -16]
-    shape_b01 = geo.Shape(geo.LineSegment.construct_with_points(b_0, b_1))
-    shape_b12 = geo.Shape(geo.LineSegment.construct_with_points(b_1, b_2))
+    shape_b01 = geo.Shape().add_line_segments([b_0, b_1])
+    shape_b12 = geo.Shape().add_line_segments([b_1, b_2])
     profile_b = geo.Profile([shape_b01, shape_b12])
     return [profile_a, profile_b]
 
 
 # helper for segment tests ----------------------------------------------------
 
-def default_segment_rasterization_tests(segment, raster_width, point_start,
-                                        point_end):
+def default_segment_rasterization_tests(segment, raster_width):
+    """
+    Perform some default checks for a passed segment's rasterization method.
+
+    The segment is rasterized and tested afterwards. The purpose of every
+    test is explained by a comment in the code.
+
+    :param segment: Instance of a segment class
+    :param raster_width: Raster width
+    :return: ---
+    """
     data = segment.rasterize(raster_width)
 
     # check dimensions are correct
@@ -82,28 +133,38 @@ def default_segment_rasterization_tests(segment, raster_width, point_start,
 
     # Check if first and last point of the data are identical to the segment
     # start and end
-    helpers.check_vectors_identical(data[:, 0], point_start)
-    helpers.check_vectors_identical(data[:, -1], point_end)
+    helpers.check_vectors_identical(data[:, 0], segment.point_start)
+    helpers.check_vectors_identical(data[:, -1], segment.point_end)
 
     for i in range(num_points - 1):
         point = data[:, i]
         next_point = data[:, i + 1]
 
         raster_width_eff = np.linalg.norm(next_point - point)
+
+        # effective raster width is close to specified one
         assert np.abs(raster_width_eff - raster_width) < 0.1 * raster_width
+
+        # effective raster width is constant (equidistant points)
+        assert math.isclose(raster_width_eff,
+                            np.linalg.norm(data[:, 1] - data[:, 0]))
 
     # check that there are no duplicate points
     assert helpers.are_all_points_unique(data)
 
-    # check that rasterization with to large raster width still works
+    # check that rasterization with too large raster width still works
     data_200 = segment.rasterize(200)
 
     num_points_200 = data_200.shape[1]
     assert num_points_200 == 2
-    helpers.check_vectors_identical(point_start, data_200[:, 0])
-    helpers.check_vectors_identical(point_end, data_200[:, 1])
 
-    # check exceptions when raster width <= 0
+    # only 2 points must be segment start and end
+    helpers.check_vectors_identical(segment.point_start, data_200[:, 0])
+    helpers.check_vectors_identical(segment.point_end, data_200[:, 1])
+
+    # exceptions ------------------------------------------
+
+    # raster width <= 0
     with pytest.raises(ValueError):
         segment.rasterize(0)
     with pytest.raises(ValueError):
@@ -145,8 +206,7 @@ def test_line_segment_rasterization():
     segment = geo.LineSegment(points)
 
     # perform default tests
-    default_segment_rasterization_tests(segment, raster_width, point_start,
-                                        point_end)
+    default_segment_rasterization_tests(segment, raster_width)
 
     # check that points lie between start and end
     raster_data = segment.rasterize(raster_width)
@@ -320,8 +380,7 @@ def arc_segment_test(point_center, point_start, point_end, raster_width,
                                                        arc_winding_ccw)
 
     # Perform standard segment rasterization tests
-    default_segment_rasterization_tests(arc_segment, raster_width, point_start,
-                                        point_end)
+    default_segment_rasterization_tests(arc_segment, raster_width)
 
     data = arc_segment.rasterize(raster_width)
 
