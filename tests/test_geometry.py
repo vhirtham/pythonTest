@@ -1357,11 +1357,11 @@ def check_trace_segment_length(segment, tolerance=1E-9):
         length_numeric = 0
         increment = 1. / num_segments
 
-        ccs0 = segment.local_coordinate_system(0)
+        cs_0 = segment.local_coordinate_system(0)
         for rel_pos in (np.arange(increment, 1. + increment / 2, increment)):
-            ccs1 = segment.local_coordinate_system(rel_pos)
-            length_numeric += np.linalg.norm(ccs1.origin - ccs0.origin)
-            ccs0 = copy.deepcopy(ccs1)
+            cs_1 = segment.local_coordinate_system(rel_pos)
+            length_numeric += np.linalg.norm(cs_1.origin - cs_0.origin)
+            cs_0 = copy.deepcopy(cs_1)
 
         relative_change = length_numeric / length_numeric_prev
 
@@ -1471,11 +1471,11 @@ def test_radial_horizontal_trace_segment():
 def test_trace_construction():
     linear_segment = geo.LinearHorizontalTraceSegment(1)
     radial_segment = geo.RadialHorizontalTraceSegment(1, np.pi)
-    ccs_origin = np.array([2, 3, -2])
-    ccs = helpers.rotated_coordinate_system(origin=ccs_origin)
+    cs_origin = np.array([2, 3, -2])
+    cs_initial = helpers.rotated_coordinate_system(origin=cs_origin)
 
     # test single segment construction --------------------
-    trace = geo.Trace(linear_segment, ccs)
+    trace = geo.Trace(linear_segment, cs_initial)
     assert math.isclose(trace.length, linear_segment.length)
     assert trace.num_segments == 1
 
@@ -1484,8 +1484,10 @@ def test_trace_construction():
     assert isinstance(segments[0], type(linear_segment))
     assert math.isclose(linear_segment.length, segments[0].length)
 
-    helpers.check_matrices_identical(ccs.basis, trace.coordinate_system.basis)
-    helpers.check_vectors_identical(ccs.origin, trace.coordinate_system.origin)
+    helpers.check_matrices_identical(cs_initial.basis,
+                                     trace.coordinate_system.basis)
+    helpers.check_vectors_identical(cs_initial.origin,
+                                    trace.coordinate_system.origin)
 
     # test multi segment construction ---------------------
     trace = geo.Trace([radial_segment, linear_segment])
