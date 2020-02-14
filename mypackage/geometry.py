@@ -1007,8 +1007,8 @@ class Trace:
         for i, segment in enumerate(segments):
             # Fill coordinate system lookup
             lcs_segment_end = segments[i].local_coordinate_system(1)
-            csys = lcs_segment_end + self._coordinate_system_lookup[i]
-            self._coordinate_system_lookup += [csys]
+            lcs = lcs_segment_end + self._coordinate_system_lookup[i]
+            self._coordinate_system_lookup += [lcs]
 
             # Fill length lookups
             segment_length = segment.length
