@@ -1,10 +1,11 @@
+"""Tests the transformation package"""
+
 import mypackage.transformations as tf
 import mypackage.utility as ut
 import numpy as np
 import pytest
 import random
 import math
-import copy
 import tests._helpers as helper
 
 
@@ -114,10 +115,6 @@ def rotated_positive_orthogonal_basis(angle_x=np.pi / 3, angle_y=np.pi / 4,
     :param angle_z: Rotation angle around the z-axis
     :return:
     """
-    x = [1, 0, 0]
-    y = [0, 1, 0]
-    z = [0, 0, 1]
-
     # rotate axes to produce a more general test case
     r_x = tf.rotation_matrix_x(angle_x)
     r_y = tf.rotation_matrix_y(angle_y)
@@ -254,7 +251,7 @@ def test_orientation_point_plane():
     :return: ---
     """
     [b, c, n] = rotated_positive_orthogonal_basis()
-    a = [3.2, -2.1, 5.4]
+    a = ut.to_float_array([3.2, -2.1, 5.4])
     b = b * 6.5 + a
     c = c * 0.3 + a
 
@@ -321,6 +318,13 @@ def test_is_orthogonal():
 
 
 def test_vector_points_to_left_of_vector():
+    """
+    Test vector_points_to_left_of_vector function.
+
+    Tests multiple vector combinations with known result.
+
+    :return: ---
+    """
     assert tf.vector_points_to_left_of_vector([-0.1, 1], [0, 1]) > 0
     assert tf.vector_points_to_left_of_vector([-0.1, -1], [0, 1]) > 0
     assert tf.vector_points_to_left_of_vector([3, 5], [1, 0]) > 0
@@ -340,6 +344,13 @@ def test_vector_points_to_left_of_vector():
 
 
 def test_point_left_of_line():
+    """
+    Test the point_left_of_line function.
+
+    Tests multiple test cases with known results.
+
+    :return: ---
+    """
     line_start = np.array([2, 3])
     line_end = np.array([5, 6])
     assert tf.point_left_of_line([-8, 10], line_start, line_end) > 0
@@ -354,6 +365,13 @@ def test_point_left_of_line():
 
 
 def test_reflection_sign():
+    """
+    Test the reflection_sign function.
+
+    Tests multiple test cases with known results.
+
+    :return: ---
+    """
     assert tf.reflection_sign([[-1, 0], [0, 1]]) == -1
     assert tf.reflection_sign([[1, 0], [0, -1]]) == -1
     assert tf.reflection_sign([[0, 1], [1, 0]]) == -1
@@ -383,6 +401,14 @@ def test_reflection_sign():
 # test cartesian coordinate system class --------------------------------------
 
 def test_coordinate_system_construction():
+    """
+    Test construction of coordinate system class.
+
+    Create multiple coordinate systems with all provided methods and check
+    if they are constructed correctly.
+
+    :return: ---
+    """
     # alias name for class - name is too long :)
     lcs = tf.LocalCoordinateSystem
 
@@ -451,7 +477,15 @@ def test_coordinate_system_construction():
         lcs([x, y, [0, 0, 1]])
 
 
-def test_coordinate_system_addition_and_substraction():
+def test_coordinate_system_addition_and_subtraction():
+    """
+    Test the + and - operator of the coordinate system class.
+
+    Creates some coordinate systems and uses the operators on them. Results
+    are compared to expected values.
+
+    :return: ---
+    """
     lcs = tf.LocalCoordinateSystem
 
     orientation0 = tf.rotation_matrix_z(np.pi / 2)

@@ -418,11 +418,3 @@ class LocalCoordinateSystem:
         :return: Location of the coordinate system.
         """
         return self._location
-
-# def vector_to_vector_transformation(u, v):
-#    r = np.cross(u, v)
-#    w = np.sqrt(np.dot(u, u) * np.dot(v, v)) + np.dot(u, v)
-#    quaternion = np.concatenate((r, [w]))
-#    unit_quaternion = quaternion / np.linalg.norm(quaternion)
-
-#    return R.from_quat(unit_quaternion).as_dcm()
