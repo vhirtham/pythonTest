@@ -138,7 +138,7 @@ def change_of_basis_rotation(ccs_from, ccs_to):
 
 def change_of_basis_translation(ccs_from, ccs_to):
     """
-    Calculate the translative transformation between 2 coordinate systems.
+    Calculate the translation between 2 coordinate systems.
 
     :param ccs_from: Source coordinate system
     :param ccs_to: Target coordinate system
