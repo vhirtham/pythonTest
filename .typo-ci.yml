@@ -52,6 +52,7 @@ excluded_words:
   - vstack
   # jupyter notebooks ---------------------------
   - jupyter
+  - nbformat
   # iPython -------------------------------------
   - ipynb
   - ipywidgets
