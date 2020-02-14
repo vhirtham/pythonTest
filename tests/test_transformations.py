@@ -320,50 +320,6 @@ def test_is_orthogonal():
         tf.is_orthogonal([0, 0, 0], [0, 0, 0])
 
 
-def test_change_of_basis_rotation():
-    diff_angle = np.pi / 2
-    ref_mat = [tf.rotation_matrix_x(-diff_angle),
-               tf.rotation_matrix_y(-diff_angle),
-               tf.rotation_matrix_z(-diff_angle)]
-
-    for i in range(3):
-        angles_from = np.pi * np.array([1 / 3., 1 / 5., 1 / 4])
-        for j in np.arange(i + 1, 3):
-            angles_from[j] = 0
-
-        angles_to = copy.deepcopy(angles_from)
-        angles_to[i] += diff_angle
-
-        base_from = rotated_positive_orthogonal_basis(*angles_from)
-        base_to = rotated_positive_orthogonal_basis(*angles_to)
-
-        cs_from = tf.LocalCoordinateSystem(base_from,
-                                           random_non_unit_vector())
-        cs_to = tf.LocalCoordinateSystem(base_to, random_non_unit_vector())
-
-        matrix = tf.change_of_basis_rotation(cs_from, cs_to)
-
-        helper.check_matrices_identical(matrix, ref_mat[i])
-
-
-def test_change_of_basis_translation():
-    for _ in range(20):
-        origin_from = random_non_unit_vector()
-        origin_to = random_non_unit_vector()
-        base_from = rotated_positive_orthogonal_basis(
-            *random_non_unit_vector())
-        base_to = rotated_positive_orthogonal_basis(*random_non_unit_vector())
-
-        cs_from = tf.LocalCoordinateSystem(base_from, origin_from)
-        cs_to = tf.LocalCoordinateSystem(base_to, origin_to)
-
-        diff = tf.change_of_basis_translation(cs_from, cs_to)
-
-        expected_diff = origin_from - origin_to
-        for j in range(3):
-            assert math.isclose(diff[j], expected_diff[j])
-
-
 def test_vector_points_to_left_of_vector():
     assert tf.vector_points_to_left_of_vector([-0.1, 1], [0, 1]) > 0
     assert tf.vector_points_to_left_of_vector([-0.1, -1], [0, 1]) > 0

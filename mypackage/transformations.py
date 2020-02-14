@@ -125,28 +125,6 @@ def is_orthogonal(vec_u, vec_v, tolerance=1E-9):
     return math.isclose(np.dot(vec_u, vec_v), 0, abs_tol=tolerance)
 
 
-def change_of_basis_rotation(ccs_from, ccs_to):
-    """
-    Calculate the rotatory transformation between 2 coordinate systems.
-
-    :param ccs_from: Source coordinate system
-    :param ccs_to: Target coordinate system
-    :return: Rotation matrix
-    """
-    return np.matmul(ccs_from.basis, np.transpose(ccs_to.basis))
-
-
-def change_of_basis_translation(ccs_from, ccs_to):
-    """
-    Calculate the translation between 2 coordinate systems.
-
-    :param ccs_from: Source coordinate system
-    :param ccs_to: Target coordinate system
-    :return: Translation vector
-    """
-    return ccs_from.origin - ccs_to.origin
-
-
 def point_left_of_line(point, line_start, line_end):
     """
     Determine if a point lies left of a line.
