@@ -52,6 +52,31 @@ def test_is_row_in_matrix():
     assert not ut.is_row_in_matrix([1, 1, 3, 1], matrix)
 
 
+def test_matrix_is_close():
+    """
+    Test the matrix_is_close function.
+
+    Test should be self explanatory.
+
+    :return: ---
+    """
+    mat_a = np.array([[0, 1, 2], [3, 4, 5]])
+    mat_b = np.array([[3, 5, 1], [7, 1, 9]])
+
+    assert ut.matrix_is_close(mat_a, mat_a)
+    assert ut.matrix_is_close(mat_b, mat_b)
+    assert not ut.matrix_is_close(mat_a, mat_b)
+    assert not ut.matrix_is_close(mat_b, mat_a)
+
+    # check tolerance
+    mat_c = mat_a + 0.0001
+    assert ut.matrix_is_close(mat_a, mat_c, abs_tol=0.00011)
+    assert not ut.matrix_is_close(mat_a, mat_c, abs_tol=0.00009)
+
+    # vectors have different size
+    assert not ut.matrix_is_close(mat_a, mat_a[0:2, 0:2])
+
+
 def test_vector_is_close():
     """
     Test the vector_is_close function.

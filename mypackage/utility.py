@@ -58,6 +58,27 @@ def to_list(var):
     return [var]
 
 
+def matrix_is_close(mat_a, mat_b, abs_tol=1E-9):
+    """
+    Check if a matrix is close or equal to another matrix.
+
+    :param mat_a: First matrix
+    :param mat_b: Second matrix
+    :param abs_tol: Absolute tolerance
+    :return: True or False
+    """
+    mat_a = to_float_array(mat_a)
+    mat_b = to_float_array(mat_b)
+
+    if not mat_a.shape == mat_b.shape:
+        return False
+    for i in range(mat_a.shape[0]):
+        for j in range(mat_a.shape[1]):
+            if not math.isclose(mat_a[i, j], mat_b[i, j], abs_tol=abs_tol):
+                return False
+    return True
+
+
 def vector_is_close(vec_a, vec_b, abs_tol=1E-9):
     """
     Check if a vector is close or equal to another vector.
@@ -67,6 +88,9 @@ def vector_is_close(vec_a, vec_b, abs_tol=1E-9):
     :param abs_tol: Absolute tolerance
     :return: True or False
     """
+    vec_a = to_float_array(vec_a)
+    vec_b = to_float_array(vec_b)
+
     if not vec_a.size == vec_b.size:
         return False
     for i in range(vec_a.size):
