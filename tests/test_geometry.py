@@ -2505,7 +2505,7 @@ def test_geometry_rasterization_profile_interpolation():
     for i in range(20):
         idx_0 = (30 - i) * 6
         for j in range(6):
-            exp_point = np.array([3 - i * 0.1,
+            point_exp = np.array([3 - i * 0.1,
                                   profile_points[0, j] * (1 + i * 0.05),
                                   profile_points[1, j] * (1 + i * 0.05)])
             assert ut.vector_is_close(data[:, idx_0 + j], point_exp)
