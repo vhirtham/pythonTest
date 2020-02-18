@@ -1111,132 +1111,165 @@ def default_test_shape():
     return geo.Shape([arc_segment, line_segment])
 
 
-def test_shape_translation():
-    def check_point(point, point_ref, translation):
-        helpers.check_vectors_identical(point - translation, point_ref)
+def default_translation_vector():
+    """
+    Get a default translation for transformation tests.
 
-    translation = [3, 4]
+    :return: Translation vector
+    """
+    return ut.to_float_array([3, 4])
 
-    shape_ref = default_test_shape()
 
-    # apply translation
-    shape = shape_ref.translate(translation)
+def check_point_translation(point_trans, point_original):
+    """
+    Check if a point is translated by the default translation test vector.
+
+    :param point_trans: Translated point
+    :param point_original: Original point
+    :return:
+    """
+    assert ut.vector_is_close(point_trans - default_translation_vector(),
+                              point_original)
+
+
+def check_point_rotation_90_degree(point_trans, point_original):
+    """
+    Check if a point is rotated by 90 degrees.
+
+    :param point_trans: Transformed point
+    :param point_original: Original point
+    :return:
+    """
+    assert point_trans[0] == point_original[1]
+    assert point_trans[1] == -point_original[0]
+
+
+def check_point_reflection_at_line_with_slope_1(point_trans, point_original):
+    """
+    Check if a point is reflected at a line through the origin with slope 1.
+
+    :param point_trans: Transformed point
+    :param point_original: Original point
+    :return:
+    """
+    assert point_trans[0] == point_original[1]
+    assert point_trans[1] == point_original[0]
+
+
+def shape_transformation_test_case(check_point_func, exp_winding_change,
+                                   translation=None, transformation=None):
+    """
+    Test a shape transformation.
+
+    :param check_point_func: Function that checks if a point is transformed
+    correctly. Interface: (point_transformed, point_original) -> None
+    :param exp_winding_change: Bool that specifies if the transformation
+    should change the winding order of arc segments.
+    :param translation: Translation vector (optional)
+    :param transformation: Transformation matrix (optional)
+    :return: ---
+    """
+    if translation is not None:
+        assert transformation is None, "No mixed test cases supported"
+
+    shape = default_test_shape()
+
+    if translation is not None:
+        shape_trans = shape.translate(translation)
+    else:
+        shape_trans = shape.transform(transformation)
 
     # original shape unchanged
-    check_shapes_identical(shape_ref, default_test_shape())
+    check_shapes_identical(shape, default_test_shape())
 
+    # extract segments
     arc_segment = shape.segments[0]
-    arc_segment_ref = shape_ref.segments[0]
-
-    assert (arc_segment.arc_winding_ccw == arc_segment_ref.arc_winding_ccw)
-
-    check_point(arc_segment.point_start, arc_segment_ref.point_start,
-                translation)
-    check_point(arc_segment.point_end, arc_segment_ref.point_end,
-                translation)
-    check_point(arc_segment.point_center, arc_segment_ref.point_center,
-                translation)
-
     line_segment = shape.segments[1]
-    line_segment_ref = shape_ref.segments[1]
+    arc_segment_trans = shape_trans.segments[0]
+    line_segment_trans = shape_trans.segments[1]
 
-    check_point(line_segment.point_start, line_segment_ref.point_start,
-                translation)
-    check_point(line_segment.point_end, line_segment_ref.point_end,
-                translation)
+    # check transformed arc segment's winding order
+    assert arc_segment_trans.arc_winding_ccw is not exp_winding_change
+
+    # check segment points
+    check_point_func(arc_segment_trans.point_start, arc_segment.point_start)
+    check_point_func(arc_segment_trans.point_end, arc_segment.point_end)
+    check_point_func(arc_segment_trans.point_center, arc_segment.point_center)
+
+    check_point_func(line_segment_trans.point_start, line_segment.point_start)
+    check_point_func(line_segment_trans.point_end, line_segment.point_end)
 
     # apply same transformation in place
-    shape_ref.apply_translation(translation)
-    check_shapes_identical(shape_ref, shape)
+    if translation is not None:
+        shape.apply_translation(translation)
+    else:
+        shape.apply_transformation(transformation)
+
+    check_shapes_identical(shape_trans, shape)
 
 
 def test_shape_transformation():
-    # without reflection ----------------------------------
-    def check_point_rotation(point, point_ref):
-        assert point[0] == point_ref[1]
-        assert point[1] == -point_ref[0]
+    """
+    Test the shapes transformation functions.
 
+    Dedicated reflection functions are tested separately.
+
+    :return: ---
+    """
+    # translation -----------------------------------------
+    shape_transformation_test_case(check_point_func=check_point_translation,
+                                   exp_winding_change=False,
+                                   translation=default_translation_vector())
+
+    # transformation without reflection -------------------
     rotation_matrix = np.array([[0, 1], [-1, 0]])
 
-    shape_ref = default_test_shape()
+    shape_transformation_test_case(
+        check_point_func=check_point_rotation_90_degree,
+        exp_winding_change=False,
+        transformation=rotation_matrix)
 
-    # apply transformation
-    shape = shape_ref.transform(rotation_matrix)
-
-    # original shape unchanged
-    check_shapes_identical(shape_ref, default_test_shape())
-
-    arc_segment = shape.segments[0]
-    arc_segment_ref = shape_ref.segments[0]
-
-    assert (arc_segment.arc_winding_ccw == arc_segment_ref.arc_winding_ccw)
-
-    check_point_rotation(arc_segment.point_start, arc_segment_ref.point_start)
-    check_point_rotation(arc_segment.point_end, arc_segment_ref.point_end)
-    check_point_rotation(arc_segment.point_center,
-                         arc_segment_ref.point_center)
-
-    line_segment = shape.segments[1]
-    line_segment_ref = shape_ref.segments[1]
-
-    check_point_rotation(line_segment.point_start,
-                         line_segment_ref.point_start)
-    check_point_rotation(line_segment.point_end, line_segment_ref.point_end)
-
-    # apply same transformation in place
-    shape_ref.apply_transformation(rotation_matrix)
-    check_shapes_identical(shape_ref, shape)
-
-    # with reflection -------------------------------------
-    def check_point_reflection(point, point_ref):
-        assert point[0] == point_ref[1]
-        assert point[1] == point_ref[0]
-
+    # transformation with reflection ----------------------
     reflection_matrix = np.array([[0, 1], [1, 0]])
 
-    shape_ref = default_test_shape()
-
-    # apply transformation
-    shape = shape_ref.transform(reflection_matrix)
-
-    # original shape unchanged
-    check_shapes_identical(shape_ref, default_test_shape())
-
-    arc_segment = shape.segments[0]
-    arc_segment_ref = shape_ref.segments[0]
-
-    assert (arc_segment.arc_winding_ccw != arc_segment_ref.arc_winding_ccw)
-
-    check_point_reflection(arc_segment.point_start,
-                           arc_segment_ref.point_start)
-    check_point_reflection(arc_segment.point_end, arc_segment_ref.point_end)
-    check_point_reflection(arc_segment.point_center,
-                           arc_segment_ref.point_center)
-
-    line_segment = shape.segments[1]
-    line_segment_ref = shape_ref.segments[1]
-
-    check_point_reflection(line_segment.point_start,
-                           line_segment_ref.point_start)
-    check_point_reflection(line_segment.point_end, line_segment_ref.point_end)
-
-    # apply same transformation in place
-    shape_ref.apply_transformation(reflection_matrix)
-    check_shapes_identical(shape_ref, shape)
+    shape_transformation_test_case(
+        check_point_func=check_point_reflection_at_line_with_slope_1,
+        exp_winding_change=True,
+        transformation=reflection_matrix)
 
 
-def check_reflected_point(point, reflected_point, axis_offset,
-                          direction_reflection_axis):
-    """Check if the midpoint lies on the reflection axis."""
-    vec_original_reflected = reflected_point - point
-    mid_point = point + 0.5 * vec_original_reflected
-    shifted_mid_point = mid_point - axis_offset
-    determinant = np.linalg.det(
-        [shifted_mid_point, direction_reflection_axis])
-    assert np.abs(determinant) < 1E-8
+def check_reflected_point(point_original, point_reflected,
+                          reflection_axis_offset,
+                          reflection_axis_direction):
+    """
+    Check if a point is reflected correctly.
+
+    The function determines if the midpoint of the line
+    point->reflected_point lies on the reflection axis. The reflection axis
+    is specified by a normal and an offset.
+
+    :param point_original: Original point
+    :param point_reflected: Reflected point
+    :param reflection_axis_offset: Offset vector of the reflection axis
+    towards the origin.
+    :param reflection_axis_direction: Direction vector of the reflection axis.
+    """
+    vec_original_reflected = point_reflected - point_original
+    midpoint = point_original + 0.5 * vec_original_reflected
+    shifted_mid_point = midpoint - reflection_axis_offset
+
+    determinant = np.linalg.det([shifted_mid_point, reflection_axis_direction])
+    assert math.isclose(determinant, 0, abs_tol=1E-9)
 
 
-def shape_reflection_testcase(normal, distance_to_origin):
+def shape_reflection_test_case(normal, distance_to_origin):
+    """
+    Test the shape's reflection functions.
+
+    :param normal: Normal of the reflection axis
+    :param distance_to_origin: Distance to the origin of the reflection axis.
+    :return: ---
+    """
     direction_reflection_axis = np.array([normal[1], -normal[0]])
     normal_length = np.linalg.norm(normal)
     unit_normal = np.array(normal) / normal_length
@@ -1284,13 +1317,18 @@ def shape_reflection_testcase(normal, distance_to_origin):
 
 
 def test_shape_reflection():
-    shape_reflection_testcase([2, 1], np.linalg.norm([2, 1]))
-    shape_reflection_testcase([0, 1], 5)
-    shape_reflection_testcase([1, 0], 3)
-    shape_reflection_testcase([1, 0], -3)
-    shape_reflection_testcase([-7, 2], 4.12)
-    shape_reflection_testcase([-7, -2], 4.12)
-    shape_reflection_testcase([7, -2], 4.12)
+    """
+    Test multiple reflections.
+
+    :return: ---
+    """
+    shape_reflection_test_case([2, 1], np.linalg.norm([2, 1]))
+    shape_reflection_test_case([0, 1], 5)
+    shape_reflection_test_case([1, 0], 3)
+    shape_reflection_test_case([1, 0], -3)
+    shape_reflection_test_case([-7, 2], 4.12)
+    shape_reflection_test_case([-7, -2], 4.12)
+    shape_reflection_test_case([7, -2], 4.12)
 
     # exceptions ------------------------------------------
     shape = default_test_shape()
