@@ -87,6 +87,19 @@ def check_traces_identical(trc_a, trc_b):
         check_trace_segments_identical(trc_a.segments[i], trc_b.segments[i])
 
 
+def check_coordinate_systems_identical(lcs_a, lcs_b, abs_tol=1E-9):
+    """
+    Check if 2 local coordinate systems are identical within a tolerance.
+
+    :param lcs_a: First local coordinate system
+    :param lcs_b: Second local coordinate system
+    :param abs_tol: Absolute tolerance
+    :return: ---
+    """
+    assert ut.matrix_is_close(lcs_a.orientation, lcs_b.orientation, abs_tol)
+    assert ut.vector_is_close(lcs_a.location, lcs_b.location, abs_tol)
+
+
 def get_default_profiles():
     """
     Get 2 profiles.
@@ -1266,6 +1279,9 @@ def shape_reflection_test_case(normal, distance_to_origin):
     """
     Test the shape's reflection functions.
 
+    Only the functions that use a normal and a distance to the origin to
+    specify the reflection axis are tested by this test.
+
     :param normal: Normal of the reflection axis
     :param distance_to_origin: Distance to the origin of the reflection axis.
     :return: ---
@@ -1339,20 +1355,43 @@ def test_shape_reflection():
         shape.apply_reflection([0, 0])
 
 
-def check_point_reflected_across_line(point, reflected_point, point_start,
+def check_point_reflected_across_line(point_original, point_reflected,
+                                      point_start,
                                       point_end):
-    """Check if the midpoint lies on the reflection axis."""
-    vec_original_reflected = reflected_point - point
-    mid_point = point + 0.5 * vec_original_reflected
+    """
+    Check if a point is reflected correctly.
+
+    The function determines if the midpoint of the line
+    point->reflected_point lies on the reflection axis. The reflection axis
+    is specified by 2 points.
+
+    :param point_original: Original point
+    :param point_reflected: Reflected point
+    :param point_start: First point of the reflection axis
+    :param point_end: Second point of the reflection axis
+    :return: ---
+    """
+    vec_original_reflected = point_reflected - point_original
+    mid_point = point_original + 0.5 * vec_original_reflected
 
     vec_start_mid = mid_point - point_start
     vec_start_end = point_end - point_start
 
     determinant = np.linalg.det([vec_start_end, vec_start_mid])
-    assert np.abs(determinant) < 1E-8
+    assert math.isclose(determinant, 0, abs_tol=1E-9)
 
 
-def shape_reflection_across_line_testcase(point_start, point_end):
+def shape_reflection_across_line_test_case(point_start, point_end):
+    """
+    Test the shape's reflection functions.
+
+    Only the functions that use 2 points to specify the reflection axis are
+    tested by this test.
+
+    :param point_start: First point of the reflection axis
+    :param point_end: Second point of the reflection axis
+    :return: ---
+    """
     point_start = np.array(point_start, float)
     point_end = np.array(point_end, float)
 
@@ -1398,12 +1437,17 @@ def shape_reflection_across_line_testcase(point_start, point_end):
 
 
 def test_shape_reflection_across_line():
-    shape_reflection_across_line_testcase([0, 0], [0, 1])
-    shape_reflection_across_line_testcase([0, 0], [1, 0])
-    shape_reflection_across_line_testcase([-3, 2.5], [31.53, -23.44])
-    shape_reflection_across_line_testcase([7, 8], [9, 10])
-    shape_reflection_across_line_testcase([-4.26, -23.1], [-8, -0.12])
-    shape_reflection_across_line_testcase([-2, 1], [2, -4.5])
+    """
+    Test multiple reflections.
+
+    :return: ---
+    """
+    shape_reflection_across_line_test_case([0, 0], [0, 1])
+    shape_reflection_across_line_test_case([0, 0], [1, 0])
+    shape_reflection_across_line_test_case([-3, 2.5], [31.53, -23.44])
+    shape_reflection_across_line_test_case([7, 8], [9, 10])
+    shape_reflection_across_line_test_case([-4.26, -23.1], [-8, -0.12])
+    shape_reflection_across_line_test_case([-2, 1], [2, -4.5])
 
     # exceptions ------------------------------------------
     shape = default_test_shape()
@@ -1414,89 +1458,117 @@ def test_shape_reflection_across_line():
         shape.apply_reflection_across_line([-3, 2], [-3, 2])
 
 
-def interpolation_nearest(segment_a, segment_b, weight):
+def segment_interpolation_nearest(segment_a, segment_b, weight):
+    """
+    Interpolate 2 segments by taking the nearest one.
+
+    :param segment_a: First segment
+    :param segment_b: Second segment
+    :param weight: Interpolation weight
+    :return: Nearest segment
+    """
     if weight > 0.5:
         return segment_b
     return segment_a
 
 
 def test_shape_interpolation_general():
-    segment_a0 = geo.LineSegment.construct_with_points([-1, -1], [1, 1])
-    segment_a1 = geo.LineSegment.construct_with_points([1, 1], [3, -1])
-    shape_a = geo.Shape([segment_a0, segment_a1])
+    """
+    Test the shapes interpolation function.
 
-    segment_b0 = geo.LineSegment.construct_with_points([-1, 4], [1, 1])
-    segment_b1 = geo.LineSegment.construct_with_points([1, 1], [3, 4])
-    shape_b = geo.Shape([segment_b0, segment_b1])
+    Creates 2 shapes, each containing 2 segments. Different segment
+    interpolations are used. Afterwards, the shapes are interpolated using
+    different weights and the results are compared to the expected values.
 
+    :return: ---
+    """
+    # create shapes
+    shape_a = geo.Shape().add_line_segments([[-1, -1], [1, 1], [3, -1]])
+    shape_b = geo.Shape().add_line_segments([[-1, 4], [1, 1], [3, 4]])
+
+    # define interpolation schemes
     interpolations = [geo.LineSegment.linear_interpolation,
-                      interpolation_nearest]
+                      segment_interpolation_nearest]
+
     for i in range(6):
+        # interpolate shapes
         weight = i / 5.
         shape_c = geo.Shape.interpolate(shape_a, shape_b, weight,
                                         interpolations)
-        assert shape_c.num_segments == 2
 
-        exp_segment_c0 = geo.LineSegment.construct_with_points(
-            [-1, -1 + 5 * weight], [1, 1])
-        check_segments_identical(shape_c.segments[0], exp_segment_c0)
-
+        # check result
         if weight > 0.5:
-            check_segments_identical(shape_c.segments[1], segment_b1)
+            last_point_exp = [3, 4]
         else:
-            check_segments_identical(shape_c.segments[1], segment_a1)
+            last_point_exp = [3, -1]
 
+        points_exp = [[-1, -1 + 5 * weight],
+                      [1, 1],
+                      last_point_exp]
+        shape_c_exp = geo.Shape().add_line_segments(points_exp)
 
-def test_shape_linear_interpolation():
-    segment_a0 = geo.LineSegment.construct_with_points([0, 0], [1, 1])
-    segment_a1 = geo.LineSegment.construct_with_points([1, 1], [2, 0])
-    shape_a = geo.Shape([segment_a0, segment_a1])
-
-    segment_b0 = geo.LineSegment.construct_with_points([1, 1], [2, -1])
-    segment_b1 = geo.LineSegment.construct_with_points([2, -1], [3, 5])
-    shape_b = geo.Shape([segment_b0, segment_b1])
-
-    for i in range(5):
-        weight = i / 4.
-        shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, weight)
-
-        helpers.check_vectors_identical(shape_c.segments[0].point_start,
-                                        [weight, weight])
-        helpers.check_vectors_identical(shape_c.segments[0].point_end,
-                                        [1 + weight, 1 - 2 * weight])
-
-        helpers.check_vectors_identical(shape_c.segments[1].point_start,
-                                        [1 + weight, 1 - 2 * weight])
-        helpers.check_vectors_identical(shape_c.segments[1].point_end,
-                                        [2 + weight, 5 * weight])
+        check_shapes_identical(shape_c, shape_c_exp)
 
     # check weight clipped to valid range -----------------
 
-    shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, -3)
+    shape_d = geo.Shape.linear_interpolation(shape_a, shape_b, -3)
+    check_shapes_identical(shape_d, shape_a)
 
-    helpers.check_vectors_identical(shape_c.segments[0].point_start,
-                                    shape_a.segments[0].point_start)
-    helpers.check_vectors_identical(shape_c.segments[0].point_end,
-                                    shape_a.segments[0].point_end)
-    helpers.check_vectors_identical(shape_c.segments[1].point_start,
-                                    shape_a.segments[1].point_start)
-    helpers.check_vectors_identical(shape_c.segments[1].point_end,
-                                    shape_a.segments[1].point_end)
-
-    shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, 100)
-
-    helpers.check_vectors_identical(shape_c.segments[0].point_start,
-                                    shape_b.segments[0].point_start)
-    helpers.check_vectors_identical(shape_c.segments[0].point_end,
-                                    shape_b.segments[0].point_end)
-    helpers.check_vectors_identical(shape_c.segments[1].point_start,
-                                    shape_b.segments[1].point_start)
-    helpers.check_vectors_identical(shape_c.segments[1].point_end,
-                                    shape_b.segments[1].point_end)
+    shape_e = geo.Shape.linear_interpolation(shape_a, shape_b, 100)
+    check_shapes_identical(shape_e, shape_b)
 
     # exceptions ------------------------------------------
 
-    shape_a.add_segments(geo.LineSegment.construct_with_points([2, 0], [2, 2]))
+    # interpolation destroys shape continuity
+    shape_f = geo.Shape().add_line_segments([[-1, 4], [2, 2], [3, 4]])
+    with pytest.raises(Exception):
+        geo.Shape.interpolate(shape_a, shape_f, 0.5, interpolations)
+
+    # number of segments differ
+    shape_a.add_line_segments([2, 2])
+    with pytest.raises(Exception):
+        geo.Shape.linear_interpolation(shape_a, shape_b, 0.25)
+
+
+def test_shape_linear_interpolation():
+    """
+    Test the shapes linear interpolation function.
+
+    Creates 2 shapes, each containing 2 segments. Afterwards, the shapes are
+    interpolated using different weights and the results are compared to the
+    expected values.
+
+    :return: ---
+    """
+    # create shapes
+    shape_a = geo.Shape().add_line_segments([[0, 0], [1, 1], [2, 0]])
+    shape_b = geo.Shape().add_line_segments([[1, 1], [2, -1], [3, 5]])
+
+    for i in range(5):
+        # interpolate shapes
+        weight = i / 4.
+        shape_c = geo.Shape.linear_interpolation(shape_a, shape_b, weight)
+
+        # check result
+        points_exp = [[weight, weight],
+                      [1 + weight, 1 - 2 * weight],
+                      [2 + weight, 5 * weight]]
+        shape_c_exp = geo.Shape().add_line_segments(points_exp)
+
+        check_shapes_identical(shape_c, shape_c_exp)
+
+    # check weight clipped to valid range -----------------
+
+    shape_d = geo.Shape.linear_interpolation(shape_a, shape_b, -3)
+    check_shapes_identical(shape_d, shape_a)
+
+    shape_e = geo.Shape.linear_interpolation(shape_a, shape_b, 100)
+    check_shapes_identical(shape_e, shape_b)
+
+    # exceptions ------------------------------------------
+
+    # number of segments differ
+    shape_a.add_line_segments([2, 2])
     with pytest.raises(Exception):
         geo.Shape.linear_interpolation(shape_a, shape_b, 0.25)
 
@@ -1504,11 +1576,16 @@ def test_shape_linear_interpolation():
 # Test profile class ----------------------------------------------------------
 
 def test_profile_construction_and_shape_addition():
-    segment0 = geo.LineSegment.construct_with_points([0, 0], [1, 0])
-    segment1 = geo.LineSegment.construct_with_points([1, 0], [2, -1])
-    segment2 = geo.LineSegment.construct_with_points([2, -1], [0, -1])
+    """
+    Test profile construction and addition of shapes.
 
-    shape = geo.Shape([segment0, segment1, segment2])
+    Test details are explained by comments.
+
+    :return: ---
+    """
+    arc_segment = geo.ArcSegment.construct_with_radius([-2, -2], [-1, -1], 1)
+    shape = geo.Shape(arc_segment)
+    shape.add_line_segments([[0, 0], [1, 0], [2, -1], [0, -1]])
 
     # Check invalid types
     with pytest.raises(TypeError):
@@ -1545,36 +1622,32 @@ def test_profile_construction_and_shape_addition():
     # Check shapes
     shapes_profile = profile.shapes
     for shape_profile in shapes_profile:
-        assert shape.num_segments == shape_profile.num_segments
-
-        segments = shape.segments
-        segments_profile = shape_profile.segments
-
-        assert len(segments) == shape.num_segments
-        assert len(segments) == len(segments_profile)
-
-        for i in range(shape.num_segments):
-            assert isinstance(segments_profile[i], type(segments[i]))
-            points = segments[i].points
-            points_profile = segments_profile[i].points
-            for j in range(2):
-                helpers.check_vectors_identical(points[:, j],
-                                                points_profile[:, j])
+        check_shapes_identical(shape, shape_profile)
 
 
 def test_profile_rasterization():
-    raster_width = 0.1
-    shape0 = geo.Shape(
-        geo.LineSegment.construct_with_points([-1, 0], [-raster_width, 0]))
-    shape1 = geo.Shape(geo.LineSegment.construct_with_points([0, 0], [1, 0]))
-    shape2 = geo.Shape(
-        geo.LineSegment.construct_with_points([1 + raster_width, 0], [2, 0]))
+    """
+    Test the profile's rasterize function.
 
-    profile = geo.Profile([shape0, shape1])
-    profile.add_shapes(shape2)
+    The test creates a profile where all its shapes lie on the y axis. The
+    gaps between each shape are identical to the raster width and they are
+    added in ascending order to the profile. Therefore, all raster points
+    are equidistant and can be checked easily.
+
+    :return: ---
+    """
+    raster_width = 0.1
+
+    # create shapes
+    shape0 = geo.Shape().add_line_segments([[-1, 0], [-raster_width, 0]])
+    shape1 = geo.Shape().add_line_segments([[0, 0], [1, 0]])
+    shape2 = geo.Shape().add_line_segments([[1 + raster_width, 0], [2, 0]])
+
+    # create profile
+    profile = geo.Profile([shape0, shape1, shape2])
 
     # rasterize
-    data = profile.rasterize(0.1)
+    data = profile.rasterize(raster_width)
 
     # no duplications
     assert helpers.are_all_points_unique(data)
@@ -1585,9 +1658,7 @@ def test_profile_rasterization():
 
     # Check that all shapes are rasterized correct
     for i in range(int(round(3 / raster_width)) + 1):
-        expected_raster_point_x = i * raster_width - 1
-        assert data[0, i] - expected_raster_point_x < 1E-9
-        assert data[1, i] == 0
+        assert ut.vector_is_close(data[:, i], [i * raster_width - 1, 0])
 
     # exceptions
     with pytest.raises(Exception):
@@ -1599,6 +1670,20 @@ def test_profile_rasterization():
 # Test trace segment classes --------------------------------------------------
 
 def check_trace_segment_length(segment, tolerance=1E-9):
+    """
+    Check if a trace segment returns the correct length.
+
+    The check calculates the segment length numerically and compares it to
+    the length returned by the segment.
+    The numerical algorithm calculates the distances between several points
+    on the trace and sums them up. The number of points is increased until
+    the difference of the sum between two iterations is way below the
+    specified tolerance.
+
+    :param segment: Trace segment (any type)
+    :param tolerance: Numerical tolerance
+    :return: ---
+    """
     lcs = segment.local_coordinate_system(1)
     length_numeric_prev = np.linalg.norm(lcs.origin)
 
@@ -1632,36 +1717,62 @@ def check_trace_segment_length(segment, tolerance=1E-9):
 
 
 def check_trace_segment_orientation(segment):
-    # The initial orientation of a segment must be [0, 1, 0]
+    """
+    Test if the segment's local coordinate system is always oriented correctly.
+
+    The orientation of the trace is determined numerically. A small delta is
+    applied to the tested location to approximate the local direction of the
+    trace. The result is compared to the local coordinate systems x-axis,
+    which should always point into the trace's direction.
+
+    :param segment: Trace segment (any type)
+    :return: ---
+    """
+    # The initial orientation of a segment must be [1, 0, 0]
     lcs = segment.local_coordinate_system(0)
-    helpers.check_vectors_identical(lcs.basis[:, 1], np.array([0, 1, 0]))
+    assert ut.vector_is_close(lcs.basis[:, 0], np.array([1, 0, 0]))
 
     delta = 1E-9
     for rel_pos in np.arange(0.1, 1.01, 0.1):
         lcs = segment.local_coordinate_system(rel_pos)
         lcs_d = segment.local_coordinate_system(rel_pos - delta)
-        trace_direction_numerical = tf.normalize(lcs.origin - lcs_d.origin)
+        trace_direction_approx = tf.normalize(lcs.origin - lcs_d.origin)
 
-        # Check that the y-axis is always aligned with the trace's direction
-        helpers.check_vectors_identical(lcs.basis[:, 0],
-                                        trace_direction_numerical, 1E-6)
+        # Check if the x-axis is aligned with the approximate trace direction
+        assert ut.vector_is_close(lcs.basis[:, 0], trace_direction_approx,
+                                  1E-6)
 
 
 def default_trace_segment_tests(segment, tolerance_length=1E-9):
+    """
+    Perform some default tests on trace segment.
+
+    :param segment: Trace segment (any type)
+    :param tolerance_length: Tolerance for the length test
+    :return: ---
+    """
     lcs = segment.local_coordinate_system(0)
 
     # test that function actually returns a coordinate system class
     assert isinstance(lcs, tf.LocalCoordinateSystem)
 
-    # check that origin for weight 0 is at [0,0,0]
-    for i in range(3):
-        assert math.isclose(lcs.origin[i], 0)
+    # check that origin for weight 0 is at [0, 0, 0]
+    assert ut.vector_is_close(lcs.origin, [0, 0, 0])
 
+    # length and orientation tests
     check_trace_segment_length(segment, tolerance_length)
     check_trace_segment_orientation(segment)
 
 
 def test_linear_horizontal_trace_segment():
+    """
+    Test the linear horizontal trace segment.
+
+    Each sub test is documented by comments.
+
+    :return: ---
+    """
+
     length = 7.13
     segment = geo.LinearHorizontalTraceSegment(length)
 
@@ -1679,6 +1790,14 @@ def test_linear_horizontal_trace_segment():
 
 
 def test_radial_horizontal_trace_segment():
+    """
+    Test the radial horizontal trace segment.
+
+    Each sub test is documented by comments.
+
+    :return: ---
+    """
+
     radius = 4.74
     angle = np.pi / 1.23
     segment_cw = geo.RadialHorizontalTraceSegment(radius, angle, True)
@@ -1705,10 +1824,8 @@ def test_radial_horizontal_trace_segment():
         lcs_cw = segment_cw.local_coordinate_system(weight)
         lcs_ccw = segment_ccw.local_coordinate_system(weight)
 
-        assert math.isclose(lcs_cw.origin[0], x_exp)
-        assert math.isclose(lcs_cw.origin[1], -y_exp)
-        assert math.isclose(lcs_ccw.origin[0], x_exp)
-        assert math.isclose(lcs_ccw.origin[1], y_exp)
+        assert ut.vector_is_close(lcs_cw.origin, [x_exp, -y_exp, 0])
+        assert ut.vector_is_close(lcs_ccw.origin, [x_exp, y_exp, 0])
 
     # invalid inputs
     with pytest.raises(ValueError):
@@ -1723,7 +1840,32 @@ def test_radial_horizontal_trace_segment():
 
 # Test trace class ------------------------------------------------------------
 
+class CustomSegment():
+    """ Custom trace segment for tests"""
+
+    def __init__(self):
+        """
+        Construct a custom segment.
+        """
+        self.length = None
+
+    @staticmethod
+    def local_coordinate_system(*args):
+        """
+        Get the local coordinate system.
+
+        :param args: Unused parameters
+        :return: Local coordinate system
+        """
+        return tf.LocalCoordinateSystem()
+
+
 def test_trace_construction():
+    """
+    Test the trace's construction.
+
+    :return: ---
+    """
     linear_segment = geo.LinearHorizontalTraceSegment(1)
     radial_segment = geo.RadialHorizontalTraceSegment(1, np.pi)
     cs_origin = np.array([2, 3, -2])
@@ -1736,13 +1878,10 @@ def test_trace_construction():
 
     segments = trace.segments
     assert len(segments) == 1
-    assert isinstance(segments[0], type(linear_segment))
-    assert math.isclose(linear_segment.length, segments[0].length)
 
-    helpers.check_matrices_identical(cs_initial.basis,
-                                     trace.coordinate_system.basis)
-    helpers.check_vectors_identical(cs_initial.origin,
-                                    trace.coordinate_system.origin)
+    check_trace_segments_identical(trace.segments[0], linear_segment)
+
+    check_coordinate_systems_identical(trace.coordinate_system, cs_initial)
 
     # test multi segment construction ---------------------
     trace = geo.Trace([radial_segment, linear_segment])
@@ -1750,20 +1889,11 @@ def test_trace_construction():
                         linear_segment.length + radial_segment.length)
     assert trace.num_segments == 2
 
-    segments = trace.segments
-    assert len(segments) == 2
-    assert isinstance(segments[0], type(radial_segment))
-    assert isinstance(segments[1], type(linear_segment))
+    check_trace_segments_identical(trace.segments[0], radial_segment)
+    check_trace_segments_identical(trace.segments[1], linear_segment)
 
-    assert math.isclose(radial_segment.radius, segments[0].radius)
-    assert math.isclose(radial_segment.angle, segments[0].angle)
-    assert math.isclose(radial_segment.is_clockwise, segments[0].is_clockwise)
-    assert math.isclose(linear_segment.length, segments[1].length)
-
-    helpers.check_matrices_identical(np.identity(3),
-                                     trace.coordinate_system.basis)
-    helpers.check_vectors_identical(np.array([0, 0, 0]),
-                                    trace.coordinate_system.origin)
+    check_coordinate_systems_identical(trace.coordinate_system,
+                                       tf.LocalCoordinateSystem())
 
     # check invalid inputs --------------------------------
     with pytest.raises(TypeError):
@@ -1774,18 +1904,11 @@ def test_trace_construction():
         geo.Trace(None)
 
     # check construction with custom segment --------------
-    class CustomSegment():
-        def __init__(self):
-            self.length = None
-
-        @staticmethod
-        def local_coordinate_system(*args):
-            return tf.LocalCoordinateSystem()
-
     custom_segment = CustomSegment()
     custom_segment.length = 3
     geo.Trace(custom_segment)
 
+    # trace length <= 0
     with pytest.raises(Exception):
         custom_segment.length = -12
         geo.Trace(custom_segment)
@@ -1795,23 +1918,30 @@ def test_trace_construction():
 
 
 def test_trace_local_coordinate_system():
+    """
+    Test the trace's local coordinate system function.
+
+    The tested trace starts with a semicircle of radius 1 turning to the left
+    and continues with a straight line of length 1.
+
+    :return: ---
+    """
     radial_segment = geo.RadialHorizontalTraceSegment(1, np.pi)
     linear_segment = geo.LinearHorizontalTraceSegment(1)
 
     # check with default coordinate system ----------------
     trace = geo.Trace([radial_segment, linear_segment])
 
-    # check first segment
+    # check first segment (radial)
     for i in range(11):
         weight = i / 10
         position = radial_segment.length * weight
         cs_trace = trace.local_coordinate_system(position)
         cs_segment = radial_segment.local_coordinate_system(weight)
 
-        helpers.check_matrices_identical(cs_trace.basis, cs_segment.basis)
-        helpers.check_vectors_identical(cs_trace.origin, cs_segment.origin)
+        check_coordinate_systems_identical(cs_trace, cs_segment)
 
-    # check second segment
+    # check second segment (linear)
     expected_basis = radial_segment.local_coordinate_system(1).basis
     for i in range(11):
         weight = i / 10
@@ -1819,10 +1949,11 @@ def test_trace_local_coordinate_system():
         position = radial_segment.length + position_on_segment
 
         expected_origin = np.array([-position_on_segment, 2, 0])
+        cs_expected = tf.LocalCoordinateSystem(basis=expected_basis,
+                                               origin=expected_origin)
         cs_trace = trace.local_coordinate_system(position)
 
-        helpers.check_matrices_identical(cs_trace.basis, expected_basis)
-        helpers.check_vectors_identical(cs_trace.origin, expected_origin)
+        check_coordinate_systems_identical(cs_trace, cs_expected)
 
     # check with arbitrary coordinate system --------------
     basis = tf.rotation_matrix_x(np.pi / 2)
@@ -1838,28 +1969,35 @@ def test_trace_local_coordinate_system():
         cs_trace = trace.local_coordinate_system(position)
         cs_segment = radial_segment.local_coordinate_system(weight)
 
-        expected_basis = np.matmul(basis, cs_segment.basis)
-        expected_origin = np.matmul(basis, cs_segment.origin) + origin
+        cs_expected = cs_segment + cs_base
 
-        helpers.check_matrices_identical(cs_trace.basis, expected_basis)
-        helpers.check_vectors_identical(cs_trace.origin, expected_origin)
+        check_coordinate_systems_identical(cs_trace, cs_expected)
 
     # check second segment
     expected_basis = np.matmul(basis,
                                radial_segment.local_coordinate_system(1).basis)
+    cs_start_seg2 = radial_segment.local_coordinate_system(1) + cs_base
     for i in range(11):
         weight = i / 10
         position_on_segment = linear_segment.length * weight
         position = radial_segment.length + position_on_segment
+        lcs_origin = [position_on_segment, 0, 0]
 
-        expected_origin = np.array([-position_on_segment, 0, 2]) + origin
+        cs_exp = tf.LocalCoordinateSystem(origin=lcs_origin) + cs_start_seg2
         cs_trace = trace.local_coordinate_system(position)
 
-        helpers.check_matrices_identical(cs_trace.basis, expected_basis)
-        helpers.check_vectors_identical(cs_trace.origin, expected_origin)
+        check_coordinate_systems_identical(cs_trace, cs_exp)
 
 
 def test_trace_rasterization():
+    """
+    Test the trace's rasterize function.
+
+    The tested trace starts with a line segment of length 1 and continues
+    with a radial segment of radius 1 and counter clockwise winding.
+
+    :return: ---
+    """
     radial_segment = geo.RadialHorizontalTraceSegment(1, np.pi)
     linear_segment = geo.LinearHorizontalTraceSegment(1)
 
@@ -1874,13 +2012,14 @@ def test_trace_rasterization():
     for i in range(data.shape[1]):
         trace_location = i * raster_width_eff
         if trace_location <= 1:
-            helpers.check_vectors_identical([trace_location, 0, 0], data[:, i])
+            assert ut.vector_is_close([trace_location, 0, 0], data[:, i])
         else:
-            arc_location = trace_location - 1
-            angle = arc_location  # radius 1!
-            x = np.sin(angle) + 1  # radius 1!
+            arc_length = trace_location - 1
+            angle = arc_length  # radius 1 -> arc_length = arc_angle * radius
+            x = np.sin(angle) + 1  # radius 1 -> sin(arc_angle) = x / radius
             y = 1 - np.cos(angle)
-            helpers.check_vectors_identical([x, y, 0], data[:, i])
+
+            assert ut.vector_is_close([x, y, 0], data[:, i])
 
     # check with arbitrary coordinate system --------------
     basis = tf.rotation_matrix_y(np.pi / 2)
@@ -1899,20 +2038,20 @@ def test_trace_rasterization():
             y = origin[1]
             z = origin[2] - trace_location
         else:
-            arc_location = trace_location - 1
-            angle = arc_location  # radius 1!
+            arc_length = trace_location - 1
+            angle = arc_length  # radius 1 -> arc_length = arc_angle * radius
             x = origin[0]
             y = origin[1] + 1 - np.cos(angle)
             z = origin[2] - 1 - np.sin(angle)
 
-        helpers.check_vectors_identical([x, y, z], data[:, i])
+        assert ut.vector_is_close([x, y, z], data[:, i])
 
     # check if raster width is clipped to valid range -----
     data = trace.rasterize(1000)
 
     assert data.shape[1] == 2
-    helpers.check_vectors_identical([-3, 2.5, 5], data[:, 0])
-    helpers.check_vectors_identical([-3, 4.5, 4], data[:, 1])
+    assert ut.vector_is_close([-3, 2.5, 5], data[:, 0])
+    assert ut.vector_is_close([-3, 4.5, 4], data[:, 1])
 
     # exceptions ------------------------------------------
     with pytest.raises(Exception):
@@ -1922,7 +2061,6 @@ def test_trace_rasterization():
 
 
 # Profile interpolation classes -----------------------------------------------
-
 
 def check_interpolated_profile_points(profile, c_0, c_1, c_2):
     helpers.check_vectors_identical(profile.shapes[0].segments[0].point_start,
