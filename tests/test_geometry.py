@@ -23,8 +23,7 @@ def check_segments_identical(seg_a, seg_b):
     :return: ---
     """
     assert isinstance(seg_a, type(seg_b))
-    helpers.check_vectors_identical(seg_a.point_start, seg_b.point_start)
-    helpers.check_vectors_identical(seg_a.point_end, seg_b.point_end)
+    assert ut.matrix_is_close(seg_a.points, seg_b.points)
     if isinstance(seg_a, geo.ArcSegment):
         assert seg_a.arc_winding_ccw == seg_b.arc_winding_ccw
         helpers.check_vectors_identical(seg_a.point_center, seg_b.point_center)
@@ -54,6 +53,27 @@ def check_profiles_identical(pro_a, pro_b):
     assert pro_a.num_shapes == pro_b.num_shapes
     for i in range(pro_a.num_shapes):
         check_shapes_identical(pro_a.shapes[i], pro_b.shapes[i])
+
+
+def check_variable_profiles_identical(vp_a, vp_b):
+    """
+    Check if 2 variable profiles are identical within floating point tolerance.
+
+    :param vp_a: First variable profile
+    :param vp_b: Second variable profile
+    :return: ---
+    """
+    assert vp_a.num_profiles == vp_b.num_profiles
+    assert vp_a.num_locations == vp_b.num_locations
+    assert vp_a.num_interpolation_schemes == vp_b.num_interpolation_schemes
+
+    for i in range(vp_a.num_profiles):
+        check_profiles_identical(vp_a.profiles[i], vp_b.profiles[i])
+    for i in range(vp_a.num_locations):
+        assert math.isclose(vp_a.locations[i], vp_b.locations[i])
+    for i in range(vp_a.num_interpolation_schemes):
+        assert isinstance(vp_a.interpolation_schemes[i],
+                          type(vp_b.interpolation_schemes[i]))
 
 
 def check_trace_segments_identical(seg_a, seg_b):
@@ -2063,31 +2083,30 @@ def test_trace_rasterization():
 # Profile interpolation classes -----------------------------------------------
 
 def check_interpolated_profile_points(profile, c_0, c_1, c_2):
-    helpers.check_vectors_identical(profile.shapes[0].segments[0].point_start,
-                                    c_0)
-    helpers.check_vectors_identical(profile.shapes[0].segments[0].point_end,
-                                    c_1)
-    helpers.check_vectors_identical(profile.shapes[1].segments[0].point_start,
-                                    c_1)
-    helpers.check_vectors_identical(profile.shapes[1].segments[0].point_end,
-                                    c_2)
+    """
+    Check the points of an interpolated profile from the interpolation test.
+
+    :param profile: Interpolated profile.
+    :param c_0: First expected point
+    :param c_1: Second expected point
+    :param c_2: Third expected point
+    :return: ---
+    """
+    assert ut.vector_is_close(profile.shapes[0].segments[0].point_start, c_0)
+    assert ut.vector_is_close(profile.shapes[0].segments[0].point_end, c_1)
+    assert ut.vector_is_close(profile.shapes[1].segments[0].point_start, c_1)
+    assert ut.vector_is_close(profile.shapes[1].segments[0].point_end, c_2)
 
 
 def test_linear_profile_interpolation_sbs():
-    a_0 = [0, 0]
-    a_1 = [8, 16]
-    a_2 = [16, 0]
-    shape_a01 = geo.Shape(geo.LineSegment.construct_with_points(a_0, a_1))
-    shape_a12 = geo.Shape(geo.LineSegment.construct_with_points(a_1, a_2))
-    profile_a = geo.Profile([shape_a01, shape_a12])
+    """
+    Test linear profile interpolation.
 
-    b_0 = [-4, 8]
-    b_1 = [0, 8]
-    b_2 = [16, -16]
-    shape_b01 = geo.Shape(geo.LineSegment.construct_with_points(b_0, b_1))
-    shape_b12 = geo.Shape(geo.LineSegment.construct_with_points(b_1, b_2))
-    profile_b = geo.Profile([shape_b01, shape_b12])
+    Uses the default profiles which consist of two shapes. Each shape
+    contains just a single line segment.
 
+    :return: ---
+    """
     [profile_a, profile_b] = get_default_profiles()
 
     for i in range(5):
@@ -2100,6 +2119,9 @@ def test_linear_profile_interpolation_sbs():
                                           [16, -4 * i])
 
     # check weight clipped to valid range -----------------
+    a_0 = profile_a.shapes[0].segments[0].point_start
+    a_1 = profile_a.shapes[1].segments[0].point_start
+    a_2 = profile_a.shapes[1].segments[0].point_end
 
     profile_c = geo.linear_profile_interpolation_sbs(profile_a, profile_b, -3)
 
@@ -2107,9 +2129,17 @@ def test_linear_profile_interpolation_sbs():
 
     profile_c = geo.linear_profile_interpolation_sbs(profile_a, profile_b, 42)
 
+    b_0 = profile_b.shapes[0].segments[0].point_start
+    b_1 = profile_b.shapes[1].segments[0].point_start
+    b_2 = profile_b.shapes[1].segments[0].point_end
+
     check_interpolated_profile_points(profile_c, b_0, b_1, b_2)
 
     # exceptions ------------------------------------------
+
+    shape_a12 = profile_a.shapes[1]
+    shape_b01 = profile_b.shapes[0]
+    shape_b12 = profile_b.shapes[1]
 
     # number of shapes differ
     profile_d = geo.Profile([shape_b01, shape_b12, shape_a12])
@@ -2127,17 +2157,32 @@ def test_linear_profile_interpolation_sbs():
 
 # test variable profile -------------------------------------------------------
 
-def check_variable_profile_state(variable_profile, locations):
-    num_profiles = len(locations)
+def check_variable_profile_state(variable_profile, profiles_exp,
+                                 locations_exp):
+    """
+    Check the state of a variable profile.
+
+    :param variable_profile: Variable profile that should be checked.
+    :param profiles_exp: Expected stored profiles
+    :param locations_exp: Expected stored locations
+    :return:
+    """
+    num_profiles = len(locations_exp)
     assert variable_profile.num_interpolation_schemes == num_profiles - 1
     assert variable_profile.num_locations == num_profiles
     assert variable_profile.num_profiles == num_profiles
 
     for i in range(num_profiles):
-        assert math.isclose(locations[i], variable_profile.locations[i])
+        assert math.isclose(variable_profile.locations[i], locations_exp[i])
+        check_profiles_identical(variable_profile.profiles[i], profiles_exp[i])
 
 
 def test_variable_profile_construction():
+    """
+    Test construction of variable profiles.
+
+    :return: ---
+    """
     interpol = geo.linear_profile_interpolation_sbs
 
     profile_a, profile_b = get_default_profiles()
@@ -2146,27 +2191,38 @@ def test_variable_profile_construction():
     variable_profile = geo.VariableProfile([profile_a, profile_b],
                                            1,
                                            interpol)
-    check_variable_profile_state(variable_profile, [0, 1])
+    check_variable_profile_state(variable_profile,
+                                 [profile_a, profile_b],
+                                 [0, 1])
+
     variable_profile = geo.VariableProfile([profile_a, profile_b],
                                            [1],
                                            [interpol])
-    check_variable_profile_state(variable_profile, [0, 1])
+    check_variable_profile_state(variable_profile,
+                                 [profile_a, profile_b],
+                                 [0, 1])
 
     # construction with location list
     variable_profile = geo.VariableProfile([profile_a, profile_b],
                                            [0, 1],
                                            interpol)
-    check_variable_profile_state(variable_profile, [0, 1])
+    check_variable_profile_state(variable_profile,
+                                 [profile_a, profile_b],
+                                 [0, 1])
 
     variable_profile = geo.VariableProfile([profile_a, profile_b, profile_a],
                                            [1, 2],
                                            [interpol, interpol])
-    check_variable_profile_state(variable_profile, [0, 1, 2])
+    check_variable_profile_state(variable_profile,
+                                 [profile_a, profile_b, profile_a],
+                                 [0, 1, 2])
 
     variable_profile = geo.VariableProfile([profile_a, profile_b, profile_a],
                                            [0, 1, 2],
                                            [interpol, interpol])
-    check_variable_profile_state(variable_profile, [0, 1, 2])
+    check_variable_profile_state(variable_profile,
+                                 [profile_a, profile_b, profile_a],
+                                 [0, 1, 2])
 
     # exceptions ------------------------------------------
 
@@ -2197,6 +2253,11 @@ def test_variable_profile_construction():
 
 
 def test_variable_profile_local_profile():
+    """
+    Test if the local profiles of a variable profile are calculated correctly.
+
+    :return: ---
+    """
     interpol = geo.linear_profile_interpolation_sbs
 
     profile_a, profile_b = get_default_profiles()
@@ -2220,7 +2281,7 @@ def test_variable_profile_local_profile():
                                           [2 * i, 8 + 2 * i],
                                           [16, -16 + 4 * i])
 
-    # check if values are clipped to valid range
+    # check if values are clipped to valid range ----------
 
     profile = variable_profile.local_profile(177)
     check_interpolated_profile_points(profile, [0, 0], [8, 16], [16, 0])
@@ -2231,21 +2292,12 @@ def test_variable_profile_local_profile():
 
 # test geometry class ---------------------------------------------------------
 
-def check_variable_profiles_identical(a, b):
-    assert a.num_profiles == b.num_profiles
-    assert a.num_locations == b.num_locations
-    assert a.num_interpolation_schemes == b.num_interpolation_schemes
-
-    for i in range(a.num_profiles):
-        check_profiles_identical(a.profiles[i], b.profiles[i])
-    for i in range(a.num_locations):
-        assert math.isclose(a.locations[i], b.locations[i])
-    for i in range(a.num_interpolation_schemes):
-        assert isinstance(a.interpolation_schemes[i],
-                          type(b.interpolation_schemes[i]))
-
-
 def test_geometry_construction():
+    """
+    Test construction of he geometry class
+
+    :return: ---
+    """
     profile_a, profile_b = get_default_profiles()
     variable_profile = \
         geo.VariableProfile([profile_a, profile_b],
@@ -2282,53 +2334,65 @@ def test_geometry_construction():
 
 
 def test_geometry_rasterization_trace():
+    """
+    Test if the rasterized geometry data follows the trace.
+
+    The utilized trace starts with a line segment of length 1 and continues
+    with a radial segment of radius 1 and counter clockwise winding. Each
+    individual step is documented by comments.
+
+    :return:
+    """
     a0 = [1, 0]
     a1 = [1, 1]
     a2 = [0, 1]
     a3 = [-1, 1]
     a4 = [-1, 0]
+    profile_points = ut.to_float_array([a0, a1, a2, a2, a3, a4]).transpose()
 
-    shape_a012 = geo.Shape([geo.LineSegment.construct_with_points(a0, a1),
-                            geo.LineSegment.construct_with_points(a1, a2)])
-    shape_a234 = geo.Shape([geo.LineSegment.construct_with_points(a2, a3),
-                            geo.LineSegment.construct_with_points(a3, a4)])
-
+    # create profile
+    shape_a012 = geo.Shape().add_line_segments([a0, a1, a2])
+    shape_a234 = geo.Shape().add_line_segments([a2, a3, a4])
     profile_a = geo.Profile([shape_a012, shape_a234])
 
+    # create trace
     radial_segment = geo.RadialHorizontalTraceSegment(1, np.pi / 2, False)
     linear_segment = geo.LinearHorizontalTraceSegment(1)
     trace = geo.Trace([linear_segment, radial_segment])
 
+    # create geometry
     geometry = geo.Geometry(profile_a, trace)
 
+    # rasterize
     # Note, if the raster width is larger than the segment, it is automatically
-    # adjusted to the segment width. Hence each rasterized profile has 6
+    # adjusted to the segment width. Hence, each rasterized profile has 6
     # points, which were defined at the beginning of the test (a2 is
     # included twice)
     data = geometry.rasterize(7, 0.1)
 
+    # calculate the number of rasterized profiles
     num_raster_profiles = int(np.round(data.shape[1] / 6))
-    profile_points = np.array([a0, a1, a2, a2, a3, a4]).transpose()
 
+    # calculate effective raster width
     eff_raster_width = trace.length / (data.shape[1] / 6 - 1)
     arc_point_distance_on_trace = 2 * np.sin(eff_raster_width / 2)
 
     for i in range(num_raster_profiles):
+        # get index of the current profiles first point
         idx_0 = i * 6
+
+        # check first segment (line)
         if data[0, idx_0 + 2] <= 1:
-            x = data[0, idx_0]
-            assert math.isclose(x, eff_raster_width * i, abs_tol=1E-6)
             for j in range(6):
-                assert math.isclose(data[1, idx_0 + j], profile_points[0, j])
-                assert math.isclose(data[2, idx_0 + j], profile_points[1, j])
-                assert math.isclose(data[0, idx_0 + j], data[0, idx_0])
+                point_exp = [eff_raster_width * i,
+                             profile_points[0, j],
+                             profile_points[1, j]]
+                assert ut.vector_is_close(data[:, idx_0 + j], point_exp)
+        # check second segment (arc)
         else:
-            assert math.isclose(data[0, idx_0], 1)
-            assert math.isclose(data[1, idx_0], a0[0])
-            assert math.isclose(data[2, idx_0], a0[1])
-            assert math.isclose(data[0, idx_0 + 1], 1)
-            assert math.isclose(data[1, idx_0 + 1], a1[0])
-            assert math.isclose(data[2, idx_0 + 1], a1[1])
+            # first 2 profile points lie on the arcs center point
+            assert ut.vector_is_close(data[:, idx_0], [1, a0[0], a0[1]])
+            assert ut.vector_is_close(data[:, idx_0 + 1], [1, a1[0], a1[1]])
 
             # z-values are constant
             for j in np.arange(2, 6, 1):
@@ -2336,8 +2400,10 @@ def test_geometry_rasterization_trace():
 
             # all profile points in a common x-y plane
             exp_radius = np.array([1, 1, 2, 2])
+
             vec_02 = data[0:2, idx_0 + 2] - data[0:2, idx_0]
             assert math.isclose(np.linalg.norm(vec_02), exp_radius[0])
+
             for j in np.arange(3, 6, 1):
                 vec_0j = data[0:2, idx_0 + j] - data[0:2, idx_0]
                 assert math.isclose(np.linalg.norm(vec_0j), exp_radius[j - 2])
@@ -2380,6 +2446,11 @@ def test_geometry_rasterization_trace():
 
 
 def test_geometry_rasterization_profile_interpolation():
+    """
+    Check if the rasterized geometry interpolates profiles correctly.
+
+    :return:
+    """
     interpol = geo.linear_profile_interpolation_sbs
 
     a0 = [1, 0]
@@ -2388,16 +2459,16 @@ def test_geometry_rasterization_profile_interpolation():
     a3 = [-1, 1]
     a4 = [-1, 0]
 
-    shape_a012 = geo.Shape([geo.LineSegment.construct_with_points(a0, a1),
-                            geo.LineSegment.construct_with_points(a1, a2)])
-    shape_a234 = geo.Shape([geo.LineSegment.construct_with_points(a2, a3),
-                            geo.LineSegment.construct_with_points(a3, a4)])
+    # create shapes
+    shape_a012 = geo.Shape().add_line_segments([a0, a1, a2])
+    shape_a234 = geo.Shape().add_line_segments([a2, a3, a4])
 
     shape_b012 = copy.deepcopy(shape_a012)
     shape_b234 = copy.deepcopy(shape_a234)
     shape_b012.apply_transformation([[2, 0], [0, 2]])
     shape_b234.apply_transformation([[2, 0], [0, 2]])
 
+    # create variable profile
     profile_a = geo.Profile([shape_a012, shape_a234])
     profile_b = geo.Profile([shape_b012, shape_b234])
 
@@ -2406,8 +2477,8 @@ def test_geometry_rasterization_profile_interpolation():
 
     linear_segment_l1 = geo.LinearHorizontalTraceSegment(1)
     linear_segment_l2 = geo.LinearHorizontalTraceSegment(2)
-    # Note: The profile in the middle is not located at the start of the
-    # second segment
+    # Note: The profile in the middle of the variable profile is not located
+    # at the start of the second trace segment
     trace = geo.Trace([linear_segment_l2, linear_segment_l1])
 
     geometry = geo.Geometry(variable_profile, trace)
@@ -2421,20 +2492,20 @@ def test_geometry_rasterization_profile_interpolation():
 
     profile_points = np.array([a0, a1, a2, a2, a3, a4]).transpose()
 
-    # check first segment
+    # check first profile interpolation
     for i in range(11):
         idx_0 = i * 6
         for j in range(6):
-            exp_point = np.array([i * 0.1,
+            point_exp = np.array([i * 0.1,
                                   profile_points[0, j] * (1 + i * 0.1),
                                   profile_points[1, j] * (1 + i * 0.1)])
-            helpers.check_vectors_identical(data[:, idx_0 + j], exp_point)
+            assert ut.vector_is_close(data[:, idx_0 + j], point_exp)
 
-    # check second segment
+    # check second profile interpolation
     for i in range(20):
         idx_0 = (30 - i) * 6
         for j in range(6):
             exp_point = np.array([3 - i * 0.1,
                                   profile_points[0, j] * (1 + i * 0.05),
                                   profile_points[1, j] * (1 + i * 0.05)])
-            helpers.check_vectors_identical(data[:, idx_0 + j], exp_point)
+            assert ut.vector_is_close(data[:, idx_0 + j], point_exp)
