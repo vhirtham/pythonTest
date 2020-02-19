@@ -58,3 +58,4 @@ excluded_words:
   - ipywidgets
   - ipython
   # other ---------------------------------------
+  - linearization
