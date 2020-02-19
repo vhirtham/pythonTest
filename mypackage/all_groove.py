@@ -7,7 +7,7 @@ import mypackage.geometry as geo
 
 
 def singleVGrooveButtWeld(
-    t, alpha, b, c, width_default=Quantity(5, unit="millimeter")
+    t, alpha, b, c, width_default=Quantity(2, unit="millimeter")
 ):
     """
     Calculate a Single-V Groove Butt Weld.
@@ -17,13 +17,22 @@ def singleVGrooveButtWeld(
     :param b: the root opening, as Astropy unit
     :param c: the root face, as Astropy unit
     :param width_default: the width of the workpiece, as Astropy unit
-    :return: point_could_generator.Profile
+    :return: geo.Profile
     """
     t = t.to_value("millimeter")
     alpha = alpha.to_value("rad")
     b = b.to_value("millimeter")
     c = c.to_value("millimeter")
     width = width_default.to_value("millimeter")
+
+    # calculations:
+    s = np.tan(alpha / 2) * (t - c)
+
+    # Rand breiten Berechnung
+    edge = np.min([-s, 0])
+    if width <= -edge + 1:
+        # zu Kleine Breite für die Naht wird angepasst
+        width = width - edge
 
     segment_list = []
 
@@ -34,7 +43,6 @@ def singleVGrooveButtWeld(
         root_face = geo.LineSegment([[0, 0], [0, c]])
         segment_list.append(root_face)
 
-    s = np.tan(alpha / 2) * (t - c)
     groove_face = geo.LineSegment([[0, -s], [c, t]])
     segment_list.append(groove_face)
 
@@ -53,7 +61,7 @@ def singleVGrooveButtWeld(
 
 
 def singleUGrooveButtWeld(
-    t, beta, R, b, c, width_default=Quantity(15, unit="millimeter")
+    t, beta, R, b, c, width_default=Quantity(3, unit="millimeter")
 ):
     """
     Calculate a Single-U Groove Butt Weld.
@@ -64,7 +72,7 @@ def singleUGrooveButtWeld(
     :param b: the root opening, as Astropy unit
     :param c: the root face, as Astropy unit
     :param width_default: the width of the workpiece, as Astropy unit
-    :return: point_could_generator.Profile
+    :return: geo.Profile
     """
     t = t.to_value("millimeter")
     beta = beta.to_value("rad")
@@ -72,6 +80,21 @@ def singleUGrooveButtWeld(
     b = b.to_value("millimeter")
     c = c.to_value("millimeter")
     width = width_default.to_value("millimeter")
+
+    # calculations:
+    # vom nächsten Punkt zum Kreismittelpunkt ist der Vektor (x,y)
+    x = R * np.cos(beta)
+    y = R * np.sin(beta)
+    # m = [0,c+R] Kreismittelpunkt
+    # => [-x,c+R-y] ist der nächste Punkt
+
+    s = np.tan(beta) * (t - (c + R - y))
+
+    # Rand breiten Berechnung
+    edge = np.min([-x - s, 0])
+    if width <= -edge + 1:
+        # zu Kleine Breite für die Naht wird angepasst
+        width = width - edge
 
     segment_list = []
 
@@ -82,16 +105,10 @@ def singleUGrooveButtWeld(
         root_face = geo.LineSegment([[0, 0], [0, c]])
         segment_list.append(root_face)
 
-    # vom nächsten Punkt zum Kreismittelpunkt ist der Vektor (x,y)
-    x = R * np.cos(beta)
-    y = R * np.sin(beta)
-    # m = [0,c+R] Kreismittelpunkt
-    # => [-x,c+R-y] ist der nächste Punkt
     groove_face_arc = geo.ArcSegment([[0, -x, 0], [c, c + R - y, c + R]],
                                      False)
     segment_list.append(groove_face_arc)
 
-    s = np.tan(beta) * (t - (c + R - y))
     groove_face_line = geo.LineSegment([[-x, -x - s], [c + R - y, t]])
     segment_list.append(groove_face_line)
 
