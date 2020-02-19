@@ -1,4 +1,4 @@
-"""Tests the geometry package"""
+"""Tests the geometry package."""
 
 import mypackage.geometry as geo
 import mypackage.transformations as tf
@@ -1792,7 +1792,6 @@ def test_linear_horizontal_trace_segment():
 
     :return: ---
     """
-
     length = 7.13
     segment = geo.LinearHorizontalTraceSegment(length)
 
@@ -1817,7 +1816,6 @@ def test_radial_horizontal_trace_segment():
 
     :return: ---
     """
-
     radius = 4.74
     angle = np.pi / 1.23
     segment_cw = geo.RadialHorizontalTraceSegment(radius, angle, True)
@@ -1861,12 +1859,10 @@ def test_radial_horizontal_trace_segment():
 # Test trace class ------------------------------------------------------------
 
 class CustomSegment():
-    """ Custom trace segment for tests"""
+    """Custom trace segment for tests."""
 
     def __init__(self):
-        """
-        Construct a custom segment.
-        """
+        """Construct a custom segment."""
         self.length = None
 
     @staticmethod
@@ -2294,7 +2290,7 @@ def test_variable_profile_local_profile():
 
 def test_geometry_construction():
     """
-    Test construction of he geometry class
+    Test construction of he geometry class.
 
     :return: ---
     """

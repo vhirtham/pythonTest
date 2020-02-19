@@ -1,4 +1,4 @@
-"""Tests the transformation package"""
+"""Tests the transformation package."""
 
 import mypackage.transformations as tf
 import mypackage.utility as ut
@@ -54,7 +54,9 @@ def check_matrix_does_not_reflect(matrix):
 
 def check_matrix_orthogonal(matrix):
     """
-    Check if a matrix is orthogonal. Condition: A^-1 = A^T
+    Check if a matrix is orthogonal.
+
+    Condition: A^-1 = A^T.
 
     :param matrix: Matrix that should be checked
     :return: ---
