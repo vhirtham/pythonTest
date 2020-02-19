@@ -22,12 +22,40 @@ dictionaries:
 excluded_files:
   - ".*"
   - "docs*"
+  - "environment.yml"
+  - "tools*"
 
 # Any typos we should ignore?
 excluded_words:
   - typoci
+  # python packages -----------------------------
   - numpy
-  - vstack
+  - scipy
   - pytest
+  - matplotlib
+  # matplotlib ----------------------------------
+  - pyplot
+  - gca
+  - plt
+  # flake8 --------------------------------------
+  - noqa
+  # numpy ---------------------------------------
   - linalg
   - ndim
+  - dtype
+  - isclose
+  - ndarray
+  - hstack
+  - matmul
+  - arange
+  - det
+  - vstack
+  # jupyter notebooks ---------------------------
+  - jupyter
+  - nbformat
+  # iPython -------------------------------------
+  - ipynb
+  - ipywidgets
+  - ipython
+  # other ---------------------------------------
+  - linearization
