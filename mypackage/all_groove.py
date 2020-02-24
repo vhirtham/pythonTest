@@ -6,6 +6,20 @@ import numpy as np
 import mypackage.geometry as geo
 
 
+def grooveType(dictionary, groove_type):
+    """
+    Calculate a Groove type with given dictionary and goove type.
+
+    :param dictionary: dictionary with the needed groove parameters
+    :param groove_type: string, string corresponding to the groove type.
+    """
+    if groove_type == "v":
+        return singleVGrooveButtWeld(**dictionary)
+
+    if groove_type == "u":
+        return singleUGrooveButtWeld(**dictionary)
+
+
 def singleVGrooveButtWeld(
     t, alpha, b, c, width_default=Quantity(2, unit="millimeter")
 ):
